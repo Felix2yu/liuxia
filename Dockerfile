@@ -24,17 +24,10 @@ FROM alpine:3.20
 
 WORKDIR /app
 
-# 设置时区
-ENV TZ=Asia/Shanghai
-RUN apk add --no-cache tzdata ca-certificates \
-    && ln -sf /usr/share/zoneinfo/$TZ /etc/localtime \
-    && echo $TZ > /etc/timezone
+RUN apk add --no-cache tzdata ca-certificates
 
-# 复制二进制文件
+ENV TZ=Asia/Shanghai
+
 COPY --from=builder /build/sunsetbot /app/sunsetbot
 
-# 设置执行权限
-RUN chmod +x /app/sunsetbot
-
-# 启动程序
 CMD ["/app/sunsetbot"]
