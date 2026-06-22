@@ -20,7 +20,7 @@ COPY . .
 RUN go build -ldflags="-s -w" -o /build/sunsetbot .
 
 # 第二阶段 - 运行阶段
-FROM alpine:3.20
+FROM alpine:latest
 
 WORKDIR /app
 
