@@ -1,12 +1,11 @@
 # 多阶段构建：第一阶段 - 构建阶段
-FROM golang:1.22-alpine AS builder
+FROM golang:1.26-alpine AS builder
 
 WORKDIR /build
 
 # 设置 Go 环境变量
 ENV CGO_ENABLED=0 \
-    GOOS=linux \
-    GOARCH=amd64
+    GOOS=linux
 
 # 复制依赖文件
 COPY go.mod go.sum ./
