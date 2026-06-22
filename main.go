@@ -20,7 +20,7 @@ func main() {
 		logger.Fatalf("初始化失败: %v", err)
 	}
 
-	predictor := NewWeatherPredictor(cfg)
+	predictor := NewWeatherPredictor(cfg, logger)
 
 	c := cron.New(
 		cron.WithSeconds(),
@@ -80,11 +80,11 @@ func main() {
 	}
 
 	c.Start()
-	defer c.Stop()
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	<-sigCh
+	c.Stop()
 	logger.Println("[退出] 收到终止信号，程序退出")
 }
 
@@ -102,5 +102,5 @@ func buildCronSpec(timeStr string) string {
 	if len(parts) > 2 {
 		second = parts[2]
 	}
-	return strings.TrimSpace(second) + " " + strings.TrimSpace(minute) + " " + strings.TrimSpace(hour) + " * * *"
+	return second + " " + minute + " " + hour + " * * *"
 }

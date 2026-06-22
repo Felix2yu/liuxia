@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -23,13 +22,7 @@ var eventMap = map[string]string{
 	"TOMORROW_EVENING": "set_2",
 }
 
-var predictModelMap = map[string]string{
-	"GFS": "GFS",
-	"EC":  "EC",
-}
-
-var qualityRe = regexp.MustCompile(`\d+\.\d+`)
-var aodRe = regexp.MustCompile(`\d+\.\d+`)
+var numRe = regexp.MustCompile(`\d+\.\d+`)
 
 type WeatherPredictor struct {
 	config  *Config
@@ -50,19 +43,15 @@ type tbResponse struct {
 	EventTime   string `json:"tb_event_time"`
 }
 
-func NewWeatherPredictor(config *Config) *WeatherPredictor {
-	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{},
-	}
+func NewWeatherPredictor(config *Config, logger *log.Logger) *WeatherPredictor {
 	client := &http.Client{
-		Timeout:   30 * time.Second,
-		Transport: transport,
+		Timeout: 30 * time.Second,
 	}
 
 	return &WeatherPredictor{
 		config: config,
 		client: client,
-		logger: log.New(log.Writer(), "", log.LstdFlags),
+		logger: logger,
 	}
 }
 
@@ -102,7 +91,7 @@ func (wp *WeatherPredictor) parseWeatherData(content string) *WeatherData {
 	}
 
 	qualityStr := jsonContent.Quality
-	qualityMatch := qualityRe.FindString(qualityStr)
+	qualityMatch := numRe.FindString(qualityStr)
 	if qualityMatch == "" {
 		wp.logger.Printf("无法从质量数据中提取数值: %s", qualityStr)
 		return nil
@@ -118,7 +107,7 @@ func (wp *WeatherPredictor) parseWeatherData(content string) *WeatherData {
 	if aodStr == "" {
 		aodStr = "N/A"
 	}
-	aodMatch := aodRe.FindString(aodStr)
+	aodMatch := numRe.FindString(aodStr)
 	var aodNum *float64
 	if aodMatch != "" {
 		if v, err := strconv.ParseFloat(aodMatch, 64); err == nil {
@@ -156,87 +145,39 @@ func (wp *WeatherPredictor) parseWeatherData(content string) *WeatherData {
 	}
 }
 
-func (wp *WeatherPredictor) getDayIndicator(eventTime string) string {
-	if eventTime == "" {
-		return ""
+func (wp *WeatherPredictor) errorResult(msg string) *WeatherData {
+	if wp.config.Schedule.PushError {
+		return &WeatherData{
+			PushStr:    fmt.Sprintf("[失败] %s\n", msg),
+			QualityNum: 0.0,
+		}
 	}
-	if len(eventTime) < 10 {
-		return ""
-	}
-	d, err := time.ParseInLocation("2006-01-02", eventTime[:10], time.Local)
-	if err != nil {
-		wp.logger.Printf("时间格式错误: %s", eventTime)
-		return ""
-	}
-	now := time.Now()
-	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
-	tomorrow := today.AddDate(0, 0, 1)
-	parsedDate := time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, time.Local)
-
-	if parsedDate.Equal(today) {
-		return "(今天)"
-	} else if parsedDate.Equal(tomorrow) {
-		return "(明天)"
-	} else {
-		return fmt.Sprintf("(%s)", d.Format("01-02"))
-	}
+	return nil
 }
 
 func (wp *WeatherPredictor) fetchSingleData(fetchURL string) *WeatherData {
 	req, err := http.NewRequest("GET", fetchURL, nil)
 	if err != nil {
 		wp.logger.Printf("构建请求失败: %s", fetchURL)
-		if wp.config.Schedule.PushError {
-			return &WeatherData{
-				PushStr:    fmt.Sprintf("[失败] 请求错误: %.100s\n", err.Error()),
-				QualityNum: 0.0,
-				DateStr:    "",
-				TimeStr:    "",
-			}
-		}
-		return nil
+		return wp.errorResult(fmt.Sprintf("请求错误: %.100s", err.Error()))
 	}
 
 	resp, err := wp.client.Do(req)
 	if err != nil {
 		wp.logger.Printf("请求失败: %s, 错误: %v", fetchURL, err)
-		if wp.config.Schedule.PushError {
-			return &WeatherData{
-				PushStr:    fmt.Sprintf("[失败] 请求错误: %.100s\n", err.Error()),
-				QualityNum: 0.0,
-				DateStr:    "",
-				TimeStr:    "",
-			}
-		}
-		return nil
+		return wp.errorResult(fmt.Sprintf("请求错误: %.100s", err.Error()))
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 400 {
 		wp.logger.Printf("请求返回错误状态: %s -> %d", fetchURL, resp.StatusCode)
-		if wp.config.Schedule.PushError {
-			return &WeatherData{
-				PushStr:    fmt.Sprintf("[失败] 请求错误: HTTP %d\n", resp.StatusCode),
-				QualityNum: 0.0,
-				DateStr:    "",
-				TimeStr:    "",
-			}
-		}
-		return nil
+		return wp.errorResult(fmt.Sprintf("请求错误: HTTP %d", resp.StatusCode))
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		wp.logger.Printf("读取响应失败: %v", err)
-		if wp.config.Schedule.PushError {
-			return &WeatherData{
-				PushStr:    fmt.Sprintf("[失败] 请求错误: %.100s\n", err.Error()),
-				QualityNum: 0.0,
-				DateStr:    "",
-				TimeStr:    "",
-			}
-		}
-		return nil
+		return wp.errorResult(fmt.Sprintf("请求错误: %.100s", err.Error()))
 	}
 
 	wp.logger.Printf("请求成功: %s", fetchURL)
@@ -262,7 +203,7 @@ func (wp *WeatherPredictor) FetchData(isMorning bool) {
 		models = wp.config.Schedule.Evening.Model
 	}
 	if len(models) == 0 {
-		models = []string{predictModelMap["GFS"]}
+		models = []string{"GFS"}
 	}
 
 	urls := map[string]string{}
@@ -306,7 +247,7 @@ func (wp *WeatherPredictor) FetchData(isMorning bool) {
 		eventTag = "city_sunset"
 	}
 
-	markdownLines, maxPriority, hasData := wp.buildMarkdownResponse(urls, eventTitle)
+	markdownLines, maxPriority, hasData := wp.buildMarkdownResponse(urls)
 
 	if hasData {
 		pushContent := strings.Join(markdownLines, "\n")
@@ -363,6 +304,7 @@ func (wp *WeatherPredictor) sendNtfyNotification(title, content string, priority
 		return
 	}
 	defer resp.Body.Close()
+	io.Copy(io.Discard, resp.Body)
 
 	if resp.StatusCode >= 400 {
 		wp.logger.Printf("[推送失败] HTTP %d", resp.StatusCode)
@@ -372,7 +314,7 @@ func (wp *WeatherPredictor) sendNtfyNotification(title, content string, priority
 	wp.logger.Printf("[推送成功] ntfy 通知已发送到 %s, 优先级: %d", pushURL, priority)
 }
 
-func (wp *WeatherPredictor) buildMarkdownResponse(urls map[string]string, _ string) ([]string, *int, bool) {
+func (wp *WeatherPredictor) buildMarkdownResponse(urls map[string]string) ([]string, *int, bool) {
 	dataByDate := map[string][]dateEntry{}
 	var maxPriority *int
 

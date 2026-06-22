@@ -2,7 +2,7 @@
 
 用户可通过环境变量配置每天查询火烧云的时间和预期质量，最后通过 ntfy 推送信息。
 
-由 sunsetbot.top 提供接口。
+由 sunsetbot.top 提供接口。Docker 镜像支持 `linux/amd64` 和 `linux/arm64` 架构。
 
 ## 部署
 
@@ -28,7 +28,6 @@ services:
       - EVENING_ENABLE=true
       - EVENING_TIME=08:00,11:30,16:00
       - EVENING_MODEL=GFS,EC
-      - TZ=Asia/Shanghai
     restart: unless-stopped
 ```
 
