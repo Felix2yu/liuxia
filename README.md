@@ -28,7 +28,6 @@ services:
       - EVENING_ENABLE=true
       - EVENING_TIME=08:00,11:30,16:00
       - EVENING_MODEL=GFS,EC
-      - TZ=Asia/Shanghai
     restart: unless-stopped
 ```
 
