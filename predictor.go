@@ -33,7 +33,7 @@ type WeatherPredictor struct {
 
 type WeatherData struct {
 	PushStr    string
-	QualityNum float64
+	QualityNum *float64
 	AODNum     float64
 	DateStr    string
 	TimeStr    string
@@ -95,14 +95,12 @@ func (wp *WeatherPredictor) parseWeatherData(content string) *WeatherData {
 
 	qualityStr := jsonContent.Quality
 	qualityMatch := numRe.FindString(qualityStr)
-	var qualityNum float64
+	var qualityNum *float64
 	if qualityMatch == "" {
 		wp.logger.Printf("质量数据无法解析数值: %s，记录为空值", qualityStr)
 	} else {
-		var err error
-		qualityNum, err = strconv.ParseFloat(qualityMatch, 64)
-		if err != nil {
-			wp.logger.Printf("质量数值解析失败: %s", qualityMatch)
+		if v, err := strconv.ParseFloat(qualityMatch, 64); err == nil {
+			qualityNum = &v
 		}
 	}
 
@@ -128,9 +126,9 @@ func (wp *WeatherPredictor) parseWeatherData(content string) *WeatherData {
 	}
 
 	var pushStr strings.Builder
-	if qualityMatch == "" {
+	if qualityNum == nil {
 		pushStr.WriteString(fmt.Sprintf("鲜艳度：%s（数据异常）\n", qualityStr))
-	} else if qualityNum >= 0.4 {
+	} else if *qualityNum >= 0.4 {
 		pushStr.WriteString(fmt.Sprintf("鲜艳度：**%s**\n", qualityStr))
 	} else {
 		pushStr.WriteString(fmt.Sprintf("鲜艳度：%s\n", qualityStr))
@@ -154,8 +152,7 @@ func (wp *WeatherPredictor) parseWeatherData(content string) *WeatherData {
 func (wp *WeatherPredictor) errorResult(msg string) *WeatherData {
 	if wp.config.Schedule.PushError {
 		return &WeatherData{
-			PushStr:    fmt.Sprintf("[失败] %s\n", msg),
-			QualityNum: 0.0,
+			PushStr: fmt.Sprintf("[失败] %s\n", msg),
 		}
 	}
 	return nil
@@ -270,7 +267,7 @@ func (wp *WeatherPredictor) FetchData(isMorning bool) {
 type dateEntry struct {
 	model      string
 	pushStr    string
-	qualityNum float64
+	qualityNum *float64
 	aodNum     float64
 	timeStr    string
 }
@@ -344,17 +341,21 @@ func (wp *WeatherPredictor) buildMarkdownResponse(urls map[string]string, eventT
 				Time:      result.TimeStr,
 				EventType: eventType,
 				Model:     model,
-				Quality:   floatPtr(result.QualityNum),
+				Quality:   result.QualityNum,
 				AOD:       floatPtr(result.AODNum),
 			})
 		}
 
-		if result.QualityNum < 0.2 {
-			wp.logger.Printf("[过滤] 质量 %.2f 低于 0.2，跳过通知", result.QualityNum)
+		if result.QualityNum == nil || *result.QualityNum < 0.2 {
+			if result.QualityNum == nil {
+				wp.logger.Printf("[过滤] 质量数据为空，跳过通知")
+			} else {
+				wp.logger.Printf("[过滤] 质量 %.2f 低于 0.2，跳过通知", *result.QualityNum)
+			}
 			continue
 		}
 
-		priority := calculatePriority(result.QualityNum)
+		priority := calculatePriority(*result.QualityNum)
 		if maxPriority == nil || priority > *maxPriority {
 			maxPriority = &priority
 		}

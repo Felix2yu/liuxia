@@ -121,6 +121,14 @@ function renderCharts(records) {
     borderColor: colors[model] || '#999',
     tension: 0.3,
     fill: false,
+    segment: {
+      borderDash: ctx => {
+        const v0 = ctx.p0.parsed.y;
+        const v1 = ctx.p1.parsed.y;
+        if (v0 === null || v1 === null) return [5, 5];
+        return undefined;
+      },
+    },
   }));
 
   const aodDatasets = Object.entries(grouped).map(([model, items]) => ({
@@ -129,6 +137,14 @@ function renderCharts(records) {
     borderColor: colors[model] || '#999',
     tension: 0.3,
     fill: false,
+    segment: {
+      borderDash: ctx => {
+        const v0 = ctx.p0.parsed.y;
+        const v1 = ctx.p1.parsed.y;
+        if (v0 === null || v1 === null) return [5, 5];
+        return undefined;
+      },
+    },
   }));
 
   if (qualityChart) qualityChart.destroy();
