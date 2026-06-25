@@ -53,6 +53,17 @@ func InitStore(dbPath string) (*Store, error) {
 		return nil, fmt.Errorf("create table: %w", err)
 	}
 
+	var cityExists int
+	err = db.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('sunset_data') WHERE name='city'`).Scan(&cityExists)
+	if err != nil {
+		return nil, fmt.Errorf("check city column: %w", err)
+	}
+	if cityExists == 0 {
+		if _, err := db.Exec(`ALTER TABLE sunset_data ADD COLUMN city TEXT NOT NULL DEFAULT ''`); err != nil {
+			return nil, fmt.Errorf("add city column: %w", err)
+		}
+	}
+
 	indexes := []string{
 		`CREATE INDEX IF NOT EXISTS idx_city ON sunset_data(city)`,
 		`CREATE INDEX IF NOT EXISTS idx_date ON sunset_data(date)`,
