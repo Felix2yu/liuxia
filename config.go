@@ -81,7 +81,7 @@ func LoadConfig() (*Config, error) {
 		return nil, fmt.Errorf("环境变量 CITY 未设置")
 	}
 
-	cities := getEnvList("CITIES", []string{city})
+	cities := getEnvList("CITY", []string{city})
 
 	ntfyTopic := getEnv("NTFY_TOPIC", "")
 	if ntfyTopic == "" {
@@ -106,7 +106,7 @@ func LoadConfig() (*Config, error) {
 			NtfyToken:  getEnv("NTFY_TOKEN", ""),
 		},
 		Schedule: ScheduleConfig{
-			City:            city,
+			City:            cities[0],
 			Cities:          cities,
 			SendTestOnStart: getEnvBool("SEND_TEST_ON_START", false),
 			PushError:       getEnvBool("PUSH_ERROR", true),

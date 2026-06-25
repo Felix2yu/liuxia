@@ -29,8 +29,7 @@ services:
     volumes:
       - ./data:/app/data
     environment:
-      - CITY=江苏省-苏州
-      - CITIES=江苏省-苏州,上海市-上海
+      - CITY=江苏省-苏州,上海市-上海
       - BASE_URL=https://sunsetbot.top/
       - PUSH_ENABLE=true
       - NTFY_SERVER=https://ntfy.sh
@@ -56,8 +55,7 @@ services:
 
 | 变量 | 必填 | 默认值 | 说明 |
 |------|------|--------|------|
-| `CITY` | 是 | — | 城市，如 `江苏省-苏州` |
-| `CITIES` | 否 | 空 | 逗号分隔的多城市列表，如 `江苏省-苏州,上海市-上海` |
+| `CITY` | 是 | — | 城市，支持逗号分隔多城市，如 `江苏省-苏州` 或 `江苏省-苏州,上海市-上海` |
 | `NTFY_TOPIC` | 是 | — | ntfy 主题 |
 | `BASE_URL` | 否 | `https://sunsetbot.top/` | 服务基础 URL |
 | `PUSH_ENABLE` | 否 | `true` | 是否启用推送 |
