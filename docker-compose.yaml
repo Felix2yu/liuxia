@@ -2,6 +2,10 @@ services:
   sunsetbot:
     container_name: sunsetbot
     image: ghcr.io/felix2yu/sunsetbot:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
     environment:
       - CITY=江苏省-苏州
       - BASE_URL=https://sunsetbot.top/
@@ -17,4 +21,6 @@ services:
       - EVENING_ENABLE=true
       - EVENING_TIME=08:00,11:30,16:00
       - EVENING_MODEL=GFS,EC
+      - DB_PATH=/app/data/sunset.db
+      - WEB_PORT=8080
     restart: unless-stopped

@@ -29,5 +29,8 @@ RUN apk add --no-cache tzdata ca-certificates
 ENV TZ=Asia/Shanghai
 
 COPY --from=builder /build/sunsetbot /app/sunsetbot
+COPY templates /app/templates
+
+EXPOSE 8080
 
 CMD ["/app/sunsetbot"]

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>朝霞晚霞数据看板</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f5f5; color: #333; padding: 20px; }
+  .container { max-width: 1200px; margin: 0 auto; }
+  h1 { text-align: center; margin-bottom: 20px; color: #e67e22; }
+  .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+  .controls select, .controls input { padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; }
+  .controls button { padding: 6px 14px; border: none; border-radius: 4px; background: #e67e22; color: #fff; cursor: pointer; }
+  .controls button:hover { background: #d35400; }
+  .chart-box { background: #fff; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+  .chart-box h2 { font-size: 16px; margin-bottom: 10px; color: #555; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
+  th { background: #e67e22; color: #fff; }
+  tr:hover { background: #fdf2e9; }
+  .empty { text-align: center; padding: 40px; color: #999; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>朝霞晚霞数据看板</h1>
+
+  <div class="controls">
+    <select id="eventType">
+      <option value="">全部</option>
+      <option value="morning">朝霞</option>
+      <option value="evening">晚霞</option>
+    </select>
+    <input type="date" id="startDate" placeholder="开始日期">
+    <input type="date" id="endDate" placeholder="结束日期">
+    <button onclick="loadData()">查询</button>
+    <button onclick="exportData('csv')">导出 CSV</button>
+    <button onclick="exportData('json')">导出 JSON</button>
+  </div>
+
+  <div class="chart-box">
+    <h2>鲜艳度趋势</h2>
+    <canvas id="qualityChart"></canvas>
+  </div>
+
+  <div class="chart-box">
+    <h2>气溶胶趋势</h2>
+    <canvas id="aodChart"></canvas>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>日期</th><th>时间</th><th>类型</th><th>模型</th><th>鲜艳度</th><th>气溶胶</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+  <div id="emptyMsg" class="empty" style="display:none;">暂无数据</div>
+</div>
+
+<script>
+let qualityChart, aodChart;
+const colors = { GFS: '#3498db', EC: '#e74c3c' };
+
+function getFilters() {
+  return {
+    event_type: document.getElementById('eventType').value,
+    start: document.getElementById('startDate').value,
+    end: document.getElementById('endDate').value,
+  };
+}
+
+function qs(params) {
+  const s = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) { if (v) s.set(k, v); }
+  return s.toString();
+}
+
+async function loadData() {
+  const params = getFilters();
+  const res = await fetch('/api/data?' + qs(params));
+  const records = await res.json();
+  renderTable(records);
+  renderCharts(records);
+}
+
+function renderTable(records) {
+  const tbody = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyMsg');
+  if (!records || records.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  const typeMap = { morning: '朝霞', evening: '晚霞' };
+  tbody.innerHTML = records.map(r => '<tr>' +
+    '<td>' + r.date + '</td><td>' + r.time + '</td>' +
+    '<td>' + (typeMap[r.event_type] || r.event_type) + '</td><td>' + r.model + '</td>' +
+    '<td>' + (r.quality != null ? r.quality.toFixed(4) : '-') + '</td>' +
+    '<td>' + (r.aod != null ? r.aod.toFixed(4) : '-') + '</td>' +
+    '</tr>').join('');
+}
+
+function renderCharts(records) {
+  const grouped = {};
+  records.forEach(r => {
+    const key = r.model;
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(r);
+  });
+
+  const labels = [...new Set(records.map(r => r.date))].sort();
+
+  const qualityDatasets = Object.entries(grouped).map(([model, items]) => ({
+    label: model,
+    data: labels.map(d => { const rec = items.find(i => i.date === d); return rec ? rec.quality : null; }),
+    borderColor: colors[model] || '#999',
+    tension: 0.3,
+    fill: false,
+  }));
+
+  const aodDatasets = Object.entries(grouped).map(([model, items]) => ({
+    label: model,
+    data: labels.map(d => { const rec = items.find(i => i.date === d); return rec ? rec.aod : null; }),
+    borderColor: colors[model] || '#999',
+    tension: 0.3,
+    fill: false,
+  }));
+
+  if (qualityChart) qualityChart.destroy();
+  if (aodChart) aodChart.destroy();
+
+  qualityChart = new Chart(document.getElementById('qualityChart'), {
+    type: 'line', data: { labels, datasets: qualityDatasets },
+    options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
+  });
+
+  aodChart = new Chart(document.getElementById('aodChart'), {
+    type: 'line', data: { labels, datasets: aodDatasets },
+    options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
+  });
+}
+
+function exportData(format) {
+  const params = getFilters();
+  params.format = format;
+  window.location.href = '/api/export?' + qs(params);
+}
+
+loadData();
+</script>
+</body>
+</html>

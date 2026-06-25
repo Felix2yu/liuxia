@@ -20,7 +20,15 @@ func main() {
 		logger.Fatalf("初始化失败: %v", err)
 	}
 
-	predictor := NewWeatherPredictor(cfg, logger)
+	dbPath := getEnv("DB_PATH", "sunset.db")
+	store, err := InitStore(dbPath)
+	if err != nil {
+		logger.Fatalf("数据库初始化失败: %v", err)
+	}
+	defer store.Close()
+	logger.Printf("[启动] 数据库已初始化: %s", dbPath)
+
+	predictor := NewWeatherPredictor(cfg, logger, store)
 
 	c := cron.New(
 		cron.WithSeconds(),
@@ -78,6 +86,9 @@ func main() {
 	if cfg.Schedule.SendTestOnStart {
 		predictor.sendNtfyNotification("服务启动测试", "服务已启动，这是一条测试消息", 3, nil)
 	}
+
+	webPort := getEnv("WEB_PORT", "8080")
+	go StartWebServer(webPort, store, logger)
 
 	c.Start()
 

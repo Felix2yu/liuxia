@@ -13,6 +13,10 @@ services:
   sunsetbot:
     container_name: sunsetbot
     image: ghcr.io/felix2yu/sunsetbot:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
     environment:
       - CITY=江苏省-苏州
       - BASE_URL=https://sunsetbot.top/
@@ -28,6 +32,8 @@ services:
       - EVENING_ENABLE=true
       - EVENING_TIME=08:00,11:30,16:00
       - EVENING_MODEL=GFS,EC
+      - DB_PATH=/app/data/sunset.db
+      - WEB_PORT=8080
     restart: unless-stopped
 ```
 
@@ -49,6 +55,8 @@ services:
 | `EVENING_ENABLE` | 否 | `true` | 晚霞任务是否启用 |
 | `EVENING_TIME` | 否 | `08:00,11:30,16:00` | 晚霞执行时间，逗号分隔 |
 | `EVENING_MODEL` | 否 | `GFS,EC` | 晚霞模型，逗号分隔 |
+| `DB_PATH` | 否 | `sunset.db` | SQLite 数据库文件路径 |
+| `WEB_PORT` | 否 | `8080` | Web 看板端口 |
 | `TZ` | 否 | `Asia/Shanghai` | 时区 |
 
 ## 消息推送
@@ -73,3 +81,14 @@ Ntfy 通知等级对应关系：
 ntfy 消息中质量、气溶胶数值较优秀时会加粗标记。
 
 ![](.img/snapshot.jpg)
+
+## 数据看板
+
+启动后访问 `http://localhost:8080` 查看历史数据看板，支持：
+
+- 按朝霞/晚霞筛选
+- 按日期范围查询
+- 鲜艳度和气溶胶折线图（按模型分组）
+- 导出 CSV / JSON
+
+每次获取数据后自动写入 SQLite 数据库（`sunset.db`），已存在数据自动更新。

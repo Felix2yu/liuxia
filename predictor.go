@@ -28,11 +28,13 @@ type WeatherPredictor struct {
 	config  *Config
 	client  *http.Client
 	logger  *log.Logger
+	store   *Store
 }
 
 type WeatherData struct {
 	PushStr    string
 	QualityNum float64
+	AODNum     float64
 	DateStr    string
 	TimeStr    string
 }
@@ -43,7 +45,7 @@ type tbResponse struct {
 	EventTime   string `json:"tb_event_time"`
 }
 
-func NewWeatherPredictor(config *Config, logger *log.Logger) *WeatherPredictor {
+func NewWeatherPredictor(config *Config, logger *log.Logger, store *Store) *WeatherPredictor {
 	client := &http.Client{
 		Timeout: 30 * time.Second,
 	}
@@ -52,6 +54,7 @@ func NewWeatherPredictor(config *Config, logger *log.Logger) *WeatherPredictor {
 		config: config,
 		client: client,
 		logger: logger,
+		store:  store,
 	}
 }
 
@@ -140,6 +143,7 @@ func (wp *WeatherPredictor) parseWeatherData(content string) *WeatherData {
 	return &WeatherData{
 		PushStr:    pushStr.String(),
 		QualityNum: qualityNum,
+		AODNum:     derefFloat(aodNum),
 		DateStr:    dateStr,
 		TimeStr:    timeStr,
 	}
@@ -247,7 +251,7 @@ func (wp *WeatherPredictor) FetchData(isMorning bool) {
 		eventTag = "city_sunset"
 	}
 
-	markdownLines, maxPriority, hasData := wp.buildMarkdownResponse(urls)
+	markdownLines, maxPriority, hasData := wp.buildMarkdownResponse(urls, section)
 
 	if hasData {
 		pushContent := strings.Join(markdownLines, "\n")
@@ -265,6 +269,7 @@ type dateEntry struct {
 	model      string
 	pushStr    string
 	qualityNum float64
+	aodNum     float64
 	timeStr    string
 }
 
@@ -314,7 +319,7 @@ func (wp *WeatherPredictor) sendNtfyNotification(title, content string, priority
 	wp.logger.Printf("[推送成功] ntfy 通知已发送到 %s, 优先级: %d", pushURL, priority)
 }
 
-func (wp *WeatherPredictor) buildMarkdownResponse(urls map[string]string) ([]string, *int, bool) {
+func (wp *WeatherPredictor) buildMarkdownResponse(urls map[string]string, eventType string) ([]string, *int, bool) {
 	dataByDate := map[string][]dateEntry{}
 	var maxPriority *int
 
@@ -345,8 +350,20 @@ func (wp *WeatherPredictor) buildMarkdownResponse(urls map[string]string) ([]str
 			model:      model,
 			pushStr:    result.PushStr,
 			qualityNum: result.QualityNum,
+			aodNum:     result.AODNum,
 			timeStr:    result.TimeStr,
 		})
+
+		if wp.store != nil {
+			wp.store.UpsertRecord(SunsetRecord{
+				Date:      result.DateStr,
+				Time:      result.TimeStr,
+				EventType: eventType,
+				Model:     model,
+				Quality:   floatPtr(result.QualityNum),
+				AOD:       floatPtr(result.AODNum),
+			})
+		}
 	}
 
 	var markdownLines []string
@@ -384,4 +401,18 @@ func (wp *WeatherPredictor) buildMarkdownResponse(urls map[string]string) ([]str
 	}
 
 	return markdownLines, maxPriority, hasData
+}
+
+func derefFloat(f *float64) float64 {
+	if f != nil {
+		return *f
+	}
+	return 0
+}
+
+func floatPtr(f float64) *float64 {
+	if f == 0 {
+		return nil
+	}
+	return &f
 }
