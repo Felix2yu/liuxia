@@ -34,6 +34,8 @@ services:
       - EVENING_MODEL=GFS,EC
       - DB_PATH=/app/data/sunset.db
       - WEB_PORT=8080
+      - PUID=1000
+      - PGID=1000
     restart: unless-stopped
 ```
 
@@ -57,6 +59,8 @@ services:
 | `EVENING_MODEL` | 否 | `GFS,EC` | 晚霞模型，逗号分隔 |
 | `DB_PATH` | 否 | `sunset.db` | SQLite 数据库文件路径 |
 | `WEB_PORT` | 否 | `8080` | Web 看板端口 |
+| `PUID` | 否 | `1000` | 容器运行用户 UID |
+| `PGID` | 否 | `1000` | 容器运行用户 GID |
 | `TZ` | 否 | `Asia/Shanghai` | 时区 |
 
 ## 消息推送
