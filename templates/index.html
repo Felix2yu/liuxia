@@ -61,7 +61,7 @@
   <table>
     <thead>
       <tr>
-        <th>日期</th><th>时间</th><th>类型</th><th>模型</th><th>鲜艳度</th><th>气溶胶</th>
+        <th>日期</th><th>时间</th><th>类型</th><th>模型</th><th>鲜艳度</th><th>鲜艳度说明</th><th>气溶胶</th><th>气溶胶说明</th>
       </tr>
     </thead>
     <tbody id="tableBody"></tbody>
@@ -95,6 +95,31 @@ async function loadData() {
   renderCharts(records);
 }
 
+function qualityLabel(v) {
+  if (v == null) return '-';
+  if (v < 0.05) return '微微烧';
+  if (v < 0.2) return '小烧';
+  if (v < 0.4) return '小烧到中等烧';
+  if (v < 0.6) return '中等烧';
+  if (v < 0.8) return '中等到大烧';
+  if (v < 1.0) return '不完美的大烧';
+  if (v < 1.5) return '典型大烧';
+  if (v < 2.0) return '优质大烧';
+  if (v < 2.5) return '世纪大烧';
+  return '超级大烧';
+}
+
+function aodLabel(v) {
+  if (v == null) return '-';
+  if (v < 0.1) return '高级水晶天';
+  if (v < 0.2) return '普通水晶天';
+  if (v < 0.3) return '蓝天';
+  if (v < 0.4) return '普通';
+  if (v < 0.6) return '小污';
+  if (v < 0.8) return '中污';
+  return '重污';
+}
+
 function renderTable(records) {
   const tbody = document.getElementById('tableBody');
   const empty = document.getElementById('emptyMsg');
@@ -109,7 +134,9 @@ function renderTable(records) {
     '<td>' + r.date + '</td><td>' + r.time + '</td>' +
     '<td>' + (typeMap[r.event_type] || r.event_type) + '</td><td>' + r.model + '</td>' +
     '<td>' + (r.quality != null ? r.quality.toFixed(4) : '-') + '</td>' +
+    '<td>' + qualityLabel(r.quality) + '</td>' +
     '<td>' + (r.aod != null ? r.aod.toFixed(4) : '-') + '</td>' +
+    '<td>' + aodLabel(r.aod) + '</td>' +
     '</tr>').join('');
 }
 
