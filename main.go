@@ -87,6 +87,25 @@ func main() {
 		predictor.sendNtfyNotification("服务启动测试", "服务已启动，这是一条测试消息", 3, nil)
 	}
 
+	if cfg.Schedule.DataRetention > 0 {
+		_, err := c.AddFunc("0 3 * * *", func() {
+			logger.Printf("[清理] 开始清理 %d 天前的数据", cfg.Schedule.DataRetention)
+			deleted, err := store.DeleteOldRecords(cfg.Schedule.DataRetention)
+			if err != nil {
+				logger.Printf("[清理] 清理失败: %v", err)
+			} else {
+				logger.Printf("[清理] 已清理 %d 条旧数据", deleted)
+			}
+		})
+		if err != nil {
+			logger.Printf("[启动] 数据清理任务调度错误: %v", err)
+		} else {
+			logger.Printf("[启动] 数据清理任务已启用，保留 %d 天数据", cfg.Schedule.DataRetention)
+		}
+	} else {
+		logger.Printf("[启动] 数据清理任务已禁用（DATA_RETENTION_DAYS=0）")
+	}
+
 	webPort := getEnv("WEB_PORT", "8080")
 	go StartWebServer(webPort, store, logger)
 

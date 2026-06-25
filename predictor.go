@@ -209,6 +209,17 @@ func (wp *WeatherPredictor) FetchData(isMorning bool) {
 		models = []string{"GFS"}
 	}
 
+	cities := wp.config.Schedule.Cities
+	if len(cities) == 0 {
+		cities = []string{wp.config.Schedule.City}
+	}
+
+	for _, city := range cities {
+		wp.fetchDataForCity(city, models, isMorning, now, section)
+	}
+}
+
+func (wp *WeatherPredictor) fetchDataForCity(city string, models []string, isMorning bool, now time.Time, section string) {
 	urls := map[string]string{}
 	eventPrefix := "MORNING"
 	if !isMorning {
@@ -216,6 +227,7 @@ func (wp *WeatherPredictor) FetchData(isMorning bool) {
 	}
 
 	for _, model := range models {
+		wp.config.Schedule.City = city
 		urlTomorrow := wp.buildURL(eventMap["TOMORROW_"+eventPrefix], model)
 		urls[urlTomorrow] = model
 
@@ -236,21 +248,21 @@ func (wp *WeatherPredictor) FetchData(isMorning bool) {
 	for u := range urls {
 		urlList = append(urlList, u)
 	}
-	wp.logger.Printf("[URL构建] 构建了 %d 个请求URL: %v", len(urls), urlList)
+	wp.logger.Printf("[URL构建] 城市 %s 构建了 %d 个请求URL: %v", city, len(urls), urlList)
 
-	city := wp.config.Schedule.City
+	displayCity := city
 	if idx := strings.LastIndex(city, "-"); idx >= 0 {
-		city = city[idx+1:]
+		displayCity = city[idx+1:]
 	}
 
-	eventTitle := fmt.Sprintf("%s朝霞预报", city)
+	eventTitle := fmt.Sprintf("%s朝霞预报", displayCity)
 	eventTag := "sunrise"
 	if !isMorning {
-		eventTitle = fmt.Sprintf("%s晚霞预报", city)
+		eventTitle = fmt.Sprintf("%s晚霞预报", displayCity)
 		eventTag = "city_sunset"
 	}
 
-	markdownLines, maxPriority, hasData := wp.buildMarkdownResponse(urls, section)
+	markdownLines, maxPriority, hasData := wp.buildMarkdownResponse(city, urls, section)
 
 	if hasData {
 		pushContent := strings.Join(markdownLines, "\n")
@@ -260,7 +272,7 @@ func (wp *WeatherPredictor) FetchData(isMorning bool) {
 		}
 		wp.sendNtfyNotification(eventTitle, pushContent, *maxPriority, []string{eventTag})
 	} else {
-		wp.logger.Println("[推送] 没有符合条件的数据")
+		wp.logger.Printf("[推送] 城市 %s 没有符合条件的数据", city)
 	}
 }
 
@@ -318,7 +330,7 @@ func (wp *WeatherPredictor) sendNtfyNotification(title, content string, priority
 	wp.logger.Printf("[推送成功] ntfy 通知已发送到 %s, 优先级: %d", pushURL, priority)
 }
 
-func (wp *WeatherPredictor) buildMarkdownResponse(urls map[string]string, eventType string) ([]string, *int, bool) {
+func (wp *WeatherPredictor) buildMarkdownResponse(city string, urls map[string]string, eventType string) ([]string, *int, bool) {
 	dataByDate := map[string][]dateEntry{}
 	var maxPriority *int
 
@@ -337,6 +349,7 @@ func (wp *WeatherPredictor) buildMarkdownResponse(urls map[string]string, eventT
 
 		if wp.store != nil && result.DateStr != "" {
 			wp.store.UpsertRecord(SunsetRecord{
+				City:      city,
 				Date:      result.DateStr,
 				Time:      result.TimeStr,
 				EventType: eventType,

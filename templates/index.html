@@ -6,31 +6,70 @@
 <title>朝霞晚霞数据看板</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <style>
+  :root {
+    --bg-color: #f5f5f5;
+    --text-color: #333;
+    --card-bg: #fff;
+    --border-color: #eee;
+    --hover-bg: #fdf2e9;
+    --text-secondary: #555;
+  }
+  [data-theme="dark"] {
+    --bg-color: #1a1a1a;
+    --text-color: #e0e0e0;
+    --card-bg: #2d2d2d;
+    --border-color: #404040;
+    --hover-bg: #3a3a3a;
+    --text-secondary: #b0b0b0;
+  }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f5f5; color: #333; padding: 20px; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg-color); color: var(--text-color); padding: 20px; transition: background 0.3s, color 0.3s; }
   .container { max-width: 1200px; margin: 0 auto; }
   h1 { text-align: center; margin-bottom: 20px; color: #e67e22; }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .header h1 { margin-bottom: 0; }
+  .theme-toggle { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 20px; padding: 8px 16px; cursor: pointer; font-size: 14px; color: var(--text-color); }
+  .theme-toggle:hover { background: var(--hover-bg); }
   .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
-  .controls select, .controls input { padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; }
+  .controls select, .controls input { padding: 6px 10px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--card-bg); color: var(--text-color); }
   .controls button { padding: 6px 14px; border: none; border-radius: 4px; background: #e67e22; color: #fff; cursor: pointer; }
   .controls button:hover { background: #d35400; }
-  .controls button.secondary { background: #fff; color: #e67e22; border: 1px solid #e67e22; }
-  .controls button.secondary:hover { background: #fdf2e9; }
+  .controls button.secondary { background: var(--card-bg); color: #e67e22; border: 1px solid #e67e22; }
+  .controls button.secondary:hover { background: var(--hover-bg); }
   .controls button.secondary.active { background: #e67e22; color: #fff; }
-  .chart-box { background: #fff; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
-  .chart-box h2 { font-size: 16px; margin-bottom: 10px; color: #555; }
-  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
-  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
+  .chart-box { background: var(--card-bg); border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.1); transition: background 0.3s; }
+  .chart-box h2 { font-size: 16px; margin-bottom: 10px; color: var(--text-secondary); }
+  table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.1); transition: background 0.3s; }
+  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 14px; }
   th { background: #e67e22; color: #fff; }
-  tr:hover { background: #fdf2e9; }
-  .empty { text-align: center; padding: 40px; color: #999; }
+  tr:hover { background: var(--hover-bg); }
+  .empty { text-align: center; padding: 40px; color: var(--text-secondary); }
+  .loading { text-align: center; padding: 20px; color: var(--text-secondary); }
+  .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
+  .pagination button { padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--card-bg); color: var(--text-color); cursor: pointer; }
+  .pagination button:hover { background: var(--hover-bg); }
+  .pagination button.active { background: #e67e22; color: #fff; border-color: #e67e22; }
+  .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+  @media (max-width: 768px) {
+    .container { padding: 10px; }
+    .controls { flex-direction: column; align-items: stretch; }
+    .controls button, .controls select, .controls input { width: 100%; }
+    table { font-size: 12px; }
+    th, td { padding: 6px 8px; }
+  }
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>朝霞晚霞数据看板</h1>
+  <div class="header">
+    <h1>朝霞晚霞数据看板</h1>
+    <button class="theme-toggle" onclick="toggleTheme()">🌙 深色模式</button>
+  </div>
 
   <div class="controls">
+    <select id="city">
+      <option value="">全部城市</option>
+    </select>
     <select id="eventType">
       <option value="">全部</option>
       <option value="morning">朝霞</option>
@@ -49,36 +88,125 @@
   </div>
 
   <div class="chart-box">
-    <h2>鲜艳度趋势</h2>
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h2>鲜艳度趋势</h2>
+      <button class="secondary" onclick="downloadChart('qualityChart', '鲜艳度趋势')">下载图片</button>
+    </div>
     <canvas id="qualityChart"></canvas>
   </div>
 
   <div class="chart-box">
-    <h2>气溶胶趋势</h2>
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h2>气溶胶趋势</h2>
+      <button class="secondary" onclick="downloadChart('aodChart', '气溶胶趋势')">下载图片</button>
+    </div>
     <canvas id="aodChart"></canvas>
   </div>
+
+  <div class="chart-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h2>模型对比统计</h2>
+      <button class="secondary" onclick="downloadChart('modelCompareChart', '模型对比统计')">下载图片</button>
+    </div>
+    <canvas id="modelCompareChart"></canvas>
+  </div>
+
+  <div class="chart-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h2>月度趋势</h2>
+      <button class="secondary" onclick="downloadChart('monthlyChart', '月度趋势')">下载图片</button>
+    </div>
+    <canvas id="monthlyChart"></canvas>
+  </div>
+
+  <div class="chart-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h2>城市对比</h2>
+      <button class="secondary" onclick="downloadChart('cityCompareChart', '城市对比')">下载图片</button>
+    </div>
+    <canvas id="cityCompareChart"></canvas>
+  </div>
+
+  <div id="loadingIndicator" class="loading" style="display:none;">加载中...</div>
 
   <table>
     <thead>
       <tr>
-        <th>日期</th><th>时间</th><th>类型</th><th>模型</th><th>鲜艳度</th><th>鲜艳度说明</th><th>气溶胶</th><th>气溶胶说明</th>
+        <th>城市</th><th>日期</th><th>时间</th><th>类型</th><th>模型</th><th>鲜艳度</th><th>鲜艳度说明</th><th>气溶胶</th><th>气溶胶说明</th>
       </tr>
     </thead>
     <tbody id="tableBody"></tbody>
   </table>
+  <div id="pagination" class="pagination"></div>
   <div id="emptyMsg" class="empty" style="display:none;">暂无数据</div>
 </div>
 
 <script>
-let qualityChart, aodChart;
+let qualityChart, aodChart, modelCompareChart, monthlyChart, cityCompareChart;
 const colors = { GFS: '#3498db', EC: '#e74c3c' };
+let allRecords = [];
+let currentPage = 1;
+const pageSize = 20;
+
+function initTheme() {
+  const saved = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+  updateThemeButton(saved);
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  updateThemeButton(next);
+  updateChartColors();
+}
+
+function updateThemeButton(theme) {
+  const btn = document.querySelector('.theme-toggle');
+  btn.textContent = theme === 'dark' ? '☀️ 浅色模式' : '🌙 深色模式';
+}
+
+function updateChartColors() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const textColor = isDark ? '#e0e0e0' : '#333';
+  const gridColor = isDark ? '#404040' : '#eee';
+
+  [qualityChart, aodChart, modelCompareChart, monthlyChart, cityCompareChart].forEach(chart => {
+    if (chart) {
+      chart.options.scales.x && (chart.options.scales.x.ticks = { color: textColor });
+      chart.options.scales.x && (chart.options.scales.x.grid = { color: gridColor });
+      Object.values(chart.options.scales).forEach(scale => {
+        if (scale.ticks) scale.ticks.color = textColor;
+        if (scale.grid) scale.grid.color = gridColor;
+        if (scale.title) scale.title.color = textColor;
+      });
+      chart.options.plugins.legend.labels.color = textColor;
+      chart.update();
+    }
+  });
+}
 
 function getFilters() {
   return {
+    city: document.getElementById('city').value,
     event_type: document.getElementById('eventType').value,
     start: document.getElementById('startDate').value,
     end: document.getElementById('endDate').value,
   };
+}
+
+async function loadCities() {
+  const res = await fetch('/api/cities');
+  const cities = await res.json();
+  const select = document.getElementById('city');
+  cities.forEach(city => {
+    const option = document.createElement('option');
+    option.value = city;
+    option.textContent = city;
+    select.appendChild(option);
+  });
 }
 
 function qs(params) {
@@ -88,11 +216,131 @@ function qs(params) {
 }
 
 async function loadData() {
+  const loading = document.getElementById('loadingIndicator');
+  loading.style.display = 'block';
+
+  try {
+    const params = getFilters();
+    const res = await fetch('/api/data?' + qs(params));
+    allRecords = await res.json();
+    currentPage = 1;
+    renderTable();
+    renderCharts(allRecords);
+    loadStatistics();
+  } finally {
+    loading.style.display = 'none';
+  }
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyMsg');
+  const pagination = document.getElementById('pagination');
+
+  if (!allRecords || allRecords.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    pagination.innerHTML = '';
+    return;
+  }
+
+  empty.style.display = 'none';
+  const typeMap = { morning: '朝霞', evening: '晚霞' };
+
+  const totalPages = Math.ceil(allRecords.length / pageSize);
+  const start = (currentPage - 1) * pageSize;
+  const end = start + pageSize;
+  const pageRecords = allRecords.slice(start, end);
+
+  tbody.innerHTML = pageRecords.map(r => '<tr>' +
+    '<td>' + (r.city || '-') + '</td><td>' + r.date + '</td><td>' + r.time + '</td>' +
+    '<td>' + (typeMap[r.event_type] || r.event_type) + '</td><td>' + r.model + '</td>' +
+    '<td>' + (r.quality != null ? r.quality.toFixed(4) : '-') + '</td>' +
+    '<td>' + qualityLabel(r.quality) + '</td>' +
+    '<td>' + (r.aod != null ? r.aod.toFixed(4) : '-') + '</td>' +
+    '<td>' + aodLabel(r.aod) + '</td>' +
+    '</tr>').join('');
+
+  if (totalPages > 1) {
+    let paginationHTML = '';
+    paginationHTML += `<button ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">上一页</button>`;
+
+    const maxVisible = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    if (endPage - startPage < maxVisible - 1) {
+      startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+
+    if (startPage > 1) {
+      paginationHTML += `<button onclick="goToPage(1)">1</button>`;
+      if (startPage > 2) paginationHTML += `<button disabled>...</button>`;
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      paginationHTML += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+    }
+
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) paginationHTML += `<button disabled>...</button>`;
+      paginationHTML += `<button onclick="goToPage(${totalPages})">${totalPages}</button>`;
+    }
+
+    paginationHTML += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">下一页</button>`;
+    paginationHTML += `<span style="margin-left:10px;color:var(--text-secondary)">共 ${allRecords.length} 条</span>`;
+
+    pagination.innerHTML = paginationHTML;
+  } else {
+    pagination.innerHTML = '';
+  }
+}
+
+function goToPage(page) {
+  currentPage = page;
+  renderTable();
+}
+
+async function loadStatistics() {
   const params = getFilters();
-  const res = await fetch('/api/data?' + qs(params));
-  const records = await res.json();
-  renderTable(records);
-  renderCharts(records);
+  const res = await fetch('/api/statistics?' + qs(params));
+  const stats = await res.json();
+  renderModelCompare(stats.models);
+  renderMonthly(stats.monthly);
+  loadCityComparison();
+}
+
+async function loadCityComparison() {
+  const params = getFilters();
+  const res = await fetch('/api/city-comparison?' + qs(params));
+  const comparison = await res.json();
+  renderCityComparison(comparison);
+}
+
+function renderCityComparison(comparison) {
+  if (!comparison || comparison.length === 0) return;
+
+  if (cityCompareChart) cityCompareChart.destroy();
+
+  const cityColors = ['#e67e22', '#3498db', '#2ecc71', '#e74c3c', '#9b59b6', '#1abc9c', '#f39c12', '#34495e'];
+
+  cityCompareChart = new Chart(document.getElementById('cityCompareChart'), {
+    type: 'bar',
+    data: {
+      labels: comparison.map(c => c.city),
+      datasets: [
+        {
+          label: '平均鲜艳度',
+          data: comparison.map(c => c.avg_quality ? parseFloat(c.avg_quality.toFixed(4)) : 0),
+          backgroundColor: comparison.map((_, i) => cityColors[i % cityColors.length]),
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'top' } },
+      scales: { y: { beginAtZero: true } },
+    },
+  });
 }
 
 function qualityLabel(v) {
@@ -118,26 +366,6 @@ function aodLabel(v) {
   if (v < 0.6) return '小污';
   if (v < 0.8) return '中污';
   return '重污';
-}
-
-function renderTable(records) {
-  const tbody = document.getElementById('tableBody');
-  const empty = document.getElementById('emptyMsg');
-  if (!records || records.length === 0) {
-    tbody.innerHTML = '';
-    empty.style.display = 'block';
-    return;
-  }
-  empty.style.display = 'none';
-  const typeMap = { morning: '朝霞', evening: '晚霞' };
-  tbody.innerHTML = records.map(r => '<tr>' +
-    '<td>' + r.date + '</td><td>' + r.time + '</td>' +
-    '<td>' + (typeMap[r.event_type] || r.event_type) + '</td><td>' + r.model + '</td>' +
-    '<td>' + (r.quality != null ? r.quality.toFixed(4) : '-') + '</td>' +
-    '<td>' + qualityLabel(r.quality) + '</td>' +
-    '<td>' + (r.aod != null ? r.aod.toFixed(4) : '-') + '</td>' +
-    '<td>' + aodLabel(r.aod) + '</td>' +
-    '</tr>').join('');
 }
 
 function renderCharts(records) {
@@ -196,10 +424,113 @@ function renderCharts(records) {
   });
 }
 
+function renderModelCompare(models) {
+  if (!models || models.length === 0) return;
+
+  const grouped = {};
+  models.forEach(m => {
+    const key = m.event_type;
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(m);
+  });
+
+  const eventTypes = Object.keys(grouped);
+  const modelNames = [...new Set(models.map(m => m.model))];
+
+  const qualityData = modelNames.map(model => ({
+    label: model + ' 鲜艳度',
+    data: eventTypes.map(et => {
+      const found = grouped[et]?.find(m => m.model === model);
+      return found ? parseFloat(found.avg_quality?.toFixed(4)) : 0;
+    }),
+    backgroundColor: colors[model] || '#999',
+  }));
+
+  const aodData = modelNames.map(model => ({
+    label: model + ' 气溶胶',
+    data: eventTypes.map(et => {
+      const found = grouped[et]?.find(m => m.model === model);
+      return found ? parseFloat(found.avg_aod?.toFixed(4)) : 0;
+    }),
+    backgroundColor: colors[model] ? colors[model] + '80' : '#99980',
+  }));
+
+  if (modelCompareChart) modelCompareChart.destroy();
+
+  modelCompareChart = new Chart(document.getElementById('modelCompareChart'), {
+    type: 'bar',
+    data: {
+      labels: eventTypes.map(et => et === 'morning' ? '朝霞' : '晚霞'),
+      datasets: [...qualityData, ...aodData],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'top' } },
+      scales: { y: { beginAtZero: true } },
+    },
+  });
+}
+
+function renderMonthly(monthly) {
+  if (!monthly || monthly.length === 0) return;
+
+  if (monthlyChart) monthlyChart.destroy();
+
+  monthlyChart = new Chart(document.getElementById('monthlyChart'), {
+    type: 'line',
+    data: {
+      labels: monthly.map(m => m.month),
+      datasets: [
+        {
+          label: '平均鲜艳度',
+          data: monthly.map(m => m.avg_quality ? parseFloat(m.avg_quality.toFixed(4)) : 0),
+          borderColor: '#e67e22',
+          tension: 0.3,
+          fill: false,
+          yAxisID: 'y',
+        },
+        {
+          label: '平均气溶胶',
+          data: monthly.map(m => m.avg_aod ? parseFloat(m.avg_aod.toFixed(4)) : 0),
+          borderColor: '#3498db',
+          tension: 0.3,
+          fill: false,
+          yAxisID: 'y1',
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        y: {
+          type: 'linear',
+          position: 'left',
+          title: { display: true, text: '鲜艳度' },
+        },
+        y1: {
+          type: 'linear',
+          position: 'right',
+          title: { display: true, text: '气溶胶' },
+          grid: { drawOnChartArea: false },
+        },
+      },
+    },
+  });
+}
+
 function exportData(format) {
   const params = getFilters();
   params.format = format;
   window.location.href = '/api/export?' + qs(params);
+}
+
+function downloadChart(canvasId, filename) {
+  const canvas = document.getElementById(canvasId);
+  const link = document.createElement('a');
+  link.download = filename + '.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
 }
 
 function quickRange(days) {
@@ -215,7 +546,9 @@ function quickRange(days) {
     document.getElementById('startDate').value = '';
     document.getElementById('endDate').value = '';
   }
-  loadData();
+initTheme();
+loadCities();
+loadData();
 }
 
 loadData();
