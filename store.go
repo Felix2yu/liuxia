@@ -214,25 +214,28 @@ func (s *Store) GetStatistics(city, eventType, startDate, endDate string) (*Stat
 		return nil, err
 	}
 
-	modelQuery := `SELECT model, event_type, COUNT(*), 
+	modelQuery := `SELECT model, event_type, COUNT(*),
 		MIN(quality), MAX(quality), AVG(quality),
 		MIN(aod), MAX(aod), AVG(aod)
 		FROM sunset_data WHERE 1=1`
 
-	modelArgs := make([]interface{}, len(args))
-	copy(modelArgs, args)
+	modelArgs := []interface{}{}
 
 	if city != "" {
 		modelQuery += ` AND city = ?`
+		modelArgs = append(modelArgs, city)
 	}
 	if eventType != "" {
 		modelQuery += ` AND event_type = ?`
+		modelArgs = append(modelArgs, eventType)
 	}
 	if startDate != "" {
 		modelQuery += ` AND date >= ?`
+		modelArgs = append(modelArgs, startDate)
 	}
 	if endDate != "" {
 		modelQuery += ` AND date <= ?`
+		modelArgs = append(modelArgs, endDate)
 	}
 	modelQuery += ` GROUP BY model, event_type ORDER BY model, event_type`
 
@@ -255,20 +258,23 @@ func (s *Store) GetStatistics(city, eventType, startDate, endDate string) (*Stat
 	monthlyQuery := `SELECT substr(date, 1, 7) as month, COUNT(*), AVG(quality), AVG(aod)
 		FROM sunset_data WHERE 1=1`
 
-	monthlyArgs := make([]interface{}, len(args))
-	copy(monthlyArgs, args)
+	monthlyArgs := []interface{}{}
 
 	if city != "" {
 		monthlyQuery += ` AND city = ?`
+		monthlyArgs = append(monthlyArgs, city)
 	}
 	if eventType != "" {
 		monthlyQuery += ` AND event_type = ?`
+		monthlyArgs = append(monthlyArgs, eventType)
 	}
 	if startDate != "" {
 		monthlyQuery += ` AND date >= ?`
+		monthlyArgs = append(monthlyArgs, startDate)
 	}
 	if endDate != "" {
 		monthlyQuery += ` AND date <= ?`
+		monthlyArgs = append(monthlyArgs, endDate)
 	}
 	monthlyQuery += ` GROUP BY month ORDER BY month`
 

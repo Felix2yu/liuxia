@@ -88,7 +88,7 @@ func main() {
 	}
 
 	if cfg.Schedule.DataRetention > 0 {
-		_, err := c.AddFunc("0 3 * * *", func() {
+		_, err := c.AddFunc("0 0 3 * * *", func() {
 			logger.Printf("[清理] 开始清理 %d 天前的数据", cfg.Schedule.DataRetention)
 			deleted, err := store.DeleteOldRecords(cfg.Schedule.DataRetention)
 			if err != nil {

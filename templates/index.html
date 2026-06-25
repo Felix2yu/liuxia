@@ -148,6 +148,16 @@ let allRecords = [];
 let currentPage = 1;
 const pageSize = 20;
 
+function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 function initTheme() {
   const saved = localStorage.getItem('theme') || 'light';
   document.documentElement.setAttribute('data-theme', saved);
@@ -253,12 +263,12 @@ function renderTable() {
   const pageRecords = allRecords.slice(start, end);
 
   tbody.innerHTML = pageRecords.map(r => '<tr>' +
-    '<td>' + (r.city || '-') + '</td><td>' + r.date + '</td><td>' + r.time + '</td>' +
-    '<td>' + (typeMap[r.event_type] || r.event_type) + '</td><td>' + r.model + '</td>' +
+    '<td>' + escapeHtml(r.city || '-') + '</td><td>' + escapeHtml(r.date) + '</td><td>' + escapeHtml(r.time) + '</td>' +
+    '<td>' + escapeHtml(typeMap[r.event_type] || r.event_type) + '</td><td>' + escapeHtml(r.model) + '</td>' +
     '<td>' + (r.quality != null ? r.quality.toFixed(4) : '-') + '</td>' +
-    '<td>' + qualityLabel(r.quality) + '</td>' +
+    '<td>' + escapeHtml(qualityLabel(r.quality)) + '</td>' +
     '<td>' + (r.aod != null ? r.aod.toFixed(4) : '-') + '</td>' +
-    '<td>' + aodLabel(r.aod) + '</td>' +
+    '<td>' + escapeHtml(aodLabel(r.aod)) + '</td>' +
     '</tr>').join('');
 
   if (totalPages > 1) {
@@ -546,11 +556,11 @@ function quickRange(days) {
     document.getElementById('startDate').value = '';
     document.getElementById('endDate').value = '';
   }
-initTheme();
-loadCities();
-loadData();
+  loadData();
 }
 
+initTheme();
+loadCities();
 loadData();
 </script>
 </body>

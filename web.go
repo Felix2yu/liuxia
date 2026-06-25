@@ -81,7 +81,8 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 		records, err := store.QueryRecords(city, eventType, start, end)
 		if err != nil {
 			atomic.AddInt64(&httpRequestErrors, 1)
-			http.Error(w, err.Error(), 500)
+			logger.Printf("[Web] QueryRecords error: %v", err)
+			http.Error(w, "internal server error", 500)
 			return
 		}
 		cache.Set(cacheKey, records)
@@ -139,7 +140,8 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 		stats, err := store.GetStatistics(city, eventType, start, end)
 		if err != nil {
 			atomic.AddInt64(&httpRequestErrors, 1)
-			http.Error(w, err.Error(), 500)
+			logger.Printf("[Web] GetStatistics error: %v", err)
+			http.Error(w, "internal server error", 500)
 			return
 		}
 		cache.Set(cacheKey, stats)
@@ -163,7 +165,8 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 		cities, err := store.GetCities()
 		if err != nil {
 			atomic.AddInt64(&httpRequestErrors, 1)
-			http.Error(w, err.Error(), 500)
+			logger.Printf("[Web] GetCities error: %v", err)
+			http.Error(w, "internal server error", 500)
 			return
 		}
 		cache.Set(cacheKey, cities)
@@ -207,7 +210,8 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 		comparison, err := store.GetCityComparison(eventType, start, end)
 		if err != nil {
 			atomic.AddInt64(&httpRequestErrors, 1)
-			http.Error(w, err.Error(), 500)
+			logger.Printf("[Web] GetCityComparison error: %v", err)
+			http.Error(w, "internal server error", 500)
 			return
 		}
 		cache.Set(cacheKey, comparison)

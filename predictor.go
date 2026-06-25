@@ -58,13 +58,13 @@ func NewWeatherPredictor(config *Config, logger *log.Logger, store *Store) *Weat
 	}
 }
 
-func (wp *WeatherPredictor) buildURL(event, model string) string {
+func (wp *WeatherPredictor) buildURL(event, model, city string) string {
 	base := wp.config.Request.BaseURL
 	params := url.Values{}
 	params.Set("query_id", fmt.Sprintf("%d", rand.Intn(900000)+100000))
 	params.Set("event", event)
 	params.Set("model", model)
-	params.Set("query_city", wp.config.Schedule.City)
+	params.Set("query_city", city)
 	params.Set("intend", "select_city")
 	params.Set("event_date", "None")
 	params.Set("times", "None")
@@ -227,18 +227,17 @@ func (wp *WeatherPredictor) fetchDataForCity(city string, models []string, isMor
 	}
 
 	for _, model := range models {
-		wp.config.Schedule.City = city
-		urlTomorrow := wp.buildURL(eventMap["TOMORROW_"+eventPrefix], model)
+		urlTomorrow := wp.buildURL(eventMap["TOMORROW_"+eventPrefix], model, city)
 		urls[urlTomorrow] = model
 
 		if isMorning {
 			if now.Hour() < 12 {
-				urlToday := wp.buildURL(eventMap["TODAY_"+eventPrefix], model)
+				urlToday := wp.buildURL(eventMap["TODAY_"+eventPrefix], model, city)
 				urls[urlToday] = model
 			}
 		} else {
 			if now.Hour() < 19 {
-				urlToday := wp.buildURL(eventMap["TODAY_"+eventPrefix], model)
+				urlToday := wp.buildURL(eventMap["TODAY_"+eventPrefix], model, city)
 				urls[urlToday] = model
 			}
 		}
@@ -427,8 +426,5 @@ func derefFloat(f *float64) float64 {
 }
 
 func floatPtr(f float64) *float64 {
-	if f == 0 {
-		return nil
-	}
 	return &f
 }
