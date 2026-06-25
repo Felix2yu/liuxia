@@ -143,7 +143,6 @@
 
 <script>
 let qualityChart, aodChart, modelCompareChart, monthlyChart, cityCompareChart;
-const colors = { GFS: '#3498db', EC: '#e74c3c' };
 let allRecords = [];
 let currentPage = 1;
 const pageSize = 20;
@@ -378,7 +377,8 @@ function aodLabel(v) {
 }
 
 const typeMap = { morning: '朝霞', evening: '晚霞' };
-const typeColors = { morning: '', evening: '99' };
+const modelColors = { GFS: '#3498db', EC: '#e74c3c' };
+const typeMarkers = { morning: '', evening: '90' };
 
 function renderCharts(records) {
   const grouped = {};
@@ -393,13 +393,15 @@ function renderCharts(records) {
   const makeDatasets = (field) => Object.entries(grouped).map(([key, items]) => {
     const [model, eventType] = key.split('_');
     const label = `${model}-${typeMap[eventType] || eventType}`;
-    const baseColor = colors[model] || '#999';
-    const color = typeColors[eventType] ? baseColor + typeColors[eventType] : baseColor;
+    const baseColor = modelColors[model] || '#999';
+    const color = typeMarkers[eventType] ? baseColor + typeMarkers[eventType] : baseColor;
+    const data = labels.map(d => { const rec = items.find(i => i.date === d); return rec ? rec[field] : null; });
+    const hasGap = data.some(v => v === null);
     return {
       label,
-      data: labels.map(d => { const rec = items.find(i => i.date === d); return rec ? rec[field] : null; }),
+      data,
       borderColor: color,
-      borderDash: eventType === 'evening' ? [5, 5] : undefined,
+      borderDash: hasGap ? [5, 5] : undefined,
       tension: 0.3,
       fill: false,
     };
@@ -438,7 +440,7 @@ function renderModelCompare(models) {
       const found = grouped[et]?.find(m => m.model === model);
       return found ? parseFloat(found.avg_quality?.toFixed(4)) : 0;
     }),
-    backgroundColor: colors[model] || '#999',
+    backgroundColor: modelColors[model] || '#999',
   }));
 
   const aodData = modelNames.map(model => ({
@@ -447,7 +449,7 @@ function renderModelCompare(models) {
       const found = grouped[et]?.find(m => m.model === model);
       return found ? parseFloat(found.avg_aod?.toFixed(4)) : 0;
     }),
-    backgroundColor: colors[model] ? colors[model] + '80' : '#99980',
+    backgroundColor: modelColors[model] ? modelColors[model] + '80' : '#999800',
   }));
 
   if (modelCompareChart) modelCompareChart.destroy();
