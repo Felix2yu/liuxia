@@ -20,7 +20,6 @@ var (
 	startTime         = time.Now()
 	dateRegex         = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
 	validEventTypes   = map[string]bool{"": true, "morning": true, "evening": true}
-	validModels       = map[string]bool{"": true, "GFS": true, "EC": true}
 )
 
 func validateDate(date string) bool {
@@ -38,6 +37,13 @@ func validateEventType(eventType string) bool {
 	return validEventTypes[eventType]
 }
 
+func methodNotAllowed(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+}
+
 func StartWebServer(port string, store *Store, logger *log.Logger) {
 	cache := NewCache(5 * time.Minute)
 	mux := http.NewServeMux()
@@ -47,10 +53,18 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 			http.NotFound(w, r)
 			return
 		}
+		methodNotAllowed(w, r)
+		if r.Method != http.MethodGet {
+			return
+		}
 		serveIndex(w, r)
 	})
 
 	mux.HandleFunc("/api/data", func(w http.ResponseWriter, r *http.Request) {
+		methodNotAllowed(w, r)
+		if r.Method != http.MethodGet {
+			return
+		}
 		atomic.AddInt64(&httpRequestsTotal, 1)
 		city := r.URL.Query().Get("city")
 		eventType := r.URL.Query().Get("event_type")
@@ -92,11 +106,24 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 	})
 
 	mux.HandleFunc("/api/export", func(w http.ResponseWriter, r *http.Request) {
+		methodNotAllowed(w, r)
+		if r.Method != http.MethodGet {
+			return
+		}
 		format := r.URL.Query().Get("format")
 		city := r.URL.Query().Get("city")
 		eventType := r.URL.Query().Get("event_type")
 		start := r.URL.Query().Get("start")
 		end := r.URL.Query().Get("end")
+
+		if !validateEventType(eventType) {
+			http.Error(w, "invalid event_type", http.StatusBadRequest)
+			return
+		}
+		if !validateDate(start) || !validateDate(end) {
+			http.Error(w, "invalid date format", http.StatusBadRequest)
+			return
+		}
 
 		if format == "csv" {
 			w.Header().Set("Content-Type", "text/csv; charset=utf-8")
@@ -110,6 +137,10 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 	})
 
 	mux.HandleFunc("/api/statistics", func(w http.ResponseWriter, r *http.Request) {
+		methodNotAllowed(w, r)
+		if r.Method != http.MethodGet {
+			return
+		}
 		atomic.AddInt64(&httpRequestsTotal, 1)
 		city := r.URL.Query().Get("city")
 		eventType := r.URL.Query().Get("event_type")
@@ -151,6 +182,10 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 	})
 
 	mux.HandleFunc("/api/cities", func(w http.ResponseWriter, r *http.Request) {
+		methodNotAllowed(w, r)
+		if r.Method != http.MethodGet {
+			return
+		}
 		atomic.AddInt64(&httpRequestsTotal, 1)
 		cacheKey := "cities"
 		if cached, ok := cache.Get(cacheKey); ok {
@@ -176,11 +211,19 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 	})
 
 	mux.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) {
+		methodNotAllowed(w, r)
+		if r.Method != http.MethodGet {
+			return
+		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 	})
 
 	mux.HandleFunc("/api/city-comparison", func(w http.ResponseWriter, r *http.Request) {
+		methodNotAllowed(w, r)
+		if r.Method != http.MethodGet {
+			return
+		}
 		atomic.AddInt64(&httpRequestsTotal, 1)
 		eventType := r.URL.Query().Get("event_type")
 		start := r.URL.Query().Get("start")
@@ -221,8 +264,20 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 	})
 
 	mux.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
-		totalRecords, _ := store.GetTotalRecords()
-		cities, _ := store.GetCities()
+		methodNotAllowed(w, r)
+		if r.Method != http.MethodGet {
+			return
+		}
+		totalRecords, err := store.GetTotalRecords()
+		if err != nil {
+			logger.Printf("[Web] GetTotalRecords error: %v", err)
+			totalRecords = 0
+		}
+		cities, err := store.GetCities()
+		if err != nil {
+			logger.Printf("[Web] GetCities error for metrics: %v", err)
+			cities = nil
+		}
 
 		uptime := time.Since(startTime).Seconds()
 
@@ -272,7 +327,7 @@ func serveIndex(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		data, err = os.ReadFile("templates/index.html")
 		if err != nil {
-			http.Error(w, fmt.Sprintf("page not found: %v", err), 500)
+			http.Error(w, "page not found", 500)
 			return
 		}
 	}
