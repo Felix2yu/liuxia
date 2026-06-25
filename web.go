@@ -49,15 +49,40 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/" {
-			http.NotFound(w, r)
-			return
-		}
 		methodNotAllowed(w, r)
 		if r.Method != http.MethodGet {
 			return
 		}
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
 		serveIndex(w, r)
+	})
+
+	mux.HandleFunc("/manifest.json", func(w http.ResponseWriter, r *http.Request) {
+		methodNotAllowed(w, r)
+		if r.Method != http.MethodGet {
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{
+			"name": "朝霞晚霞数据看板",
+			"short_name": "SunsetBot",
+			"start_url": "/",
+			"display": "standalone",
+			"background_color": "#f5f5f5",
+			"theme_color": "#e67e22"
+		}`))
+	})
+
+	mux.HandleFunc("/service-worker.js", func(w http.ResponseWriter, r *http.Request) {
+		methodNotAllowed(w, r)
+		if r.Method != http.MethodGet {
+			return
+		}
+		w.Header().Set("Content-Type", "application/javascript")
+		w.Write([]byte(`self.addEventListener('fetch', e => e.respondWith(fetch(e.request)));`))
 	})
 
 	mux.HandleFunc("/api/data", func(w http.ResponseWriter, r *http.Request) {
