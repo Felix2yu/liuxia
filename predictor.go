@@ -95,15 +95,15 @@ func (wp *WeatherPredictor) parseWeatherData(content string) *WeatherData {
 
 	qualityStr := jsonContent.Quality
 	qualityMatch := numRe.FindString(qualityStr)
+	var qualityNum float64
 	if qualityMatch == "" {
-		wp.logger.Printf("无法从质量数据中提取数值: %s", qualityStr)
-		return nil
-	}
-
-	qualityNum, err := strconv.ParseFloat(qualityMatch, 64)
-	if err != nil {
-		wp.logger.Printf("质量数值解析失败: %s", qualityMatch)
-		return nil
+		wp.logger.Printf("质量数据无法解析数值: %s，记录为空值", qualityStr)
+	} else {
+		var err error
+		qualityNum, err = strconv.ParseFloat(qualityMatch, 64)
+		if err != nil {
+			wp.logger.Printf("质量数值解析失败: %s", qualityMatch)
+		}
 	}
 
 	aodStr := jsonContent.AOD
@@ -128,7 +128,9 @@ func (wp *WeatherPredictor) parseWeatherData(content string) *WeatherData {
 	}
 
 	var pushStr strings.Builder
-	if qualityNum >= 0.4 {
+	if qualityMatch == "" {
+		pushStr.WriteString(fmt.Sprintf("鲜艳度：%s（数据异常）\n", qualityStr))
+	} else if qualityNum >= 0.4 {
 		pushStr.WriteString(fmt.Sprintf("鲜艳度：**%s**\n", qualityStr))
 	} else {
 		pushStr.WriteString(fmt.Sprintf("鲜艳度：%s\n", qualityStr))
