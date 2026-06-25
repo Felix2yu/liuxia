@@ -14,6 +14,9 @@
   .controls select, .controls input { padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; }
   .controls button { padding: 6px 14px; border: none; border-radius: 4px; background: #e67e22; color: #fff; cursor: pointer; }
   .controls button:hover { background: #d35400; }
+  .controls button.secondary { background: #fff; color: #e67e22; border: 1px solid #e67e22; }
+  .controls button.secondary:hover { background: #fdf2e9; }
+  .controls button.secondary.active { background: #e67e22; color: #fff; }
   .chart-box { background: #fff; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
   .chart-box h2 { font-size: 16px; margin-bottom: 10px; color: #555; }
   table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
@@ -33,6 +36,11 @@
       <option value="morning">朝霞</option>
       <option value="evening">晚霞</option>
     </select>
+    <button class="secondary" onclick="quickRange(30)">近1月</button>
+    <button class="secondary" onclick="quickRange(90)">近3月</button>
+    <button class="secondary" onclick="quickRange(180)">近半年</button>
+    <button class="secondary" onclick="quickRange(365)">近1年</button>
+    <button class="secondary" onclick="quickRange(0)">全部</button>
     <input type="date" id="startDate" placeholder="开始日期">
     <input type="date" id="endDate" placeholder="结束日期">
     <button onclick="loadData()">查询</button>
@@ -165,6 +173,22 @@ function exportData(format) {
   const params = getFilters();
   params.format = format;
   window.location.href = '/api/export?' + qs(params);
+}
+
+function quickRange(days) {
+  document.querySelectorAll('.controls .secondary').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  const end = new Date();
+  const start = new Date();
+  if (days > 0) {
+    start.setDate(start.getDate() - days);
+    document.getElementById('startDate').value = start.toISOString().slice(0, 10);
+    document.getElementById('endDate').value = end.toISOString().slice(0, 10);
+  } else {
+    document.getElementById('startDate').value = '';
+    document.getElementById('endDate').value = '';
+  }
+  loadData();
 }
 
 loadData();
