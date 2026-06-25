@@ -336,6 +336,17 @@ func (wp *WeatherPredictor) buildMarkdownResponse(urls map[string]string, eventT
 			continue
 		}
 
+		if wp.store != nil && result.DateStr != "" {
+			wp.store.UpsertRecord(SunsetRecord{
+				Date:      result.DateStr,
+				Time:      result.TimeStr,
+				EventType: eventType,
+				Model:     model,
+				Quality:   floatPtr(result.QualityNum),
+				AOD:       floatPtr(result.AODNum),
+			})
+		}
+
 		if result.QualityNum < 0.2 {
 			wp.logger.Printf("[过滤] 质量 %.2f 低于 0.2，跳过通知", result.QualityNum)
 			continue
@@ -353,17 +364,6 @@ func (wp *WeatherPredictor) buildMarkdownResponse(urls map[string]string, eventT
 			aodNum:     result.AODNum,
 			timeStr:    result.TimeStr,
 		})
-
-		if wp.store != nil {
-			wp.store.UpsertRecord(SunsetRecord{
-				Date:      result.DateStr,
-				Time:      result.TimeStr,
-				EventType: eventType,
-				Model:     model,
-				Quality:   floatPtr(result.QualityNum),
-				AOD:       floatPtr(result.AODNum),
-			})
-		}
 	}
 
 	var markdownLines []string
