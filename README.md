@@ -4,6 +4,17 @@
 
 由 sunsetbot.top 提供接口。Docker 镜像支持 `linux/amd64` 和 `linux/arm64` 架构。
 
+## 功能特性
+
+- 多城市监控支持
+- 深色/浅色主题切换
+- 数据统计与图表分析
+- 城市间数据对比
+- API 响应缓存
+- Prometheus 监控指标
+- 数据自动清理策略
+- 移动端响应式设计
+
 ## 部署
 
 推荐使用 Docker Compose 部署：
@@ -18,7 +29,7 @@ services:
     volumes:
       - ./data:/app/data
     environment:
-      - CITY=江苏省-苏州
+      - CITY=江苏省-苏州,上海市-上海
       - BASE_URL=https://sunsetbot.top/
       - PUSH_ENABLE=true
       - NTFY_SERVER=https://ntfy.sh
@@ -34,6 +45,7 @@ services:
       - EVENING_MODEL=GFS,EC
       - DB_PATH=/app/data/sunset.db
       - WEB_PORT=8080
+      - DATA_RETENTION_DAYS=365
       - PUID=1000
       - PGID=1000
     restart: unless-stopped
@@ -43,7 +55,7 @@ services:
 
 | 变量 | 必填 | 默认值 | 说明 |
 |------|------|--------|------|
-| `CITY` | 是 | — | 城市，如 `江苏省-苏州` |
+| `CITY` | 是 | — | 城市，支持逗号分隔多城市，如 `江苏省-苏州` 或 `江苏省-苏州,上海市-上海` |
 | `NTFY_TOPIC` | 是 | — | ntfy 主题 |
 | `BASE_URL` | 否 | `https://sunsetbot.top/` | 服务基础 URL |
 | `PUSH_ENABLE` | 否 | `true` | 是否启用推送 |
@@ -59,6 +71,7 @@ services:
 | `EVENING_MODEL` | 否 | `GFS,EC` | 晚霞模型，逗号分隔 |
 | `DB_PATH` | 否 | `sunset.db` | SQLite 数据库文件路径 |
 | `WEB_PORT` | 否 | `8080` | Web 看板端口 |
+| `DATA_RETENTION_DAYS` | 否 | `365` | 数据保留天数，设为 `0` 禁用自动清理 |
 | `PUID` | 否 | `1000` | 容器运行用户 UID |
 | `PGID` | 否 | `1000` | 容器运行用户 GID |
 | `TZ` | 否 | `Asia/Shanghai` | 时区 |
@@ -90,9 +103,46 @@ ntfy 消息中质量、气溶胶数值较优秀时会加粗标记。
 
 启动后访问 `http://localhost:8080` 查看历史数据看板，支持：
 
+- 多城市筛选
 - 按朝霞/晚霞筛选
 - 按日期范围查询
+- 快捷时间范围（近1月/3月/半年/1年/全部）
 - 鲜艳度和气溶胶折线图（按模型分组）
+- 模型对比统计图表
+- 月度趋势图表
+- 城市对比图表
+- 图表导出为 PNG
+- 深色/浅色主题切换
+- 表格分页（每页20条）
 - 导出 CSV / JSON
+- 移动端响应式设计
 
 每次获取数据后自动写入 SQLite 数据库（`sunset.db`），已存在数据自动更新。
+
+## API 接口
+
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/api/data` | GET | 查询历史数据 |
+| `/api/statistics` | GET | 获取统计数据 |
+| `/api/cities` | GET | 获取城市列表 |
+| `/api/city-comparison` | GET | 城市间数据对比 |
+| `/api/export` | GET | 导出数据（CSV/JSON） |
+| `/api/health` | GET | 健康检查 |
+| `/metrics` | GET | Prometheus 指标 |
+
+### 查询参数
+
+| 参数 | 说明 | 示例 |
+|------|------|------|
+| `city` | 城市筛选 | `江苏省-苏州` |
+| `event_type` | 事件类型 | `morning` 或 `evening` |
+| `start` | 开始日期 | `2024-01-01` |
+| `end` | 结束日期 | `2024-12-31` |
+| `format` | 导出格式 | `csv` 或 `json` |
+
+### 响应头
+
+| 头 | 说明 |
+|------|------|
+| `X-Cache` | 缓存命中状态：`HIT` 或 `MISS` |
