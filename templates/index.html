@@ -255,7 +255,6 @@ function renderTable() {
   }
 
   empty.style.display = 'none';
-  const typeMap = { morning: '朝霞', evening: '晚霞' };
 
   const totalPages = Math.ceil(allRecords.length / pageSize);
   const start = (currentPage - 1) * pageSize;
@@ -378,58 +377,44 @@ function aodLabel(v) {
   return '重污';
 }
 
+const typeMap = { morning: '朝霞', evening: '晚霞' };
+const typeColors = { morning: '', evening: '99' };
+
 function renderCharts(records) {
   const grouped = {};
   records.forEach(r => {
-    const key = r.model;
+    const key = r.model + '_' + r.event_type;
     if (!grouped[key]) grouped[key] = [];
     grouped[key].push(r);
   });
 
   const labels = [...new Set(records.map(r => r.date))].sort();
 
-  const qualityDatasets = Object.entries(grouped).map(([model, items]) => ({
-    label: model,
-    data: labels.map(d => { const rec = items.find(i => i.date === d); return rec ? rec.quality : null; }),
-    borderColor: colors[model] || '#999',
-    tension: 0.3,
-    fill: false,
-    segment: {
-      borderDash: ctx => {
-        const v0 = ctx.p0.parsed.y;
-        const v1 = ctx.p1.parsed.y;
-        if (v0 === null || v1 === null) return [5, 5];
-        return undefined;
-      },
-    },
-  }));
-
-  const aodDatasets = Object.entries(grouped).map(([model, items]) => ({
-    label: model,
-    data: labels.map(d => { const rec = items.find(i => i.date === d); return rec ? rec.aod : null; }),
-    borderColor: colors[model] || '#999',
-    tension: 0.3,
-    fill: false,
-    segment: {
-      borderDash: ctx => {
-        const v0 = ctx.p0.parsed.y;
-        const v1 = ctx.p1.parsed.y;
-        if (v0 === null || v1 === null) return [5, 5];
-        return undefined;
-      },
-    },
-  }));
+  const makeDatasets = (field) => Object.entries(grouped).map(([key, items]) => {
+    const [model, eventType] = key.split('_');
+    const label = `${model}-${typeMap[eventType] || eventType}`;
+    const baseColor = colors[model] || '#999';
+    const color = typeColors[eventType] ? baseColor + typeColors[eventType] : baseColor;
+    return {
+      label,
+      data: labels.map(d => { const rec = items.find(i => i.date === d); return rec ? rec[field] : null; }),
+      borderColor: color,
+      borderDash: eventType === 'evening' ? [5, 5] : undefined,
+      tension: 0.3,
+      fill: false,
+    };
+  });
 
   if (qualityChart) qualityChart.destroy();
   if (aodChart) aodChart.destroy();
 
   qualityChart = new Chart(document.getElementById('qualityChart'), {
-    type: 'line', data: { labels, datasets: qualityDatasets },
+    type: 'line', data: { labels, datasets: makeDatasets('quality') },
     options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
   });
 
   aodChart = new Chart(document.getElementById('aodChart'), {
-    type: 'line', data: { labels, datasets: aodDatasets },
+    type: 'line', data: { labels, datasets: makeDatasets('aod') },
     options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
   });
 }
