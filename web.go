@@ -45,7 +45,7 @@ func methodNotAllowed(w http.ResponseWriter, r *http.Request) {
 }
 
 func StartWebServer(port string, store *Store, logger *log.Logger) {
-	cache := NewCache(5 * time.Minute)
+	cache := store.Cache
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

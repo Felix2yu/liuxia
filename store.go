@@ -12,7 +12,8 @@ import (
 )
 
 type Store struct {
-	db *sql.DB
+	db    *sql.DB
+	Cache *Cache
 }
 
 type SunsetRecord struct {
@@ -77,7 +78,7 @@ func InitStore(dbPath string) (*Store, error) {
 		}
 	}
 
-	return &Store{db: db}, nil
+	return &Store{db: db, Cache: NewCache(5 * time.Minute)}, nil
 }
 
 func (s *Store) UpsertRecord(r SunsetRecord) error {
@@ -91,6 +92,9 @@ func (s *Store) UpsertRecord(r SunsetRecord) error {
 			aod = excluded.aod,
 			updated_at = excluded.updated_at`,
 		r.City, r.Date, r.Time, r.EventType, r.Model, r.Quality, r.AOD, now, now)
+	if err == nil {
+		s.Cache.Clear()
+	}
 	return err
 }
 
