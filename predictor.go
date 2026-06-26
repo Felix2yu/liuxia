@@ -347,7 +347,7 @@ func (wp *WeatherPredictor) buildMarkdownResponse(city string, urls map[string]s
 		}
 
 		if wp.store != nil && result.DateStr != "" {
-			wp.store.UpsertRecord(SunsetRecord{
+			if err := wp.store.UpsertRecord(SunsetRecord{
 				City:      city,
 				Date:      result.DateStr,
 				Time:      result.TimeStr,
@@ -355,7 +355,13 @@ func (wp *WeatherPredictor) buildMarkdownResponse(city string, urls map[string]s
 				Model:     model,
 				Quality:   result.QualityNum,
 				AOD:       floatPtr(result.AODNum),
-			})
+			}); err != nil {
+				wp.logger.Printf("[数据库] 写入失败: %v", err)
+			} else {
+				wp.logger.Printf("[数据库] 写入成功: %s %s %s %s quality=%.4f", city, result.DateStr, eventType, model, derefFloat(result.QualityNum))
+			}
+		} else if wp.store != nil && result.DateStr == "" {
+			wp.logger.Printf("[数据库] 跳过写入: DateStr 为空 (model=%s)", model)
 		}
 
 		if result.QualityNum == nil || *result.QualityNum < 0.2 {
