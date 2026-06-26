@@ -73,6 +73,7 @@
   .record-card .card-tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 500; }
   .record-card .tag-morning { background: #ffeaa7; color: #d35400; }
   .record-card .tag-evening { background: #dfe6e9; color: #2d3436; }
+  #cardList { display: none; }
   .table-wrap { display: none; }
   .date-group { background: var(--card-bg); border-radius: 8px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); overflow: hidden; transition: background 0.3s; }
   .date-header { background: #e67e22; color: #fff; padding: 10px 16px; font-weight: 600; font-size: 15px; }
@@ -100,9 +101,10 @@
     .controls select { min-width: 0; flex: 1 1 auto; }
     .quick-range { width: 100%; justify-content: flex-start; }
     .quick-range button { flex: 0 0 auto; font-size: 13px; padding: 5px 10px; }
+    #cardList { display: block; }
+    .table-wrap { display: none; }
   }
   @media (min-width: 769px) {
-    .record-card { display: none; }
     .table-wrap { display: block; }
   }
 </style>
