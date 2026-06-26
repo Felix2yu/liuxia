@@ -164,6 +164,9 @@
 
   <div id="loadingIndicator" class="loading" style="display:none;">加载中...</div>
 
+  <input type="hidden" id="startDate">
+  <input type="hidden" id="endDate">
+
   <div id="cardList"></div>
 
   <div class="table-wrap">
@@ -320,17 +323,12 @@ async function loadData() {
   try {
     const params = getFilters();
     const res = await fetch('/api/data?' + qs(params));
-    const text = await res.text();
-    console.log('[流霞] /api/data 响应:', text.substring(0, 500));
-    allRecords = JSON.parse(text);
-    console.log('[流霞] 解析后记录数:', allRecords ? allRecords.length : 'null');
+    allRecords = await res.json();
     currentPage = 1;
     renderTable();
     renderCards();
     renderCharts(allRecords);
     loadStatistics();
-  } catch (e) {
-    console.error('[流霞] loadData 错误:', e);
   } finally {
     loading.style.display = 'none';
   }
