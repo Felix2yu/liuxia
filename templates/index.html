@@ -52,10 +52,14 @@
   .pagination button:hover { background: var(--hover-bg); }
   .pagination button.active { background: #e67e22; color: #fff; border-color: #e67e22; }
   .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .quick-range { display: inline-flex; gap: 6px; flex-wrap: wrap; }
   @media (max-width: 768px) {
     .container { padding: 10px; }
     .controls { flex-direction: column; align-items: stretch; }
-    .controls button, .controls select, .controls input { width: 100%; }
+    .controls select, .controls input { width: 100%; }
+    .controls > button:not(.secondary) { width: 100%; }
+    .quick-range { width: 100%; justify-content: flex-start; }
+    .quick-range button { flex: 0 0 auto; }
     table { font-size: 12px; }
     th, td { padding: 6px 8px; }
   }
@@ -65,7 +69,7 @@
 <div class="container">
   <div class="header">
     <h1>朝霞晚霞数据看板</h1>
-    <button class="theme-toggle" onclick="toggleTheme()">🌙 深色模式</button>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
   </div>
 
   <div class="controls">
@@ -77,11 +81,13 @@
       <option value="morning">朝霞</option>
       <option value="evening">晚霞</option>
     </select>
-    <button class="secondary" onclick="quickRange(30)">近1月</button>
-    <button class="secondary" onclick="quickRange(90)">近3月</button>
-    <button class="secondary" onclick="quickRange(180)">近半年</button>
-    <button class="secondary" onclick="quickRange(365)">近1年</button>
-    <button class="secondary" onclick="quickRange(0)">全部</button>
+    <div class="quick-range">
+      <button class="secondary" onclick="quickRange(30)">近1月</button>
+      <button class="secondary" onclick="quickRange(90)">近3月</button>
+      <button class="secondary" onclick="quickRange(180)">近半年</button>
+      <button class="secondary" onclick="quickRange(365)">近1年</button>
+      <button class="secondary" onclick="quickRange(0)">全部</button>
+    </div>
     <input type="date" id="startDate" placeholder="开始日期">
     <input type="date" id="endDate" placeholder="结束日期">
     <button onclick="loadData()">查询</button>
@@ -160,9 +166,10 @@ function escapeHtml(str) {
 }
 
 function initTheme() {
-  const saved = localStorage.getItem('theme') || 'light';
-  document.documentElement.setAttribute('data-theme', saved);
-  updateThemeButton(saved);
+  const saved = localStorage.getItem('theme');
+  const theme = saved || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+  updateThemeButton(theme);
 }
 
 function toggleTheme() {
@@ -175,8 +182,7 @@ function toggleTheme() {
 }
 
 function updateThemeButton(theme) {
-  const btn = document.querySelector('.theme-toggle');
-  btn.textContent = theme === 'dark' ? '☀️ 浅色模式' : '🌙 深色模式';
+  document.getElementById('themeBtn').textContent = theme === 'dark' ? '☀️' : '🌙';
 }
 
 function updateChartColors() {
