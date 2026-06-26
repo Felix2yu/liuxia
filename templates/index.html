@@ -110,11 +110,11 @@
       <option value="evening">晚霞</option>
     </select>
     <div class="quick-range">
-      <button class="secondary" onclick="quickRange(30)">近1月</button>
-      <button class="secondary" onclick="quickRange(90)">近3月</button>
-      <button class="secondary" onclick="quickRange(180)">近半年</button>
-      <button class="secondary" onclick="quickRange(365)">近1年</button>
-      <button class="secondary" onclick="quickRange(0)">全部</button>
+      <button class="secondary" onclick="quickRange(30, this)">近1月</button>
+      <button class="secondary" onclick="quickRange(90, this)">近3月</button>
+      <button class="secondary" onclick="quickRange(180, this)">近半年</button>
+      <button class="secondary" onclick="quickRange(365, this)">近1年</button>
+      <button class="secondary" onclick="quickRange(0, this)">全部</button>
     </div>
     <button class="secondary date-btn" onclick="openDateModal()" id="dateBtn">📅 自定义日期</button>
     <button onclick="loadData()">查询</button>
@@ -653,9 +653,9 @@ function downloadChart(canvasId, filename) {
   link.click();
 }
 
-function quickRange(days) {
-  document.querySelectorAll('.controls .secondary').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
+function quickRange(days, btn) {
+  document.querySelectorAll('.quick-range .secondary').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
   const end = new Date();
   const start = new Date();
   if (days > 0) {
