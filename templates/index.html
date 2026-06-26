@@ -41,10 +41,6 @@
   .controls button.secondary.active { background: #e67e22; color: #fff; }
   .chart-box { background: var(--card-bg); border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.1); transition: background 0.3s; }
   .chart-box h2 { font-size: 16px; margin-bottom: 10px; color: var(--text-secondary); }
-  table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.1); transition: background 0.3s; }
-  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 14px; }
-  th { background: #e67e22; color: #fff; }
-  tr:hover { background: var(--hover-bg); }
   .empty { text-align: center; padding: 40px; color: var(--text-secondary); }
   .loading { text-align: center; padding: 20px; color: var(--text-secondary); }
   .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
@@ -53,18 +49,47 @@
   .pagination button.active { background: #e67e22; color: #fff; border-color: #e67e22; }
   .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
   .quick-range { display: inline-flex; gap: 6px; flex-wrap: wrap; }
-  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .date-btn { position: relative; }
+  .date-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; display: none; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 1000; justify-content: center; align-items: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--card-bg); border-radius: 12px; padding: 24px; width: 90%; max-width: 360px; box-shadow: 0 8px 30px rgba(0,0,0,.2); }
+  .modal h3 { font-size: 16px; margin-bottom: 16px; color: var(--text-color); }
+  .modal label { display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; margin-top: 12px; }
+  .modal label:first-of-type { margin-top: 0; }
+  .modal input[type="date"] { width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-color); color: var(--text-color); font-size: 14px; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+  .modal-actions button { padding: 8px 20px; border-radius: 4px; border: none; cursor: pointer; font-size: 14px; }
+  .modal-actions .btn-cancel { background: var(--bg-color); color: var(--text-color); border: 1px solid var(--border-color); }
+  .modal-actions .btn-confirm { background: #e67e22; color: #fff; }
+  .record-card { background: var(--card-bg); border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.08); transition: background 0.3s; }
+  .record-card .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .record-card .card-city { font-weight: 600; font-size: 15px; }
+  .record-card .card-date { font-size: 13px; color: var(--text-secondary); }
+  .record-card .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; font-size: 13px; }
+  .record-card .card-field { display: flex; flex-direction: column; }
+  .record-card .card-field .label { color: var(--text-secondary); font-size: 12px; }
+  .record-card .card-field .value { font-weight: 500; }
+  .record-card .card-tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 500; }
+  .record-card .tag-morning { background: #ffeaa7; color: #d35400; }
+  .record-card .tag-evening { background: #dfe6e9; color: #2d3436; }
+  .table-wrap { display: none; }
   @media (max-width: 768px) {
     .container { padding: 10px; }
     .header { flex-wrap: wrap; gap: 8px; }
     .header h1 { font-size: 20px; }
     .controls { gap: 8px; }
-    .controls select, .controls input { min-width: 0; flex: 1 1 auto; }
+    .controls select { min-width: 0; flex: 1 1 auto; }
     .quick-range { width: 100%; justify-content: flex-start; }
     .quick-range button { flex: 0 0 auto; font-size: 13px; padding: 5px 10px; }
-    .table-wrap { margin: 0 -10px; padding: 0 10px; }
-    .table-wrap table { min-width: 700px; }
-    th, td { padding: 8px 10px; white-space: nowrap; }
+  }
+  @media (min-width: 769px) {
+    .record-card { display: none; }
+    .table-wrap { display: block; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.1); transition: background 0.3s; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 14px; }
+    th { background: #e67e22; color: #fff; }
+    tr:hover { background: var(--hover-bg); }
   }
 </style>
 </head>
@@ -91,8 +116,7 @@
       <button class="secondary" onclick="quickRange(365)">近1年</button>
       <button class="secondary" onclick="quickRange(0)">全部</button>
     </div>
-    <input type="date" id="startDate" placeholder="开始日期">
-    <input type="date" id="endDate" placeholder="结束日期">
+    <button class="secondary date-btn" onclick="openDateModal()" id="dateBtn">📅 自定义日期</button>
     <button onclick="loadData()">查询</button>
     <button onclick="exportData('csv')">导出 CSV</button>
     <button onclick="exportData('json')">导出 JSON</button>
@@ -140,6 +164,8 @@
 
   <div id="loadingIndicator" class="loading" style="display:none;">加载中...</div>
 
+  <div id="cardList"></div>
+
   <div class="table-wrap">
   <table>
     <thead>
@@ -152,6 +178,20 @@
   </div>
   <div id="pagination" class="pagination"></div>
   <div id="emptyMsg" class="empty" style="display:none;">暂无数据</div>
+</div>
+
+<div class="modal-overlay" id="dateModal" onclick="closeDateModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h3>自定义日期范围</h3>
+    <label>开始日期</label>
+    <input type="date" id="modalStart">
+    <label>结束日期</label>
+    <input type="date" id="modalEnd">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeDateModal()">取消</button>
+      <button class="btn-confirm" onclick="confirmDate()">确定</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -210,6 +250,42 @@ function updateChartColors() {
   });
 }
 
+function openDateModal() {
+  const modal = document.getElementById('dateModal');
+  document.getElementById('modalStart').value = document.getElementById('startDate').value;
+  document.getElementById('modalEnd').value = document.getElementById('endDate').value;
+  modal.classList.add('open');
+}
+
+function closeDateModal(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('dateModal').classList.remove('open');
+}
+
+function confirmDate() {
+  const s = document.getElementById('modalStart').value;
+  const e = document.getElementById('modalEnd').value;
+  document.getElementById('startDate').value = s;
+  document.getElementById('endDate').value = e;
+  document.querySelectorAll('.controls .secondary').forEach(b => b.classList.remove('active'));
+  updateDateBtnLabel();
+  document.getElementById('dateModal').classList.remove('open');
+  loadData();
+}
+
+function updateDateBtnLabel() {
+  const s = document.getElementById('startDate').value;
+  const e = document.getElementById('endDate').value;
+  const btn = document.getElementById('dateBtn');
+  if (s || e) {
+    btn.textContent = '📅 ' + (s || '...') + ' ~ ' + (e || '...');
+    btn.classList.add('active');
+  } else {
+    btn.textContent = '📅 自定义日期';
+    btn.classList.remove('active');
+  }
+}
+
 function getFilters() {
   return {
     city: document.getElementById('city').value,
@@ -247,11 +323,44 @@ async function loadData() {
     allRecords = await res.json();
     currentPage = 1;
     renderTable();
+    renderCards();
     renderCharts(allRecords);
     loadStatistics();
   } finally {
     loading.style.display = 'none';
   }
+}
+
+function renderCards() {
+  const container = document.getElementById('cardList');
+  if (!allRecords || allRecords.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+  const totalPages = Math.ceil(allRecords.length / pageSize);
+  const start = (currentPage - 1) * pageSize;
+  const end = start + pageSize;
+  const pageRecords = allRecords.slice(start, end);
+
+  container.innerHTML = pageRecords.map(r => {
+    const tagClass = r.event_type === 'morning' ? 'tag-morning' : 'tag-evening';
+    const typeName = typeMap[r.event_type] || r.event_type;
+    const qVal = r.quality != null ? r.quality.toFixed(4) : '-';
+    const aVal = r.aod != null ? r.aod.toFixed(4) : '-';
+    return `<div class="record-card">
+      <div class="card-header">
+        <span class="card-city">${escapeHtml(r.city || '-')}</span>
+        <span class="card-date">${escapeHtml(r.date)} ${escapeHtml(r.time)}</span>
+      </div>
+      <div class="card-grid">
+        <div class="card-field"><span class="label">类型</span><span class="value"><span class="card-tag ${tagClass}">${typeName}</span> ${escapeHtml(r.model)}</span></div>
+        <div class="card-field"><span class="label">鲜艳度</span><span class="value">${qVal}</span></div>
+        <div class="card-field"><span class="label">鲜艳度说明</span><span class="value">${escapeHtml(qualityLabel(r.quality))}</span></div>
+        <div class="card-field"><span class="label">气溶胶</span><span class="value">${aVal}</span></div>
+        <div class="card-field"><span class="label">气溶胶说明</span><span class="value">${escapeHtml(aodLabel(r.aod))}</span></div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function renderTable() {
@@ -319,6 +428,7 @@ function renderTable() {
 function goToPage(page) {
   currentPage = page;
   renderTable();
+  renderCards();
 }
 
 async function loadStatistics() {
@@ -556,6 +666,7 @@ function quickRange(days) {
     document.getElementById('startDate').value = '';
     document.getElementById('endDate').value = '';
   }
+  updateDateBtnLabel();
   loadData();
 }
 
