@@ -569,6 +569,7 @@ async function loadStatistics() {
   renderModelCompare(stats.models);
   renderMonthly(stats.monthly);
   loadCityComparison();
+  loadRankings();
 }
 
 async function loadCityComparison() {
@@ -576,7 +577,6 @@ async function loadCityComparison() {
   const res = await fetch('/api/city-comparison?' + qs(params));
   const comparison = await res.json();
   renderCityComparison(comparison);
-  loadRankings();
 }
 
 async function loadRankings() {
@@ -623,7 +623,7 @@ function renderBestDates(dates) {
   if (!dates || dates.length === 0) return;
   if (bestDatesChart) bestDatesChart.destroy();
 
-  const labels = dates.map(d => d.date + ' ' + typeMap[d.event_type] + ' ' + d.model);
+  const labels = dates.map(d => d.date + ' ' + (d.time || '') + ' ' + typeMap[d.event_type] + ' ' + d.model);
   const qualityData = dates.map(d => d.quality != null ? parseFloat(d.quality.toFixed(4)) : 0);
   const aodData = dates.map(d => d.aod != null ? parseFloat(d.aod.toFixed(4)) : 0);
 

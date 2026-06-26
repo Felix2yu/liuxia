@@ -393,6 +393,7 @@ func (s *Store) GetCityComparison(eventType, startDate, endDate string) ([]CityC
 type DateRanking struct {
 	Date      string   `json:"date"`
 	City      string   `json:"city"`
+	Time      string   `json:"time"`
 	EventType string   `json:"event_type"`
 	Model     string   `json:"model"`
 	Quality   *float64 `json:"quality"`
@@ -443,7 +444,7 @@ func (s *Store) GetRankings(city, eventType string, limit int) (*Rankings, error
 	defer rows.Close()
 	for rows.Next() {
 		var d DateRanking
-		if err := rows.Scan(&d.City, &d.Date, &d.EventType, &d.Model, &d.Quality, &d.AOD); err != nil {
+		if err := rows.Scan(&d.City, &d.Date, &d.Time, &d.EventType, &d.Model, &d.Quality, &d.AOD); err != nil {
 			return nil, err
 		}
 		rankings.BestDates = append(rankings.BestDates, d)
