@@ -20,7 +20,7 @@ func main() {
 		logger.Fatalf("初始化失败: %v", err)
 	}
 
-	dbPath := getEnv("DB_PATH", "sunset.db")
+	dbPath := getEnv("DB_PATH", "liuxia.db")
 	store, err := InitStore(dbPath)
 	if err != nil {
 		logger.Fatalf("数据库初始化失败: %v", err)

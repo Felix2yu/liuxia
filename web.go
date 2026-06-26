@@ -152,11 +152,11 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 
 		if format == "csv" {
 			w.Header().Set("Content-Type", "text/csv; charset=utf-8")
-			w.Header().Set("Content-Disposition", "attachment; filename=sunset_data.csv")
+			w.Header().Set("Content-Disposition", "attachment; filename=liuxia_data.csv")
 			store.ExportCSV(w, city, eventType, start, end)
 		} else {
 			w.Header().Set("Content-Type", "application/json")
-			w.Header().Set("Content-Disposition", "attachment; filename=sunset_data.json")
+			w.Header().Set("Content-Disposition", "attachment; filename=liuxia_data.json")
 			store.ExportJSON(w, city, eventType, start, end)
 		}
 	})

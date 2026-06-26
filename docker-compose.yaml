@@ -21,7 +21,7 @@ services:
       - EVENING_ENABLE=true
       - EVENING_TIME=08:00,11:30,16:00
       - EVENING_MODEL=GFS,EC
-      - DB_PATH=/app/data/sunset.db
+      - DB_PATH=/app/data/liuxia.db
       - WEB_PORT=8080
       - PUID=1000
       - PGID=1000
