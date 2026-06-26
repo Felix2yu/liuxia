@@ -17,7 +17,7 @@ RUN go mod download
 COPY . .
 
 # 构建二进制文件
-RUN go build -ldflags="-s -w" -o /build/sunsetbot .
+RUN go build -ldflags="-s -w" -o /build/liuxia .
 
 # 第二阶段 - 运行阶段
 FROM alpine:latest
@@ -28,7 +28,7 @@ RUN apk add --no-cache tzdata ca-certificates gosu \
     && addgroup -g 1000 appuser \
     && adduser -D -u 1000 -G appuser appuser
 
-COPY --from=builder /build/sunsetbot /app/sunsetbot
+COPY --from=builder /build/liuxia /app/liuxia
 COPY templates /app/templates
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh

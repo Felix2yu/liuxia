@@ -703,9 +703,9 @@ COPY templates /app/templates
 
 ```yaml
 services:
-  sunsetbot:
-    container_name: sunsetbot
-    image: ghcr.io/felix2yu/sunsetbot:latest
+  liuxia:
+    container_name: liuxia
+    image: ghcr.io/felix2yu/liuxia:latest
     ports:
       - "8080:8080"
     volumes:

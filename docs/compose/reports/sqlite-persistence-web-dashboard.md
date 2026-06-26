@@ -12,7 +12,7 @@ commits: (pending)
 
 ## What Was Built
 
-为 sunsetbot 添加了 SQLite 数据持久化和 Web 数据看板功能。每次从 sunsetbot.top API 获取朝霞/晚霞预报数据后，自动将鲜艳度（quality）、气溶胶（AOD）、时间、模型等信息写入 SQLite 数据库（`sunset.db`），已存在数据自动更新（upsert）。
+为流霞添加了 SQLite 数据持久化和 Web 数据看板功能。每次从 sunsetbot.top API 获取朝霞/晚霞预报数据后，自动将鲜艳度（quality）、气溶胶（AOD）、时间、模型等信息写入 SQLite 数据库（`sunset.db`），已存在数据自动更新（upsert）。
 
 同时提供了一个 Web 页面（默认端口 8080），支持按朝霞/晚霞筛选、按日期范围查询、折线图展示（鲜艳度 + 气溶胶，按 GFS/EC 模型分组），以及 CSV/JSON 数据导出。
 

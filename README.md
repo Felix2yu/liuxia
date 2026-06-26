@@ -1,4 +1,4 @@
-## 朝霞晚霞预警脚本程序
+## 流霞 (liuxia) — 朝霞晚霞预警脚本程序
 
 用户可通过环境变量配置每天查询火烧云的时间和预期质量，最后通过 ntfy 推送信息。
 
@@ -21,9 +21,9 @@
 
 ```yaml
 services:
-  sunsetbot:
-    container_name: sunsetbot
-    image: ghcr.io/felix2yu/sunsetbot:latest
+  liuxia:
+    container_name: liuxia
+    image: ghcr.io/felix2yu/liuxia:latest
     ports:
       - "8080:8080"
     volumes:

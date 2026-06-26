@@ -67,8 +67,8 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`{
-			"name": "朝霞晚霞数据看板",
-			"short_name": "SunsetBot",
+			"name": "流霞 - 朝霞晚霞数据看板",
+			"short_name": "流霞",
 			"start_url": "/",
 			"display": "standalone",
 			"background_color": "#f5f5f5",
@@ -307,33 +307,33 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 		uptime := time.Since(startTime).Seconds()
 
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		fmt.Fprintf(w, "# HELP sunsetbot_http_requests_total Total HTTP requests\n")
-		fmt.Fprintf(w, "# TYPE sunsetbot_http_requests_total counter\n")
-		fmt.Fprintf(w, "sunsetbot_http_requests_total %d\n", atomic.LoadInt64(&httpRequestsTotal))
+		fmt.Fprintf(w, "# HELP liuxia_http_requests_total Total HTTP requests\n")
+		fmt.Fprintf(w, "# TYPE liuxia_http_requests_total counter\n")
+		fmt.Fprintf(w, "liuxia_http_requests_total %d\n", atomic.LoadInt64(&httpRequestsTotal))
 
-		fmt.Fprintf(w, "# HELP sunsetbot_http_request_errors Total HTTP request errors\n")
-		fmt.Fprintf(w, "# TYPE sunsetbot_http_request_errors counter\n")
-		fmt.Fprintf(w, "sunsetbot_http_request_errors %d\n", atomic.LoadInt64(&httpRequestErrors))
+		fmt.Fprintf(w, "# HELP liuxia_http_request_errors Total HTTP request errors\n")
+		fmt.Fprintf(w, "# TYPE liuxia_http_request_errors counter\n")
+		fmt.Fprintf(w, "liuxia_http_request_errors %d\n", atomic.LoadInt64(&httpRequestErrors))
 
-		fmt.Fprintf(w, "# HELP sunsetbot_cache_hits Total cache hits\n")
-		fmt.Fprintf(w, "# TYPE sunsetbot_cache_hits counter\n")
-		fmt.Fprintf(w, "sunsetbot_cache_hits %d\n", atomic.LoadInt64(&cacheHits))
+		fmt.Fprintf(w, "# HELP liuxia_cache_hits Total cache hits\n")
+		fmt.Fprintf(w, "# TYPE liuxia_cache_hits counter\n")
+		fmt.Fprintf(w, "liuxia_cache_hits %d\n", atomic.LoadInt64(&cacheHits))
 
-		fmt.Fprintf(w, "# HELP sunsetbot_cache_misses Total cache misses\n")
-		fmt.Fprintf(w, "# TYPE sunsetbot_cache_misses counter\n")
-		fmt.Fprintf(w, "sunsetbot_cache_misses %d\n", atomic.LoadInt64(&cacheMisses))
+		fmt.Fprintf(w, "# HELP liuxia_cache_misses Total cache misses\n")
+		fmt.Fprintf(w, "# TYPE liuxia_cache_misses counter\n")
+		fmt.Fprintf(w, "liuxia_cache_misses %d\n", atomic.LoadInt64(&cacheMisses))
 
-		fmt.Fprintf(w, "# HELP sunsetbot_total_records Total records in database\n")
-		fmt.Fprintf(w, "# TYPE sunsetbot_total_records gauge\n")
-		fmt.Fprintf(w, "sunsetbot_total_records %d\n", totalRecords)
+		fmt.Fprintf(w, "# HELP liuxia_total_records Total records in database\n")
+		fmt.Fprintf(w, "# TYPE liuxia_total_records gauge\n")
+		fmt.Fprintf(w, "liuxia_total_records %d\n", totalRecords)
 
-		fmt.Fprintf(w, "# HELP sunsetbot_total_cities Total cities tracked\n")
-		fmt.Fprintf(w, "# TYPE sunsetbot_total_cities gauge\n")
-		fmt.Fprintf(w, "sunsetbot_total_cities %d\n", len(cities))
+		fmt.Fprintf(w, "# HELP liuxia_total_cities Total cities tracked\n")
+		fmt.Fprintf(w, "# TYPE liuxia_total_cities gauge\n")
+		fmt.Fprintf(w, "liuxia_total_cities %d\n", len(cities))
 
-		fmt.Fprintf(w, "# HELP sunsetbot_uptime_seconds Uptime in seconds\n")
-		fmt.Fprintf(w, "# TYPE sunsetbot_uptime_seconds gauge\n")
-		fmt.Fprintf(w, "sunsetbot_uptime_seconds %.0f\n", uptime)
+		fmt.Fprintf(w, "# HELP liuxia_uptime_seconds Uptime in seconds\n")
+		fmt.Fprintf(w, "# TYPE liuxia_uptime_seconds gauge\n")
+		fmt.Fprintf(w, "liuxia_uptime_seconds %.0f\n", uptime)
 	})
 
 	addr := ":" + port

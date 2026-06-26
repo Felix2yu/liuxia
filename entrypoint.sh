@@ -12,4 +12,4 @@ fi
 
 chown -R appuser:appuser /app
 
-exec gosu appuser /app/sunsetbot
+exec gosu appuser /app/liuxia
