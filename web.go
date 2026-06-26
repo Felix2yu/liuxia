@@ -240,8 +240,14 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 		if r.Method != http.MethodGet {
 			return
 		}
+		totalRecords, _ := store.GetTotalRecords()
+		cities, _ := store.GetCities()
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":       "ok",
+			"totalRecords": totalRecords,
+			"cities":       cities,
+		})
 	})
 
 	mux.HandleFunc("/api/city-comparison", func(w http.ResponseWriter, r *http.Request) {
