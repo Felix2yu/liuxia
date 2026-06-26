@@ -297,6 +297,44 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 		json.NewEncoder(w).Encode(comparison)
 	})
 
+	mux.HandleFunc("/api/rankings", func(w http.ResponseWriter, r *http.Request) {
+		methodNotAllowed(w, r)
+		if r.Method != http.MethodGet {
+			return
+		}
+		atomic.AddInt64(&httpRequestsTotal, 1)
+		city := r.URL.Query().Get("city")
+		eventType := r.URL.Query().Get("event_type")
+
+		if !validateEventType(eventType) {
+			atomic.AddInt64(&httpRequestErrors, 1)
+			http.Error(w, "invalid event_type", http.StatusBadRequest)
+			return
+		}
+
+		cacheKey := fmt.Sprintf("rankings:%s:%s", city, eventType)
+		if cached, ok := cache.Get(cacheKey); ok {
+			atomic.AddInt64(&cacheHits, 1)
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("X-Cache", "HIT")
+			json.NewEncoder(w).Encode(cached)
+			return
+		}
+		atomic.AddInt64(&cacheMisses, 1)
+
+		rankings, err := store.GetRankings(city, eventType, 10)
+		if err != nil {
+			atomic.AddInt64(&httpRequestErrors, 1)
+			logger.Printf("[Web] GetRankings error: %v", err)
+			http.Error(w, "internal server error", 500)
+			return
+		}
+		cache.Set(cacheKey, rankings)
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("X-Cache", "MISS")
+		json.NewEncoder(w).Encode(rankings)
+	})
+
 	mux.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
 		methodNotAllowed(w, r)
 		if r.Method != http.MethodGet {

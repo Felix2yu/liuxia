@@ -178,6 +178,22 @@
     <canvas id="cityCompareChart"></canvas>
   </div>
 
+  <div class="chart-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h2>最佳观赏排行</h2>
+      <button class="secondary" onclick="downloadChart('bestDatesChart', '最佳观赏排行')">下载图片</button>
+    </div>
+    <canvas id="bestDatesChart"></canvas>
+  </div>
+
+  <div class="chart-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h2>季节对比</h2>
+      <button class="secondary" onclick="downloadChart('seasonChart', '季节对比')">下载图片</button>
+    </div>
+    <canvas id="seasonChart"></canvas>
+  </div>
+
   <div id="loadingIndicator" class="loading" style="display:none;">加载中...</div>
 
   <input type="hidden" id="startDate">
@@ -205,7 +221,7 @@
 </div>
 
 <script>
-let qualityChart, aodChart, modelCompareChart, monthlyChart, cityCompareChart;
+let qualityChart, aodChart, modelCompareChart, monthlyChart, cityCompareChart, bestDatesChart, seasonChart;
 let allRecords = [];
 let currentPage = 1;
 const pageSize = 20;
@@ -245,7 +261,7 @@ function updateChartColors() {
   const textColor = isDark ? '#e0e0e0' : '#333';
   const gridColor = isDark ? '#404040' : '#eee';
 
-  [qualityChart, aodChart, modelCompareChart, monthlyChart, cityCompareChart].forEach(chart => {
+  [qualityChart, aodChart, modelCompareChart, monthlyChart, cityCompareChart, bestDatesChart, seasonChart].forEach(chart => {
     if (chart) {
       chart.options.scales.x && (chart.options.scales.x.ticks = { color: textColor });
       chart.options.scales.x && (chart.options.scales.x.grid = { color: gridColor });
@@ -511,6 +527,15 @@ async function loadCityComparison() {
   const res = await fetch('/api/city-comparison?' + qs(params));
   const comparison = await res.json();
   renderCityComparison(comparison);
+  loadRankings();
+}
+
+async function loadRankings() {
+  const params = getFilters();
+  const res = await fetch('/api/rankings?' + qs(params));
+  const rankings = await res.json();
+  renderBestDates(rankings.best_dates);
+  renderSeasonChart(rankings.seasonal);
 }
 
 function renderCityComparison(comparison) {
@@ -535,6 +560,55 @@ function renderCityComparison(comparison) {
           data: comparison.map(c => c.avg_quality ? parseFloat(c.avg_quality.toFixed(4)) : 0),
           backgroundColor: comparison.map((_, i) => cityColors[i % cityColors.length]),
         },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'top' } },
+      scales: { y: { beginAtZero: true } },
+    },
+  });
+}
+
+function renderBestDates(dates) {
+  if (!dates || dates.length === 0) return;
+  if (bestDatesChart) bestDatesChart.destroy();
+
+  const labels = dates.map(d => d.date + ' ' + typeMap[d.event_type] + ' ' + d.model);
+  const qualityData = dates.map(d => d.quality != null ? parseFloat(d.quality.toFixed(4)) : 0);
+  const aodData = dates.map(d => d.aod != null ? parseFloat(d.aod.toFixed(4)) : 0);
+
+  bestDatesChart = new Chart(document.getElementById('bestDatesChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: '鲜艳度', data: qualityData, backgroundColor: '#e67e22' },
+        { label: '气溶胶', data: aodData, backgroundColor: '#3498db' },
+      ],
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      plugins: { legend: { position: 'top' } },
+      scales: { x: { beginAtZero: true } },
+    },
+  });
+}
+
+function renderSeasonChart(seasons) {
+  if (!seasons || seasons.length === 0) return;
+  if (seasonChart) seasonChart.destroy();
+
+  const seasonColors = { '春季': '#2ecc71', '夏季': '#e74c3c', '秋季': '#f39c12', '冬季': '#3498db' };
+
+  seasonChart = new Chart(document.getElementById('seasonChart'), {
+    type: 'bar',
+    data: {
+      labels: seasons.map(s => s.season),
+      datasets: [
+        { label: '平均鲜艳度', data: seasons.map(s => s.avg_quality ? parseFloat(s.avg_quality.toFixed(4)) : 0), backgroundColor: seasons.map(s => seasonColors[s.season] || '#999') },
+        { label: '平均气溶胶', data: seasons.map(s => s.avg_aod ? parseFloat(s.avg_aod.toFixed(4)) : 0), backgroundColor: seasons.map(s => (seasonColors[s.season] || '#999') + '80') },
       ],
     },
     options: {

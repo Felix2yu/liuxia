@@ -389,3 +389,133 @@ func (s *Store) GetCityComparison(eventType, startDate, endDate string) ([]CityC
 	}
 	return results, rows.Err()
 }
+
+type DateRanking struct {
+	Date      string   `json:"date"`
+	City      string   `json:"city"`
+	EventType string   `json:"event_type"`
+	Model     string   `json:"model"`
+	Quality   *float64 `json:"quality"`
+	AOD       *float64 `json:"aod"`
+}
+
+type MonthRanking struct {
+	Month      string   `json:"month"`
+	AvgQuality *float64 `json:"avg_quality"`
+	AvgAOD     *float64 `json:"avg_aod"`
+	Count      int      `json:"count"`
+}
+
+type SeasonRanking struct {
+	Season     string   `json:"season"`
+	AvgQuality *float64 `json:"avg_quality"`
+	AvgAOD     *float64 `json:"avg_aod"`
+	Count      int      `json:"count"`
+}
+
+type Rankings struct {
+	BestDates  []DateRanking  `json:"best_dates"`
+	Monthly    []MonthRanking `json:"monthly"`
+	Seasonal   []SeasonRanking `json:"seasonal"`
+}
+
+func (s *Store) GetRankings(city, eventType string, limit int) (*Rankings, error) {
+	rankings := &Rankings{}
+
+	dateQuery := `SELECT city, date, time, event_type, model, quality, aod
+		FROM sunset_data WHERE quality IS NOT NULL`
+	args := []interface{}{}
+	if city != "" {
+		dateQuery += ` AND city = ?`
+		args = append(args, city)
+	}
+	if eventType != "" {
+		dateQuery += ` AND event_type = ?`
+		args = append(args, eventType)
+	}
+	dateQuery += ` ORDER BY quality DESC LIMIT ?`
+	args = append(args, limit)
+
+	rows, err := s.db.Query(dateQuery, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var d DateRanking
+		if err := rows.Scan(&d.City, &d.Date, &d.EventType, &d.Model, &d.Quality, &d.AOD); err != nil {
+			return nil, err
+		}
+		rankings.BestDates = append(rankings.BestDates, d)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	monthQuery := `SELECT substr(date, 1, 7) as month, AVG(quality), AVG(aod), COUNT(*)
+		FROM sunset_data WHERE quality IS NOT NULL`
+	mArgs := []interface{}{}
+	if city != "" {
+		monthQuery += ` AND city = ?`
+		mArgs = append(mArgs, city)
+	}
+	if eventType != "" {
+		monthQuery += ` AND event_type = ?`
+		mArgs = append(mArgs, eventType)
+	}
+	monthQuery += ` GROUP BY month ORDER BY month`
+
+	mRows, err := s.db.Query(monthQuery, mArgs...)
+	if err != nil {
+		return nil, err
+	}
+	defer mRows.Close()
+	for mRows.Next() {
+		var m MonthRanking
+		if err := mRows.Scan(&m.Month, &m.AvgQuality, &m.AvgAOD, &m.Count); err != nil {
+			return nil, err
+		}
+		rankings.Monthly = append(rankings.Monthly, m)
+	}
+	if err := mRows.Err(); err != nil {
+		return nil, err
+	}
+
+	seasonQuery := `SELECT
+		CASE
+			WHEN CAST(substr(date, 6, 2) AS INTEGER) IN (3,4,5) THEN '春季'
+			WHEN CAST(substr(date, 6, 2) AS INTEGER) IN (6,7,8) THEN '夏季'
+			WHEN CAST(substr(date, 6, 2) AS INTEGER) IN (9,10,11) THEN '秋季'
+			ELSE '冬季'
+		END as season,
+		AVG(quality), AVG(aod), COUNT(*)
+		FROM sunset_data WHERE quality IS NOT NULL`
+	sArgs := []interface{}{}
+	if city != "" {
+		seasonQuery += ` AND city = ?`
+		sArgs = append(sArgs, city)
+	}
+	if eventType != "" {
+		seasonQuery += ` AND event_type = ?`
+		sArgs = append(sArgs, eventType)
+	}
+	seasonQuery += ` GROUP BY season ORDER BY AVG(quality) DESC`
+
+	sRows, err := s.db.Query(seasonQuery, sArgs...)
+	if err != nil {
+		return nil, err
+	}
+	defer sRows.Close()
+	for sRows.Next() {
+		var s SeasonRanking
+		if err := sRows.Scan(&s.Season, &s.AvgQuality, &s.AvgAOD, &s.Count); err != nil {
+			return nil, err
+		}
+		rankings.Seasonal = append(rankings.Seasonal, s)
+	}
+	if err := sRows.Err(); err != nil {
+		return nil, err
+	}
+
+	return rankings, nil
+}
