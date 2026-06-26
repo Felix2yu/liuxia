@@ -350,25 +350,47 @@ function renderCards() {
   const end = start + pageSize;
   const pageRecords = allRecords.slice(start, end);
 
-  container.innerHTML = pageRecords.map(r => {
-    const tagClass = r.event_type === 'morning' ? 'tag-morning' : 'tag-evening';
-    const typeName = typeMap[r.event_type] || r.event_type;
-    const qVal = r.quality != null ? r.quality.toFixed(4) : '-';
-    const aVal = r.aod != null ? r.aod.toFixed(4) : '-';
-    return `<div class="record-card">
-      <div class="card-header">
-        <span class="card-city">${escapeHtml(r.city || '-')}</span>
-        <span class="card-date">${escapeHtml(r.date)} ${escapeHtml(r.time)}</span>
-      </div>
-      <div class="card-grid">
-        <div class="card-field"><span class="label">类型</span><span class="value"><span class="card-tag ${tagClass}">${typeName}</span> ${escapeHtml(r.model)}</span></div>
-        <div class="card-field"><span class="label">鲜艳度</span><span class="value">${qVal}</span></div>
-        <div class="card-field"><span class="label">鲜艳度说明</span><span class="value">${escapeHtml(qualityLabel(r.quality))}</span></div>
-        <div class="card-field"><span class="label">气溶胶</span><span class="value">${aVal}</span></div>
-        <div class="card-field"><span class="label">气溶胶说明</span><span class="value">${escapeHtml(aodLabel(r.aod))}</span></div>
-      </div>
-    </div>`;
-  }).join('');
+  const sorted = [...pageRecords].sort((a, b) => {
+    if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+    const aO = a.event_type === 'morning' ? 0 : 1;
+    const bO = b.event_type === 'morning' ? 0 : 1;
+    if (aO !== bO) return aO - bO;
+    return a.time < b.time ? -1 : 1;
+  });
+
+  const groups = {};
+  sorted.forEach(r => {
+    if (!groups[r.date]) groups[r.date] = {};
+    if (!groups[r.date][r.event_type]) groups[r.date][r.event_type] = {};
+    groups[r.date][r.event_type][r.model] = r;
+  });
+
+  let html = '';
+  Object.keys(groups).sort().forEach(date => {
+    const evts = groups[date];
+    html += `<div class="date-group"><div class="date-header">${escapeHtml(date)}</div>`;
+    ['morning', 'evening'].forEach(eType => {
+      if (!evts[eType]) return;
+      const models = evts[eType];
+      const time = Object.values(models)[0]?.time || '';
+      const tagClass = eType === 'morning' ? 'tag-morning' : 'tag-evening';
+      html += `<div class="event-section">`;
+      html += `<div class="event-label"><span class="tag ${tagClass}">${typeMap[eType]}</span> ${escapeHtml(time)}</div>`;
+      html += `<div class="model-row" style="grid-template-columns:1fr 1fr">`;
+      ['GFS', 'EC'].forEach(m => {
+        const r = models[m];
+        if (!r) { html += `<div class="model-cell"><span class="model-name">${m}</span><span class="metric">-</span></div>`; return; }
+        const qBadge = r.quality != null
+          ? `<span class="quality-badge ${r.quality < 0.2 ? 'q-low' : r.quality < 0.8 ? 'q-mid' : 'q-high'}">${r.quality.toFixed(4)}</span>`
+          : '-';
+        html += `<div class="model-cell"><span class="model-name">${m}</span><span class="metric">鲜艳度 ${qBadge} ${qualityLabel(r.quality)}</span><span class="metric">气溶胶 <b>${r.aod != null ? r.aod.toFixed(4) : '-'}</b> ${aodLabel(r.aod)}</span></div>`;
+      });
+      html += `</div></div>`;
+    });
+    html += `</div>`;
+  });
+
+  container.innerHTML = html;
 }
 
 function renderTable() {
