@@ -39,8 +39,14 @@
   .controls button.secondary { background: var(--card-bg); color: #e67e22; border: 1px solid #e67e22; }
   .controls button.secondary:hover { background: var(--hover-bg); }
   .controls button.secondary.active { background: #e67e22; color: #fff; }
-  .chart-box { background: var(--card-bg); border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.1); transition: background 0.3s; }
-  .chart-box h2 { font-size: 16px; margin-bottom: 10px; color: var(--text-secondary); }
+  .chart-box { background: var(--card-bg); border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.1); transition: background 0.3s; }
+  .chart-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; cursor: pointer; user-select: none; }
+  .chart-header h2 { font-size: 16px; color: var(--text-secondary); margin: 0; }
+  .chart-header .actions { display: flex; gap: 6px; align-items: center; }
+  .chart-header .toggle-btn { background: none; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 12px; color: var(--text-secondary); }
+  .chart-header .toggle-btn:hover { background: var(--hover-bg); }
+  .chart-body { padding: 0 20px 20px; }
+  .chart-box.collapsed .chart-body { display: none; }
   .empty { text-align: center; padding: 40px; color: var(--text-secondary); }
   .loading { text-align: center; padding: 20px; color: var(--text-secondary); }
   .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
@@ -138,60 +144,81 @@
     <button onclick="exportData('json')">导出 JSON</button>
   </div>
 
-  <div class="chart-box">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
+  <div class="chart-box" data-chart="quality">
+    <div class="chart-header" onclick="toggleChart('quality')">
       <h2>鲜艳度趋势</h2>
-      <button class="secondary" onclick="downloadChart('qualityChart', '鲜艳度趋势')">下载图片</button>
+      <div class="actions">
+        <button class="secondary" onclick="event.stopPropagation();downloadChart('qualityChart', '鲜艳度趋势')">下载图片</button>
+        <span class="toggle-btn" id="toggle-quality">▼</span>
+      </div>
     </div>
-    <canvas id="qualityChart"></canvas>
+    <div class="chart-body"><canvas id="qualityChart"></canvas></div>
   </div>
 
-  <div class="chart-box">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
+  <div class="chart-box" data-chart="aod">
+    <div class="chart-header" onclick="toggleChart('aod')">
       <h2>气溶胶趋势</h2>
-      <button class="secondary" onclick="downloadChart('aodChart', '气溶胶趋势')">下载图片</button>
+      <div class="actions">
+        <button class="secondary" onclick="event.stopPropagation();downloadChart('aodChart', '气溶胶趋势')">下载图片</button>
+        <span class="toggle-btn" id="toggle-aod">▼</span>
+      </div>
     </div>
-    <canvas id="aodChart"></canvas>
+    <div class="chart-body"><canvas id="aodChart"></canvas></div>
   </div>
 
-  <div class="chart-box">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
+  <div class="chart-box" data-chart="modelCompare">
+    <div class="chart-header" onclick="toggleChart('modelCompare')">
       <h2>模型对比统计</h2>
-      <button class="secondary" onclick="downloadChart('modelCompareChart', '模型对比统计')">下载图片</button>
+      <div class="actions">
+        <button class="secondary" onclick="event.stopPropagation();downloadChart('modelCompareChart', '模型对比统计')">下载图片</button>
+        <span class="toggle-btn" id="toggle-modelCompare">▼</span>
+      </div>
     </div>
-    <canvas id="modelCompareChart"></canvas>
+    <div class="chart-body"><canvas id="modelCompareChart"></canvas></div>
   </div>
 
-  <div class="chart-box">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
+  <div class="chart-box" data-chart="monthly">
+    <div class="chart-header" onclick="toggleChart('monthly')">
       <h2>月度趋势</h2>
-      <button class="secondary" onclick="downloadChart('monthlyChart', '月度趋势')">下载图片</button>
+      <div class="actions">
+        <button class="secondary" onclick="event.stopPropagation();downloadChart('monthlyChart', '月度趋势')">下载图片</button>
+        <span class="toggle-btn" id="toggle-monthly">▼</span>
+      </div>
     </div>
-    <canvas id="monthlyChart"></canvas>
+    <div class="chart-body"><canvas id="monthlyChart"></canvas></div>
   </div>
 
-  <div class="chart-box" id="cityCompareBox">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
+  <div class="chart-box" data-chart="cityCompare" id="cityCompareBox">
+    <div class="chart-header" onclick="toggleChart('cityCompare')">
       <h2>城市对比</h2>
-      <button class="secondary" onclick="downloadChart('cityCompareChart', '城市对比')">下载图片</button>
+      <div class="actions">
+        <button class="secondary" onclick="event.stopPropagation();downloadChart('cityCompareChart', '城市对比')">下载图片</button>
+        <span class="toggle-btn" id="toggle-cityCompare">▼</span>
+      </div>
     </div>
-    <canvas id="cityCompareChart"></canvas>
+    <div class="chart-body"><canvas id="cityCompareChart"></canvas></div>
   </div>
 
-  <div class="chart-box">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
+  <div class="chart-box" data-chart="bestDates">
+    <div class="chart-header" onclick="toggleChart('bestDates')">
       <h2>最佳观赏排行</h2>
-      <button class="secondary" onclick="downloadChart('bestDatesChart', '最佳观赏排行')">下载图片</button>
+      <div class="actions">
+        <button class="secondary" onclick="event.stopPropagation();downloadChart('bestDatesChart', '最佳观赏排行')">下载图片</button>
+        <span class="toggle-btn" id="toggle-bestDates">▼</span>
+      </div>
     </div>
-    <canvas id="bestDatesChart"></canvas>
+    <div class="chart-body"><canvas id="bestDatesChart"></canvas></div>
   </div>
 
-  <div class="chart-box">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
+  <div class="chart-box" data-chart="season">
+    <div class="chart-header" onclick="toggleChart('season')">
       <h2>季节对比</h2>
-      <button class="secondary" onclick="downloadChart('seasonChart', '季节对比')">下载图片</button>
+      <div class="actions">
+        <button class="secondary" onclick="event.stopPropagation();downloadChart('seasonChart', '季节对比')">下载图片</button>
+        <span class="toggle-btn" id="toggle-season">▼</span>
+      </div>
     </div>
-    <canvas id="seasonChart"></canvas>
+    <div class="chart-body"><canvas id="seasonChart"></canvas></div>
   </div>
 
   <div id="loadingIndicator" class="loading" style="display:none;">加载中...</div>
@@ -234,6 +261,28 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+function toggleChart(id) {
+  const box = document.querySelector(`[data-chart="${id}"]`);
+  if (!box) return;
+  const collapsed = box.classList.toggle('collapsed');
+  const btn = document.getElementById('toggle-' + id);
+  if (btn) btn.textContent = collapsed ? '▶' : '▼';
+  const states = JSON.parse(localStorage.getItem('chartStates') || '{}');
+  states[id] = collapsed;
+  localStorage.setItem('chartStates', JSON.stringify(states));
+}
+
+function restoreChartStates() {
+  const states = JSON.parse(localStorage.getItem('chartStates') || '{}');
+  Object.entries(states).forEach(([id, collapsed]) => {
+    if (!collapsed) return;
+    const box = document.querySelector(`[data-chart="${id}"]`);
+    if (box) box.classList.add('collapsed');
+    const btn = document.getElementById('toggle-' + id);
+    if (btn) btn.textContent = '▶';
+  });
 }
 
 function initTheme() {
@@ -816,6 +865,7 @@ function quickRange(days, btn) {
 }
 
 initTheme();
+restoreChartStates();
 loadCities();
 loadData();
 
