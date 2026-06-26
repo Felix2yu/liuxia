@@ -42,9 +42,10 @@
   .chart-box { background: var(--card-bg); border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.1); transition: background 0.3s; }
   .chart-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; cursor: pointer; user-select: none; }
   .chart-header h2 { font-size: 16px; color: var(--text-secondary); margin: 0; }
-  .chart-header .actions { display: flex; gap: 6px; align-items: center; }
-  .chart-header .toggle-btn { background: none; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 12px; color: var(--text-secondary); }
-  .chart-header .toggle-btn:hover { background: var(--hover-bg); }
+  .chart-header .actions { display: flex; gap: 4px; align-items: center; }
+  .chart-icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 14px; transition: all 0.15s ease; }
+  .chart-icon-btn:hover { background: var(--hover-bg); color: #e67e22; }
+  .chart-icon-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.2s ease; }
   .chart-body { padding: 0 20px 20px; }
   .chart-box.collapsed .chart-body { display: none; }
   .empty { text-align: center; padding: 40px; color: var(--text-secondary); }
@@ -148,8 +149,8 @@
     <div class="chart-header" onclick="toggleChart('quality')">
       <h2>鲜艳度趋势</h2>
       <div class="actions">
-        <button class="secondary" onclick="event.stopPropagation();downloadChart('qualityChart', '鲜艳度趋势')">下载图片</button>
-        <span class="toggle-btn" id="toggle-quality">▼</span>
+        <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadChart('qualityChart', '鲜艳度趋势')"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+        <button class="chart-icon-btn" id="toggle-quality" title="收起"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>
       </div>
     </div>
     <div class="chart-body"><canvas id="qualityChart"></canvas></div>
@@ -159,8 +160,8 @@
     <div class="chart-header" onclick="toggleChart('aod')">
       <h2>气溶胶趋势</h2>
       <div class="actions">
-        <button class="secondary" onclick="event.stopPropagation();downloadChart('aodChart', '气溶胶趋势')">下载图片</button>
-        <span class="toggle-btn" id="toggle-aod">▼</span>
+        <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadChart('aodChart', '气溶胶趋势')"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+        <button class="chart-icon-btn" id="toggle-aod" title="收起"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>
       </div>
     </div>
     <div class="chart-body"><canvas id="aodChart"></canvas></div>
@@ -170,8 +171,8 @@
     <div class="chart-header" onclick="toggleChart('modelCompare')">
       <h2>模型对比统计</h2>
       <div class="actions">
-        <button class="secondary" onclick="event.stopPropagation();downloadChart('modelCompareChart', '模型对比统计')">下载图片</button>
-        <span class="toggle-btn" id="toggle-modelCompare">▼</span>
+        <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadChart('modelCompareChart', '模型对比统计')"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+        <button class="chart-icon-btn" id="toggle-modelCompare" title="收起"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>
       </div>
     </div>
     <div class="chart-body"><canvas id="modelCompareChart"></canvas></div>
@@ -181,8 +182,8 @@
     <div class="chart-header" onclick="toggleChart('monthly')">
       <h2>月度趋势</h2>
       <div class="actions">
-        <button class="secondary" onclick="event.stopPropagation();downloadChart('monthlyChart', '月度趋势')">下载图片</button>
-        <span class="toggle-btn" id="toggle-monthly">▼</span>
+        <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadChart('monthlyChart', '月度趋势')"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+        <button class="chart-icon-btn" id="toggle-monthly" title="收起"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>
       </div>
     </div>
     <div class="chart-body"><canvas id="monthlyChart"></canvas></div>
@@ -192,8 +193,8 @@
     <div class="chart-header" onclick="toggleChart('cityCompare')">
       <h2>城市对比</h2>
       <div class="actions">
-        <button class="secondary" onclick="event.stopPropagation();downloadChart('cityCompareChart', '城市对比')">下载图片</button>
-        <span class="toggle-btn" id="toggle-cityCompare">▼</span>
+        <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadChart('cityCompareChart', '城市对比')"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+        <button class="chart-icon-btn" id="toggle-cityCompare" title="收起"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>
       </div>
     </div>
     <div class="chart-body"><canvas id="cityCompareChart"></canvas></div>
@@ -203,8 +204,8 @@
     <div class="chart-header" onclick="toggleChart('bestDates')">
       <h2>最佳观赏排行</h2>
       <div class="actions">
-        <button class="secondary" onclick="event.stopPropagation();downloadChart('bestDatesChart', '最佳观赏排行')">下载图片</button>
-        <span class="toggle-btn" id="toggle-bestDates">▼</span>
+        <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadChart('bestDatesChart', '最佳观赏排行')"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+        <button class="chart-icon-btn" id="toggle-bestDates" title="收起"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>
       </div>
     </div>
     <div class="chart-body"><canvas id="bestDatesChart"></canvas></div>
@@ -214,8 +215,8 @@
     <div class="chart-header" onclick="toggleChart('season')">
       <h2>季节对比</h2>
       <div class="actions">
-        <button class="secondary" onclick="event.stopPropagation();downloadChart('seasonChart', '季节对比')">下载图片</button>
-        <span class="toggle-btn" id="toggle-season">▼</span>
+        <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadChart('seasonChart', '季节对比')"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+        <button class="chart-icon-btn" id="toggle-season" title="收起"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>
       </div>
     </div>
     <div class="chart-body"><canvas id="seasonChart"></canvas></div>
@@ -268,7 +269,7 @@ function toggleChart(id) {
   if (!box) return;
   const collapsed = box.classList.toggle('collapsed');
   const btn = document.getElementById('toggle-' + id);
-  if (btn) btn.textContent = collapsed ? '▶' : '▼';
+  if (btn) btn.style.transform = collapsed ? 'rotate(-90deg)' : '';
   const states = JSON.parse(localStorage.getItem('chartStates') || '{}');
   states[id] = collapsed;
   localStorage.setItem('chartStates', JSON.stringify(states));
@@ -281,7 +282,7 @@ function restoreChartStates() {
     const box = document.querySelector(`[data-chart="${id}"]`);
     if (box) box.classList.add('collapsed');
     const btn = document.getElementById('toggle-' + id);
-    if (btn) btn.textContent = '▶';
+    if (btn) btn.style.transform = 'rotate(-90deg)';
   });
 }
 
