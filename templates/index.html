@@ -118,7 +118,7 @@
     <select id="city">
       <option value="">全部城市</option>
     </select>
-    <select id="eventType">
+    <select id="eventType" onchange="loadData()">
       <option value="">全部</option>
       <option value="morning">朝霞</option>
       <option value="evening">晚霞</option>
@@ -168,7 +168,7 @@
     <canvas id="monthlyChart"></canvas>
   </div>
 
-  <div class="chart-box">
+  <div class="chart-box" id="cityCompareBox">
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <h2>城市对比</h2>
       <button class="secondary" onclick="downloadChart('cityCompareChart', '城市对比')">下载图片</button>
@@ -512,7 +512,12 @@ async function loadCityComparison() {
 }
 
 function renderCityComparison(comparison) {
-  if (!comparison || comparison.length === 0) return;
+  const box = document.getElementById('cityCompareBox');
+  if (!comparison || comparison.length <= 1) {
+    box.style.display = 'none';
+    return;
+  }
+  box.style.display = '';
 
   if (cityCompareChart) cityCompareChart.destroy();
 
