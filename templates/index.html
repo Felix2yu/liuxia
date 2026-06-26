@@ -53,22 +53,25 @@
   .pagination button.active { background: #e67e22; color: #fff; border-color: #e67e22; }
   .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
   .quick-range { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   @media (max-width: 768px) {
     .container { padding: 10px; }
-    .controls { flex-direction: column; align-items: stretch; }
-    .controls select, .controls input { width: 100%; }
-    .controls > button:not(.secondary) { width: 100%; }
+    .header { flex-wrap: wrap; gap: 8px; }
+    .header h1 { font-size: 20px; }
+    .controls { gap: 8px; }
+    .controls select, .controls input { min-width: 0; flex: 1 1 auto; }
     .quick-range { width: 100%; justify-content: flex-start; }
-    .quick-range button { flex: 0 0 auto; }
-    table { font-size: 12px; }
-    th, td { padding: 6px 8px; }
+    .quick-range button { flex: 0 0 auto; font-size: 13px; padding: 5px 10px; }
+    .table-wrap { margin: 0 -10px; padding: 0 10px; }
+    .table-wrap table { min-width: 700px; }
+    th, td { padding: 8px 10px; white-space: nowrap; }
   }
 </style>
 </head>
 <body>
 <div class="container">
   <div class="header">
-    <h1>朝霞晚霞数据看板</h1>
+    <h1>流霞</h1>
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
   </div>
 
@@ -137,6 +140,7 @@
 
   <div id="loadingIndicator" class="loading" style="display:none;">加载中...</div>
 
+  <div class="table-wrap">
   <table>
     <thead>
       <tr>
@@ -145,6 +149,7 @@
     </thead>
     <tbody id="tableBody"></tbody>
   </table>
+  </div>
   <div id="pagination" class="pagination"></div>
   <div id="emptyMsg" class="empty" style="display:none;">暂无数据</div>
 </div>
