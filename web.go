@@ -124,6 +124,10 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 			http.Error(w, "internal server error", 500)
 			return
 		}
+		logger.Printf("[Web] /api/data 查询结果: %d 条记录 (city=%s, event_type=%s, start=%s, end=%s)", len(records), city, eventType, start, end)
+		if records == nil {
+			records = []SunsetRecord{}
+		}
 		cache.Set(cacheKey, records)
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("X-Cache", "MISS")
