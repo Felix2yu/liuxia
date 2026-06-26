@@ -74,6 +74,24 @@
   .record-card .tag-morning { background: #ffeaa7; color: #d35400; }
   .record-card .tag-evening { background: #dfe6e9; color: #2d3436; }
   .table-wrap { display: none; }
+  .date-group { background: var(--card-bg); border-radius: 8px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); overflow: hidden; transition: background 0.3s; }
+  .date-header { background: #e67e22; color: #fff; padding: 10px 16px; font-weight: 600; font-size: 15px; }
+  .event-section { border-bottom: 1px solid var(--border-color); }
+  .event-section:last-child { border-bottom: none; }
+  .event-label { padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--text-secondary); background: var(--hover-bg); display: flex; align-items: center; gap: 8px; }
+  .event-label .tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+  .event-label .tag-morning { background: #ffeaa7; color: #d35400; }
+  .event-label .tag-evening { background: #dfe6e9; color: #2d3436; }
+  .model-row { display: grid; grid-template-columns: 70px 1fr 1fr; padding: 10px 16px; border-bottom: 1px solid var(--border-color); font-size: 14px; align-items: center; }
+  .model-row:last-child { border-bottom: none; }
+  .model-cell { display: flex; flex-direction: column; gap: 2px; }
+  .model-cell .model-name { font-weight: 600; font-size: 13px; }
+  .model-cell .metric { font-size: 13px; color: var(--text-secondary); }
+  .model-cell .metric b { color: var(--text-color); font-weight: 500; }
+  .quality-badge { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+  .q-low { background: #dfe6e9; color: #636e72; }
+  .q-mid { background: #ffeaa7; color: #d35400; }
+  .q-high { background: #e17055; color: #fff; }
   @media (max-width: 768px) {
     .container { padding: 10px; }
     .header { flex-wrap: wrap; gap: 8px; }
@@ -85,11 +103,7 @@
   }
   @media (min-width: 769px) {
     .record-card { display: none; }
-    .table-wrap { display: block; overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.1); transition: background 0.3s; }
-    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 14px; }
-    th { background: #e67e22; color: #fff; }
-    tr:hover { background: var(--hover-bg); }
+    .table-wrap { display: block; }
   }
 </style>
 </head>
@@ -169,16 +183,7 @@
 
   <div id="cardList"></div>
 
-  <div class="table-wrap">
-  <table>
-    <thead>
-      <tr>
-        <th>城市</th><th>日期</th><th>时间</th><th>类型</th><th>模型</th><th>鲜艳度</th><th>鲜艳度说明</th><th>气溶胶</th><th>气溶胶说明</th>
-      </tr>
-    </thead>
-    <tbody id="tableBody"></tbody>
-  </table>
-  </div>
+  <div class="table-wrap" id="tableWrap"></div>
   <div id="pagination" class="pagination"></div>
   <div id="emptyMsg" class="empty" style="display:none;">暂无数据</div>
 </div>
@@ -367,12 +372,12 @@ function renderCards() {
 }
 
 function renderTable() {
-  const tbody = document.getElementById('tableBody');
+  const wrap = document.getElementById('tableWrap');
   const empty = document.getElementById('emptyMsg');
   const pagination = document.getElementById('pagination');
 
   if (!allRecords || allRecords.length === 0) {
-    tbody.innerHTML = '';
+    wrap.innerHTML = '';
     empty.style.display = 'block';
     pagination.innerHTML = '';
     return;
@@ -385,43 +390,77 @@ function renderTable() {
   const end = start + pageSize;
   const pageRecords = allRecords.slice(start, end);
 
-  tbody.innerHTML = pageRecords.map(r => '<tr>' +
-    '<td>' + escapeHtml(r.city || '-') + '</td><td>' + escapeHtml(r.date) + '</td><td>' + escapeHtml(r.time) + '</td>' +
-    '<td>' + escapeHtml(typeMap[r.event_type] || r.event_type) + '</td><td>' + escapeHtml(r.model) + '</td>' +
-    '<td>' + (r.quality != null ? r.quality.toFixed(4) : '-') + '</td>' +
-    '<td>' + escapeHtml(qualityLabel(r.quality)) + '</td>' +
-    '<td>' + (r.aod != null ? r.aod.toFixed(4) : '-') + '</td>' +
-    '<td>' + escapeHtml(aodLabel(r.aod)) + '</td>' +
-    '</tr>').join('');
+  const sorted = [...pageRecords].sort((a, b) => {
+    if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+    const aOrder = a.event_type === 'morning' ? 0 : 1;
+    const bOrder = b.event_type === 'morning' ? 0 : 1;
+    if (aOrder !== bOrder) return aOrder - bOrder;
+    if (a.time !== b.time) return a.time < b.time ? -1 : 1;
+    return a.model < b.model ? -1 : 1;
+  });
+
+  const groups = {};
+  sorted.forEach(r => {
+    const key = r.date;
+    if (!groups[key]) groups[key] = {};
+    const eKey = r.event_type;
+    if (!groups[key][eKey]) groups[key][eKey] = {};
+    groups[key][eKey][r.model] = r;
+  });
+
+  let html = '';
+  const dates = Object.keys(groups).sort();
+  dates.forEach(date => {
+    const evts = groups[date];
+    html += `<div class="date-group"><div class="date-header">${escapeHtml(date)}</div>`;
+    const eventOrder = ['morning', 'evening'];
+    eventOrder.forEach(eType => {
+      if (!evts[eType]) return;
+      const models = evts[eType];
+      const typeName = typeMap[eType];
+      const tagClass = eType === 'morning' ? 'tag-morning' : 'tag-evening';
+      const time = Object.values(models)[0]?.time || '';
+      html += `<div class="event-section">`;
+      html += `<div class="event-label"><span class="tag ${tagClass}">${typeName}</span> ${escapeHtml(time)}</div>`;
+      html += `<div class="model-row"><div style="font-size:12px;color:var(--text-secondary)">模型</div>`;
+      ['GFS', 'EC'].forEach(m => {
+        const r = models[m];
+        if (!r) { html += `<div class="model-cell"><span class="model-name">${m}</span><span class="metric">-</span></div>`; return; }
+        const qBadge = r.quality != null
+          ? `<span class="quality-badge ${r.quality < 0.2 ? 'q-low' : r.quality < 0.8 ? 'q-mid' : 'q-high'}">${r.quality.toFixed(4)}</span>`
+          : '-';
+        const qLabel = qualityLabel(r.quality);
+        const aodVal = r.aod != null ? r.aod.toFixed(4) : '-';
+        const aodLbl = aodLabel(r.aod);
+        html += `<div class="model-cell"><span class="model-name">${m}</span><span class="metric">鲜艳度 ${qBadge} ${qLabel}</span><span class="metric">气溶胶 <b>${aodVal}</b> ${aodLbl}</span></div>`;
+      });
+      html += `</div></div>`;
+    });
+    html += `</div>`;
+  });
+
+  wrap.innerHTML = html;
 
   if (totalPages > 1) {
     let paginationHTML = '';
     paginationHTML += `<button ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">上一页</button>`;
-
     const maxVisible = 5;
     let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
     let endPage = Math.min(totalPages, startPage + maxVisible - 1);
-    if (endPage - startPage < maxVisible - 1) {
-      startPage = Math.max(1, endPage - maxVisible + 1);
-    }
-
+    if (endPage - startPage < maxVisible - 1) startPage = Math.max(1, endPage - maxVisible + 1);
     if (startPage > 1) {
       paginationHTML += `<button onclick="goToPage(1)">1</button>`;
       if (startPage > 2) paginationHTML += `<button disabled>...</button>`;
     }
-
     for (let i = startPage; i <= endPage; i++) {
       paginationHTML += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
     }
-
     if (endPage < totalPages) {
       if (endPage < totalPages - 1) paginationHTML += `<button disabled>...</button>`;
       paginationHTML += `<button onclick="goToPage(${totalPages})">${totalPages}</button>`;
     }
-
     paginationHTML += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">下一页</button>`;
     paginationHTML += `<span style="margin-left:10px;color:var(--text-secondary)">共 ${allRecords.length} 条</span>`;
-
     pagination.innerHTML = paginationHTML;
   } else {
     pagination.innerHTML = '';
