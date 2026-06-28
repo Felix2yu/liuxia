@@ -860,7 +860,16 @@ loadCities();
 loadData();
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/service-worker.js').catch(() => {});
+  navigator.serviceWorker.register('/service-worker.js').then(reg => {
+    reg.addEventListener('updatefound', () => {
+      const newWorker = reg.installing;
+      newWorker.addEventListener('statechange', () => {
+        if (newWorker.state === 'activated' && navigator.serviceWorker.controller) {
+          if (confirm('流霞已更新，是否刷新？')) location.reload();
+        }
+      });
+    });
+  }).catch(() => {});
 }
 </script>
 </body>

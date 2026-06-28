@@ -73,10 +73,12 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 			"short_name": "流霞",
 			"description": "朝霞晚霞预测数据看板，支持多城市、多模型对比",
 			"start_url": "/",
+			"scope": "/",
 			"display": "standalone",
 			"background_color": "#f5f5f5",
 			"theme_color": "#e67e22",
 			"orientation": "any",
+			"categories": ["weather", "utilities"],
 			"icons": [
 				{ "src": "/static/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png" },
 				{ "src": "/static/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png" },
@@ -92,29 +94,106 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 		}
 		w.Header().Set("Content-Type", "application/javascript")
 		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-		w.Write([]byte(`const CACHE_NAME = 'liuxia-v1';
-const STATIC_ASSETS = ['/', '/manifest.json', '/static/icons/icon-192x192.png', '/static/icons/icon-512x512.png'];
+		w.Write([]byte(`const CACHE_VERSION = 'v2';
+const STATIC_CACHE = 'liuxia-static-' + CACHE_VERSION;
+const DATA_CACHE = 'liuxia-data-' + CACHE_VERSION;
+const STATIC_ASSETS = ['/', '/manifest.json', '/static/icons/icon-192x192.png', '/static/icons/icon-512x512.png', '/offline.html'];
+const CDN_ASSETS = ['https://cdn.jsdelivr.net/npm/chart.js@4'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(STATIC_ASSETS)).then(() => self.skipWaiting()));
+  e.waitUntil(
+    caches.open(STATIC_CACHE).then(c => c.addAll([...STATIC_ASSETS, ...CDN_ASSETS])).then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(
+    caches.keys().then(keys => Promise.all(
+      keys.filter(k => k !== STATIC_CACHE && k !== DATA_CACHE).map(k => caches.delete(k))
+    )).then(() => self.clients.claim())
+  );
 });
 
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (url.pathname.startsWith('/api/')) {
-    e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+    e.respondWith(
+      caches.open(DATA_CACHE).then(cache =>
+        fetch(e.request).then(res => {
+          cache.put(e.request, res.clone());
+          return res;
+        }).catch(() => cache.match(e.request))
+      )
+    );
   } else {
-    e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(res => {
-      const clone = res.clone();
-      caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
-      return res;
-    })));
+    e.respondWith(
+      caches.match(e.request).then(cached => {
+        if (cached) return cached;
+        return fetch(e.request).then(res => {
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(STATIC_CACHE).then(c => c.put(e.request, clone));
+          }
+          return res;
+        }).catch(() => {
+          if (e.request.mode === 'navigate') {
+            return caches.match('/offline.html');
+          }
+          return new Response('Offline', { status: 503 });
+        });
+      })
+    );
   }
-});`))
+});
+
+self.addEventListener('sync', e => {
+  if (e.tag === 'sync-data') {
+    e.waitUntil(syncPendingData());
+  }
+});
+
+async function syncPendingData() {
+  const cache = await caches.open(DATA_CACHE);
+  const keys = await cache.keys();
+  for (const req of keys) {
+    try { await fetch(req); } catch (_) {}
+  }
+}`))
+	})
+
+	mux.HandleFunc("/offline.html", func(w http.ResponseWriter, r *http.Request) {
+		methodNotAllowed(w, r)
+		if r.Method != http.MethodGet {
+			return
+		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Write([]byte(`<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#e67e22">
+<title>离线 - 流霞</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f5f5; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+  .offline-box { text-align: center; padding: 40px; }
+  .offline-box svg { width: 80px; height: 80px; margin-bottom: 20px; fill: none; stroke: #e67e22; stroke-width: 1.5; }
+  h1 { font-size: 20px; margin-bottom: 10px; color: #e67e22; }
+  p { color: #666; margin-bottom: 20px; }
+  button { padding: 10px 24px; border: none; border-radius: 20px; background: #e67e22; color: #fff; font-size: 14px; cursor: pointer; }
+  button:hover { background: #d35400; }
+</style>
+</head>
+<body>
+<div class="offline-box">
+  <svg viewBox="0 0 24 24"><path d="M1 1l22 22"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+  <h1>当前处于离线状态</h1>
+  <p>请检查网络连接后重试</p>
+  <button onclick="location.reload()">重新加载</button>
+</div>
+</body>
+</html>`))
 	})
 
 	mux.HandleFunc("/api/data", func(w http.ResponseWriter, r *http.Request) {
