@@ -60,6 +60,8 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 		serveIndex(w, r)
 	})
 
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+
 	mux.HandleFunc("/manifest.json", func(w http.ResponseWriter, r *http.Request) {
 		methodNotAllowed(w, r)
 		if r.Method != http.MethodGet {
@@ -69,10 +71,17 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 		w.Write([]byte(`{
 			"name": "流霞 - 朝霞晚霞数据看板",
 			"short_name": "流霞",
+			"description": "朝霞晚霞预测数据看板，支持多城市、多模型对比",
 			"start_url": "/",
 			"display": "standalone",
 			"background_color": "#f5f5f5",
-			"theme_color": "#e67e22"
+			"theme_color": "#e67e22",
+			"orientation": "any",
+			"icons": [
+				{ "src": "/static/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png" },
+				{ "src": "/static/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png" },
+				{ "src": "/static/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+			]
 		}`))
 	})
 
@@ -82,7 +91,30 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/javascript")
-		w.Write([]byte(`self.addEventListener('fetch', e => e.respondWith(fetch(e.request)));`))
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		w.Write([]byte(`const CACHE_NAME = 'liuxia-v1';
+const STATIC_ASSETS = ['/', '/manifest.json', '/static/icons/icon-192x192.png', '/static/icons/icon-512x512.png'];
+
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(STATIC_ASSETS)).then(() => self.skipWaiting()));
+});
+
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+});
+
+self.addEventListener('fetch', e => {
+  const url = new URL(e.request.url);
+  if (url.pathname.startsWith('/api/')) {
+    e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+  } else {
+    e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(res => {
+      const clone = res.clone();
+      caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+      return res;
+    })));
+  }
+});`))
 	})
 
 	mux.HandleFunc("/api/data", func(w http.ResponseWriter, r *http.Request) {
