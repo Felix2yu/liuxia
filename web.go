@@ -79,22 +79,12 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 			"background_color": "#f5f5f5",
 			"theme_color": "#e67e22",
 			"orientation": "any",
-			"lang": "zh-CN",
-			"dir": "ltr",
 			"categories": ["weather", "utilities"],
 			"icons": [
-				{ "src": "/static/icons/icon-180x180.png", "sizes": "180x180", "type": "image/png", "purpose": "any" },
-				{ "src": "/static/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-				{ "src": "/static/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+				{ "src": "/static/icons/icon-180x180.png", "sizes": "180x180", "type": "image/png" },
+				{ "src": "/static/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png" },
+				{ "src": "/static/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png" },
 				{ "src": "/static/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
-			],
-			"shortcuts": [
-				{
-					"name": "今日数据",
-					"short_name": "今日",
-					"url": "/",
-					"description": "查看今日朝霞晚霞数据"
-				}
 			]
 		}`))
 	})

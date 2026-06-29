@@ -30,6 +30,7 @@ RUN apk add --no-cache tzdata ca-certificates gosu \
 
 COPY --from=builder /build/liuxia /app/liuxia
 COPY templates /app/templates
+COPY static /app/static
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
