@@ -74,15 +74,27 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 			"description": "朝霞晚霞预测数据看板，支持多城市、多模型对比",
 			"start_url": "/",
 			"scope": "/",
+			"id": "/",
 			"display": "standalone",
 			"background_color": "#f5f5f5",
 			"theme_color": "#e67e22",
 			"orientation": "any",
+			"lang": "zh-CN",
+			"dir": "ltr",
 			"categories": ["weather", "utilities"],
 			"icons": [
-				{ "src": "/static/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png" },
-				{ "src": "/static/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png" },
+				{ "src": "/static/icons/icon-180x180.png", "sizes": "180x180", "type": "image/png", "purpose": "any" },
+				{ "src": "/static/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+				{ "src": "/static/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
 				{ "src": "/static/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+			],
+			"shortcuts": [
+				{
+					"name": "今日数据",
+					"short_name": "今日",
+					"url": "/",
+					"description": "查看今日朝霞晚霞数据"
+				}
 			]
 		}`))
 	})
@@ -94,10 +106,10 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 		}
 		w.Header().Set("Content-Type", "application/javascript")
 		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-		w.Write([]byte(`const CACHE_VERSION = 'v2';
+		w.Write([]byte(`const CACHE_VERSION = 'v3';
 const STATIC_CACHE = 'liuxia-static-' + CACHE_VERSION;
 const DATA_CACHE = 'liuxia-data-' + CACHE_VERSION;
-const STATIC_ASSETS = ['/', '/manifest.json', '/static/icons/icon-192x192.png', '/static/icons/icon-512x512.png', '/offline.html'];
+const STATIC_ASSETS = ['/', '/manifest.json', '/static/icons/icon-180x180.png', '/static/icons/icon-192x192.png', '/static/icons/icon-512x512.png', '/offline.html'];
 const CDN_ASSETS = ['https://cdn.jsdelivr.net/npm/chart.js@4'];
 
 self.addEventListener('install', e => {
@@ -114,6 +126,12 @@ self.addEventListener('activate', e => {
   );
 });
 
+self.addEventListener('message', e => {
+  if (e.data && e.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (url.pathname.startsWith('/api/')) {
@@ -124,6 +142,19 @@ self.addEventListener('fetch', e => {
           return res;
         }).catch(() => cache.match(e.request))
       )
+    );
+  } else if (url.hostname === 'cdn.jsdelivr.net') {
+    e.respondWith(
+      caches.match(e.request).then(cached => {
+        const fetchPromise = fetch(e.request).then(res => {
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(STATIC_CACHE).then(c => c.put(e.request, clone));
+          }
+          return res;
+        }).catch(() => cached);
+        return cached || fetchPromise;
+      })
     );
   } else {
     e.respondWith(
