@@ -12,10 +12,14 @@ type RequestConfig struct {
 }
 
 type PushConfig struct {
-	Enable     bool
-	NtfyServer string
-	NtfyTopic  string
-	NtfyToken  string
+	Enable       bool
+	Markdown     bool
+	NtfyServer   string
+	NtfyTopic    string
+	NtfyToken    string
+	AppriseURL   string
+	AppriseKey   string
+	AppriseTargets []string
 }
 
 type TaskConfig struct {
@@ -84,9 +88,7 @@ func LoadConfig() (*Config, error) {
 	cities := getEnvList("CITY", []string{city})
 
 	ntfyTopic := getEnv("NTFY_TOPIC", "")
-	if ntfyTopic == "" {
-		return nil, fmt.Errorf("环境变量 NTFY_TOPIC 未设置")
-	}
+	appriseURL := getEnv("APPRISE_URL", "")
 
 	dataRetention := 365
 	if v := os.Getenv("DATA_RETENTION_DAYS"); v != "" {
@@ -100,10 +102,14 @@ func LoadConfig() (*Config, error) {
 			BaseURL: getEnv("BASE_URL", "https://sunsetbot.top/"),
 		},
 		Push: PushConfig{
-			Enable:     getEnvBool("PUSH_ENABLE", true),
-			NtfyServer: getEnv("NTFY_SERVER", "https://ntfy.sh"),
-			NtfyTopic:  ntfyTopic,
-			NtfyToken:  getEnv("NTFY_TOKEN", ""),
+			Enable:         getEnvBool("PUSH_ENABLE", true),
+			Markdown:       getEnvBool("PUSH_MARKDOWN", true),
+			NtfyServer:     getEnv("NTFY_SERVER", "https://ntfy.sh"),
+			NtfyTopic:      ntfyTopic,
+			NtfyToken:      getEnv("NTFY_TOKEN", ""),
+			AppriseURL:     appriseURL,
+			AppriseKey:     getEnv("APPRISE_KEY", ""),
+			AppriseTargets: getEnvList("APPRISE_TARGETS", nil),
 		},
 		Schedule: ScheduleConfig{
 			City:            cities[0],
@@ -122,6 +128,13 @@ func LoadConfig() (*Config, error) {
 			},
 			DataRetention: dataRetention,
 		},
+	}
+
+	// 推送配置验证
+	if cfg.Push.Enable {
+		if cfg.Push.AppriseURL == "" && cfg.Push.NtfyTopic == "" {
+			return nil, fmt.Errorf("推送已启用但未配置通知渠道：需设置 APPRISE_URL 或 NTFY_TOPIC")
+		}
 	}
 
 	return cfg, nil

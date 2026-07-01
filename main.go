@@ -84,7 +84,7 @@ func main() {
 	)
 
 	if cfg.Schedule.SendTestOnStart {
-		predictor.sendNtfyNotification("服务启动测试", "服务已启动，这是一条测试消息", 3, nil)
+		predictor.sendNotification("服务启动测试", "服务已启动，这是一条测试消息", 3, nil)
 	}
 
 	if cfg.Schedule.DataRetention > 0 {

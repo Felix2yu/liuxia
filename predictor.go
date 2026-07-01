@@ -25,10 +25,11 @@ var eventMap = map[string]string{
 var numRe = regexp.MustCompile(`\d+\.\d+`)
 
 type WeatherPredictor struct {
-	config  *Config
-	client  *http.Client
-	logger  *log.Logger
-	store   *Store
+	config   *Config
+	client   *http.Client
+	logger   *log.Logger
+	store    *Store
+	notifier Notifier
 }
 
 type WeatherData struct {
@@ -51,10 +52,11 @@ func NewWeatherPredictor(config *Config, logger *log.Logger, store *Store) *Weat
 	}
 
 	return &WeatherPredictor{
-		config: config,
-		client: client,
-		logger: logger,
-		store:  store,
+		config:   config,
+		client:   client,
+		logger:   logger,
+		store:    store,
+		notifier: NewNotifier(&config.Push, client, logger),
 	}
 }
 
@@ -269,7 +271,7 @@ func (wp *WeatherPredictor) fetchDataForCity(city string, models []string, isMor
 			p := 3
 			maxPriority = &p
 		}
-		wp.sendNtfyNotification(eventTitle, pushContent, *maxPriority, []string{eventTag})
+		wp.sendNotification(eventTitle, pushContent, *maxPriority, []string{eventTag})
 	} else {
 		wp.logger.Printf("[推送] 城市 %s 没有符合条件的数据", city)
 	}
@@ -283,50 +285,26 @@ type dateEntry struct {
 	timeStr    string
 }
 
-func (wp *WeatherPredictor) sendNtfyNotification(title, content string, priority int, tags []string) {
+func (wp *WeatherPredictor) sendNotification(title, content string, priority int, tags []string) {
 	if !wp.config.Push.Enable {
 		wp.logger.Println("[推送已关闭]")
 		return
 	}
 
-	server := strings.TrimRight(wp.config.Push.NtfyServer, "/")
-	topic := wp.config.Push.NtfyTopic
-	if topic == "" {
-		wp.logger.Println("[推送失败] 配置中未设置 ntfy_topic")
+	if wp.config.Push.AppriseURL == "" && wp.config.Push.NtfyTopic == "" {
+		wp.logger.Println("[推送失败] 未配置通知渠道 (需设置 APPRISE_URL 或 NTFY_TOPIC)")
 		return
 	}
 
-	pushURL := fmt.Sprintf("%s/%s", server, topic)
-	message := fmt.Sprintf("%s\n\n%s", title, content)
-
-	req, err := http.NewRequest("POST", pushURL, strings.NewReader(message))
-	if err != nil {
-		wp.logger.Printf("[推送失败] 构建请求失败: %v", err)
-		return
-	}
-	req.Header.Set("Markdown", "yes")
-	req.Header.Set("Priority", strconv.Itoa(priority))
-	if len(tags) > 0 {
-		req.Header.Set("Tags", strings.Join(tags, ","))
-	}
-	if wp.config.Push.NtfyToken != "" {
-		req.Header.Set("Authorization", "Bearer "+wp.config.Push.NtfyToken)
+	body := content
+	markdown := wp.config.Push.Markdown
+	if !markdown {
+		body = stripMarkdown(content)
 	}
 
-	resp, err := wp.client.Do(req)
-	if err != nil {
+	if err := wp.notifier.Send(title, body, priority, tags, markdown); err != nil {
 		wp.logger.Printf("[推送失败] %v", err)
-		return
 	}
-	defer resp.Body.Close()
-	io.Copy(io.Discard, resp.Body)
-
-	if resp.StatusCode >= 400 {
-		wp.logger.Printf("[推送失败] HTTP %d", resp.StatusCode)
-		return
-	}
-
-	wp.logger.Printf("[推送成功] ntfy 通知已发送到 %s, 优先级: %d", pushURL, priority)
 }
 
 func (wp *WeatherPredictor) buildMarkdownResponse(city string, urls map[string]string, eventType string) ([]string, *int, bool) {

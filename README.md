@@ -2,14 +2,14 @@
 
 > 流霞，天边流动的彩霞。古人以"流霞"喻仙酒、喻美景，今以此名，捕捉朝暮之间那一抹转瞬即逝的绚烂。
 
-流霞是一款朝霞晚霞预报与监控工具。它基于 GFS/EC 气象模型数据，每日定时获取朝霞/晚霞的鲜艳度与气溶胶预报，通过 ntfy 推送提醒，并提供 Web 数据看板用于历史数据的可视化分析。
+流霞是一款朝霞晚霞预报与监控工具。它基于 GFS/EC 气象模型数据，每日定时获取朝霞/晚霞的鲜艳度与气溶胶预报，通过 apprise 或 ntfy 推送提醒，并提供 Web 数据看板用于历史数据的可视化分析。
 
 由 sunsetbot.top 提供接口。Docker 镜像支持 `linux/amd64` 和 `linux/arm64` 架构。
 
 ## 功能特性
 
 - **定时预报** — 基于 GFS/EC 模型，按配置时间自动获取朝霞/晚霞预报
-- **智能推送** — 通过 ntfy 推送通知，按预报质量分 5 个等级，高质量预报加粗标记
+- **智能推送** — 通过 apprise/ntfy 推送通知，按预报质量分 5 个等级，支持 Markdown 格式开关
 - **数据看板** — 内置 Web 页面，支持折线图、模型对比、月度趋势、城市对比等可视化
 - **最佳观赏排行** — 按历史数据排行 Top 10 高质量日期，季节对比分析
 - **多城市监控** — 支持同时监控多个城市的朝霞/晚霞数据
@@ -33,9 +33,15 @@ services:
       - CITY=江苏省-苏州,上海市-上海
       - BASE_URL=https://sunsetbot.top/
       - PUSH_ENABLE=true
-      - NTFY_SERVER=https://ntfy.sh
-      - NTFY_TOPIC=Weather
-      - NTFY_TOKEN=
+      - PUSH_MARKDOWN=true
+      # 方式一：使用 apprise（推荐）
+      - APPRISE_URL=http://apprise:8080
+      - APPRISE_KEY=
+      - APPRISE_TARGETS=
+      # 方式二：直接使用 ntfy（向后兼容）
+      # - NTFY_SERVER=https://ntfy.sh
+      # - NTFY_TOPIC=Weather
+      # - NTFY_TOKEN=
       - SEND_TEST_ON_START=false
       - PUSH_ERROR=true
       - MORNING_ENABLE=true
@@ -54,22 +60,29 @@ services:
 
 ## 环境变量
 
+### 推送配置
+
+| 变量 | 必填 | 默认值 | 说明 |
+|------|------|--------|------|
+| `PUSH_ENABLE` | 否 | `true` | 是否启用推送 |
+| `PUSH_MARKDOWN` | 否 | `true` | 是否使用 Markdown 格式推送 |
+| `APPRISE_URL` | 否* | — | apprise-api 地址（如 `http://apprise:8080`） |
+| `APPRISE_KEY` | 否 | — | apprise-api 密钥（启用安全模式时需要） |
+| `APPRISE_TARGETS` | 否 | 全部 | 指定发送目标，逗号分隔（如 `ntfy,telegram`） |
+| `NTFY_TOPIC` | 否* | — | ntfy 主题（直接使用 ntfy 时必填） |
+| `NTFY_SERVER` | 否 | `https://ntfy.sh` | ntfy 服务器地址 |
+| `NTFY_TOKEN` | 否 | — | ntfy 认证 token |
+| `SEND_TEST_ON_START` | 否 | `false` | 启动时推送测试消息 |
+| `PUSH_ERROR` | 否 | `true` | 请求错误时推送 |
+
+> *启用推送时，需配置 `APPRISE_URL` 或 `NTFY_TOPIC` 其中之一。两者都配置时优先使用 apprise。
+
+### 基础配置
+
 | 变量 | 必填 | 默认值 | 说明 |
 |------|------|--------|------|
 | `CITY` | 是 | — | 城市，支持逗号分隔多城市，如 `江苏省-苏州` 或 `江苏省-苏州,上海市-上海` |
-| `NTFY_TOPIC` | 是 | — | ntfy 主题 |
 | `BASE_URL` | 否 | `https://sunsetbot.top/` | 服务基础 URL |
-| `PUSH_ENABLE` | 否 | `true` | 是否启用推送 |
-| `NTFY_SERVER` | 否 | `https://ntfy.sh` | ntfy 服务器地址 |
-| `NTFY_TOKEN` | 否 | 空 | ntfy 认证 token（可选） |
-| `SEND_TEST_ON_START` | 否 | `false` | 启动时推送测试消息 |
-| `PUSH_ERROR` | 否 | `true` | 请求错误时推送 |
-| `MORNING_ENABLE` | 否 | `true` | 朝霞任务是否启用 |
-| `MORNING_TIME` | 否 | `18:00,00:00` | 朝霞执行时间，逗号分隔 |
-| `MORNING_MODEL` | 否 | `GFS,EC` | 朝霞模型，逗号分隔 |
-| `EVENING_ENABLE` | 否 | `true` | 晚霞任务是否启用 |
-| `EVENING_TIME` | 否 | `08:00,11:30,16:00` | 晚霞执行时间，逗号分隔 |
-| `EVENING_MODEL` | 否 | `GFS,EC` | 晚霞模型，逗号分隔 |
 | `DB_PATH` | 否 | `liuxia.db` | SQLite 数据库文件路径 |
 | `WEB_PORT` | 否 | `8080` | Web 看板端口 |
 | `DATA_RETENTION_DAYS` | 否 | `365` | 数据保留天数，设为 `0` 禁用自动清理 |
@@ -77,17 +90,68 @@ services:
 | `PGID` | 否 | `1000` | 容器运行用户 GID |
 | `TZ` | 否 | `Asia/Shanghai` | 时区 |
 
+### 任务配置
+
+| 变量 | 必填 | 默认值 | 说明 |
+|------|------|--------|------|
+| `MORNING_ENABLE` | 否 | `true` | 朝霞任务是否启用 |
+| `MORNING_TIME` | 否 | `18:00,00:00` | 朝霞执行时间，逗号分隔 |
+| `MORNING_MODEL` | 否 | `GFS,EC` | 朝霞模型，逗号分隔 |
+| `EVENING_ENABLE` | 否 | `true` | 晚霞任务是否启用 |
+| `EVENING_TIME` | 否 | `08:00,11:30,16:00` | 晚霞执行时间，逗号分隔 |
+| `EVENING_MODEL` | 否 | `GFS,EC` | 晚霞模型，逗号分隔 |
+
 ## 消息推送
 
-使用 ntfy 推送信息，也可自建部署本地服务。
+支持两种推送方式：apprise（推荐）和 ntfy 直连。
+
+### 方式一：apprise（推荐）
+
+使用 [apprise-api](https://github.com/caronc/apprise-api) 统一管理通知服务，支持 90+ 通知渠道。
+
+**部署 apprise-api：**
+
+```bash
+docker run -d -p 8080:8080 caronc/apprise-api:latest
+```
+
+**配置通知服务：**
+
+通过 Web UI (`http://localhost:8080`) 或 API 添加通知服务：
+
+```bash
+# 添加 ntfy
+curl -X POST http://localhost:8080/config \
+  -d 'schema=ntfy&topic=mytopic&server=ntfy.sh'
+
+# 添加 Telegram
+curl -X POST http://localhost:8080/config \
+  -d 'schema=tgram&bottoken=xxx&chatid=xxx'
+```
+
+**配置环境变量：**
+
+```yaml
+APPRISE_URL=http://apprise:8080
+APPRISE_KEY=your-key        # 可选
+APPRISE_TARGETS=ntfy        # 可选，不设置则发送到所有已配置服务
+```
+
+### 方式二：ntfy 直连
+
+直接使用 ntfy 推送，无需部署 apprise-api。
 
 官方 ntfy 地址：<https://ntfy.sh/>
 
-页面上新建 Topic 后填入环境变量 `NTFY_TOPIC`；如需使用需要验证身份的 Topic，可通过 `NTFY_TOKEN` 传入认证 token。
+```yaml
+NTFY_TOPIC=Weather
+NTFY_SERVER=https://ntfy.sh
+NTFY_TOKEN=                 # 可选
+```
 
 ### 通知等级
 
-Ntfy 通知等级对应关系：
+通知等级对应关系：
 
 - 过滤阈值：< 0.2 的数据会被过滤掉，不通知
 - 0.2 - 0.4 → 等级 1
@@ -96,7 +160,7 @@ Ntfy 通知等级对应关系：
 - 0.8 - 1.0 → 等级 4
 - 1.0 及以上 → 等级 5
 
-ntfy 消息中质量、气溶胶数值较优秀时会加粗标记。
+设置 `PUSH_MARKDOWN=true` 时，消息中质量、气溶胶数值较优秀时会加粗标记；设置为 `false` 则发送纯文本。
 
 ![通知示例](.img/snapshot.jpg)
 

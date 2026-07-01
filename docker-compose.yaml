@@ -10,9 +10,13 @@ services:
       - CITY=江苏省-苏州
       - BASE_URL=https://sunsetbot.top/
       - PUSH_ENABLE=true
+      - PUSH_MARKDOWN=true
       - NTFY_SERVER=https://ntfy.sh
       - NTFY_TOPIC=Weather
       - NTFY_TOKEN=
+      # - APPRISE_URL=http://apprise:8080
+      # - APPRISE_KEY=your-key
+      # - APPRISE_TARGETS=ntfy,telegram
       - SEND_TEST_ON_START=false
       - PUSH_ERROR=true
       - MORNING_ENABLE=true
