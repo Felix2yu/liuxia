@@ -11,12 +11,12 @@ services:
       - BASE_URL=https://sunsetbot.top/
       - PUSH_ENABLE=true
       - PUSH_MARKDOWN=true
+      # 方式一：使用 shoutrrr URL（推荐，支持多渠道）
+      # - PUSH_URL=ntfy://ntfy.sh/Weather,tgram://bot-token/chatid
+      # 方式二：直接使用 ntfy（向后兼容）
       - NTFY_SERVER=https://ntfy.sh
       - NTFY_TOPIC=Weather
       - NTFY_TOKEN=
-      # - APPRISE_URL=http://apprise:8080
-      # - APPRISE_KEY=your-key
-      # - APPRISE_TARGETS=ntfy,telegram
       - SEND_TEST_ON_START=false
       - PUSH_ERROR=true
       - MORNING_ENABLE=true

@@ -56,7 +56,7 @@ func NewWeatherPredictor(config *Config, logger *log.Logger, store *Store) *Weat
 		client:   client,
 		logger:   logger,
 		store:    store,
-		notifier: NewNotifier(&config.Push, client, logger),
+		notifier: NewNotifier(&config.Push, logger),
 	}
 }
 
@@ -291,8 +291,8 @@ func (wp *WeatherPredictor) sendNotification(title, content string, priority int
 		return
 	}
 
-	if wp.config.Push.AppriseURL == "" && wp.config.Push.NtfyTopic == "" {
-		wp.logger.Println("[推送失败] 未配置通知渠道 (需设置 APPRISE_URL 或 NTFY_TOPIC)")
+	if wp.config.Push.PushURL == "" && wp.config.Push.NtfyTopic == "" {
+		wp.logger.Println("[推送失败] 未配置通知渠道 (需设置 PUSH_URL 或 NTFY_TOPIC)")
 		return
 	}
 

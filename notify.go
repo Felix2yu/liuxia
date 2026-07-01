@@ -1,13 +1,12 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
 	"strings"
+
+	"github.com/containrrr/shoutrrr"
+	"github.com/containrrr/shoutrrr/pkg/types"
 )
 
 // Notifier 通用通知接口
@@ -17,24 +16,23 @@ type Notifier interface {
 }
 
 // NewNotifier 根据配置创建对应的 Notifier
-func NewNotifier(cfg *PushConfig, client *http.Client, logger *log.Logger) Notifier {
-	if cfg.AppriseURL != "" {
-		return &AppriseNotifier{
-			AppriseURL:  cfg.AppriseURL,
-			AppriseKey:  cfg.AppriseKey,
-			Targets:     cfg.AppriseTargets,
-			client:      client,
-			logger:      logger,
+func NewNotifier(cfg *PushConfig, logger *log.Logger) Notifier {
+	if cfg.PushURL != "" {
+		return &ShoutrrrNotifier{
+			PushURL: cfg.PushURL,
+			logger:  logger,
 		}
 	}
-	// 向后兼容：如果没有配置 apprise_url，使用 ntfy 直连
-	return &NtfyNotifier{
-		Server: cfg.NtfyServer,
-		Topic:  cfg.NtfyTopic,
-		Token:  cfg.NtfyToken,
-		client: client,
-		logger: logger,
+	// 向后兼容：使用 ntfy 直连
+	if cfg.NtfyTopic != "" {
+		return &NtfyNotifier{
+			Server: cfg.NtfyServer,
+			Topic:  cfg.NtfyTopic,
+			Token:  cfg.NtfyToken,
+			logger: logger,
+		}
 	}
+	return nil
 }
 
 // stripMarkdown 移除 Markdown 格式标记，返回纯文本
@@ -57,91 +55,70 @@ func stripMarkdown(s string) string {
 	return strings.Join(result, "\n")
 }
 
-// AppriseNotifier 基于 apprise-api 的通知实现
-type AppriseNotifier struct {
-	AppriseURL  string
-	AppriseKey  string
-	Targets     []string
-	client      *http.Client
-	logger      *log.Logger
+// ShoutrrrNotifier 基于 shoutrrr 的通知实现
+type ShoutrrrNotifier struct {
+	PushURL string
+	logger  *log.Logger
 }
 
-func (a *AppriseNotifier) Name() string { return "apprise" }
+func (s *ShoutrrrNotifier) Name() string { return "shoutrrr" }
 
-func (a *AppriseNotifier) Send(title, body string, priority int, tags []string, markdown bool) error {
-	if a.AppriseURL == "" {
-		return fmt.Errorf("未设置 apprise_url")
+func (s *ShoutrrrNotifier) Send(title, body string, priority int, tags []string, markdown bool) error {
+	if s.PushURL == "" {
+		return fmt.Errorf("未设置 PUSH_URL")
 	}
 
-	// 映射优先级到 apprise type
-	msgType := "info"
+	// shoutrrr 使用逗号分隔多个 URL
+	urls := strings.Split(s.PushURL, ",")
+
+	sender, err := shoutrrr.CreateSender(urls...)
+	if err != nil {
+		return fmt.Errorf("创建通知器失败: %w", err)
+	}
+
+	// 构建完整消息
+	message := fmt.Sprintf("%s\n\n%s", title, body)
+
+	// 构建参数
+	params := &types.Params{
+		"title": title,
+	}
+
+	// 优先级映射
 	switch {
 	case priority >= 5:
-		msgType = "failure"
+		(*params)["priority"] = "5"
 	case priority >= 4:
-		msgType = "warning"
-	case priority <= 2:
-		msgType = "success"
-	}
-
-	payload := map[string]interface{}{
-		"title": title,
-		"body":  body,
-		"type":  msgType,
+		(*params)["priority"] = "4"
+	case priority >= 3:
+		(*params)["priority"] = "3"
+	case priority >= 2:
+		(*params)["priority"] = "2"
+	default:
+		(*params)["priority"] = "1"
 	}
 
 	if len(tags) > 0 {
-		payload["tag"] = strings.Join(tags, ",")
+		(*params)["tags"] = strings.Join(tags, ",")
 	}
 
-	jsonData, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("序列化失败: %w", err)
-	}
-
-	// 确定发送目标
-	targets := a.Targets
-	if len(targets) == 0 {
-		targets = []string{""} // 空字符串表示发送到所有已配置的服务
-	}
-
-	appriseURL := strings.TrimRight(a.AppriseURL, "/")
-	keyPart := ""
-	if a.AppriseKey != "" {
-		keyPart = a.AppriseKey + "/"
-	}
-
-	var lastErr error
-	for _, target := range targets {
-		url := fmt.Sprintf("%s/%snotify/", appriseURL, keyPart)
-		if target != "" {
-			url = fmt.Sprintf("%s/%snotify/%s/", appriseURL, keyPart, target)
+	// sender.Send 返回 []error
+	errs := sender.Send(message, params)
+	if len(errs) > 0 {
+		// 收集所有错误
+		var errMessages []string
+		for _, e := range errs {
+			if e != nil {
+				errMessages = append(errMessages, e.Error())
+			}
 		}
-
-		req, err := http.NewRequest("POST", url, bytes.NewReader(jsonData))
-		if err != nil {
-			lastErr = fmt.Errorf("构建请求失败: %w", err)
-			continue
+		if len(errMessages) > 0 {
+			return fmt.Errorf("推送失败: %s", strings.Join(errMessages, "; "))
 		}
-		req.Header.Set("Content-Type", "application/json")
-
-		resp, err := a.client.Do(req)
-		if err != nil {
-			lastErr = fmt.Errorf("推送失败: %w", err)
-			continue
-		}
-		io.Copy(io.Discard, resp.Body)
-		resp.Body.Close()
-
-		if resp.StatusCode >= 400 {
-			lastErr = fmt.Errorf("推送失败: HTTP %d", resp.StatusCode)
-			continue
-		}
-
-		a.logger.Printf("[推送成功] apprise 通知已发送, 目标: %s, 优先级: %d", target, priority)
 	}
 
-	return lastErr
+	s.logger.Printf("[推送成功] 通知已发送, 优先级: %d", priority)
+	return nil
 }
 
 // NtfyNotifier ntfy 直连通知实现（向后兼容）
@@ -149,7 +126,6 @@ type NtfyNotifier struct {
 	Server string
 	Topic  string
 	Token  string
-	client *http.Client
 	logger *log.Logger
 }
 
@@ -160,35 +136,41 @@ func (n *NtfyNotifier) Send(title, body string, priority int, tags []string, mar
 		return fmt.Errorf("未设置 ntfy_topic")
 	}
 
+	// 构建 ntfy URL
 	server := strings.TrimRight(n.Server, "/")
 	pushURL := fmt.Sprintf("%s/%s", server, n.Topic)
+	if n.Token != "" {
+		// 如果有 token，使用 token 格式
+		pushURL = fmt.Sprintf("%s?auth=%s", pushURL, n.Token)
+	}
+
+	sender, err := shoutrrr.CreateSender(pushURL)
+	if err != nil {
+		return fmt.Errorf("创建通知器失败: %w", err)
+	}
+
 	message := fmt.Sprintf("%s\n\n%s", title, body)
 
-	req, err := http.NewRequest("POST", pushURL, strings.NewReader(message))
-	if err != nil {
-		return fmt.Errorf("构建请求失败: %w", err)
+	params := &types.Params{
+		"title":    title,
+		"priority": fmt.Sprintf("%d", priority),
+		"markdown": fmt.Sprintf("%v", markdown),
 	}
-
-	if markdown {
-		req.Header.Set("Markdown", "yes")
-	}
-	req.Header.Set("Priority", fmt.Sprintf("%d", priority))
 	if len(tags) > 0 {
-		req.Header.Set("Tags", strings.Join(tags, ","))
-	}
-	if n.Token != "" {
-		req.Header.Set("Authorization", "Bearer "+n.Token)
+		(*params)["tags"] = strings.Join(tags, ",")
 	}
 
-	resp, err := n.client.Do(req)
-	if err != nil {
-		return fmt.Errorf("推送失败: %w", err)
-	}
-	defer resp.Body.Close()
-	io.Copy(io.Discard, resp.Body)
-
-	if resp.StatusCode >= 400 {
-		return fmt.Errorf("推送失败: HTTP %d", resp.StatusCode)
+	errs := sender.Send(message, params)
+	if len(errs) > 0 {
+		var errMessages []string
+		for _, e := range errs {
+			if e != nil {
+				errMessages = append(errMessages, e.Error())
+			}
+		}
+		if len(errMessages) > 0 {
+			return fmt.Errorf("推送失败: %s", strings.Join(errMessages, "; "))
+		}
 	}
 
 	n.logger.Printf("[推送成功] ntfy 通知已发送到 %s, 优先级: %d", pushURL, priority)
