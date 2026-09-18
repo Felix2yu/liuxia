@@ -2,14 +2,14 @@
 
 > 流霞，天边流动的彩霞。古人以"流霞"喻仙酒、喻美景，今以此名，捕捉朝暮之间那一抹转瞬即逝的绚烂。
 
-流霞是一款朝霞晚霞预报与监控工具。它基于 GFS/EC 气象模型数据，每日定时获取朝霞/晚霞的鲜艳度与气溶胶预报，通过 [shoutrrr](https://github.com/containrrr/shoutrrr) 推送提醒，并提供 Web 数据看板用于历史数据的可视化分析。
+流霞是一款朝霞晚霞预报与监控工具。它基于 GFS/EC 气象模型数据，每日定时获取朝霞/晚霞的鲜艳度与气溶胶预报，通过 [apprise-go](https://github.com/unraid/apprise-go) 推送提醒，并提供 Web 数据看板用于历史数据的可视化分析。
 
 由 sunsetbot.top 提供接口。Docker 镜像支持 `linux/amd64` 和 `linux/arm64` 架构。
 
 ## 功能特性
 
 - **定时预报** — 基于 GFS/EC 模型，按配置时间自动获取朝霞/晚霞预报
-- **智能推送** — 通过 shoutrrr 推送通知，按预报质量分 5 个等级，支持 Markdown 格式开关
+- **智能推送** — 通过 apprise-go 推送通知，按预报质量分 5 个等级，支持 Markdown 格式开关
 - **数据看板** — 内置 Web 页面，支持折线图、模型对比、月度趋势、城市对比等可视化
 - **最佳观赏排行** — 按历史数据排行 Top 10 高质量日期，季节对比分析
 - **多城市监控** — 支持同时监控多个城市的朝霞/晚霞数据
@@ -59,7 +59,7 @@ services:
 |------|------|--------|------|
 | `PUSH_ENABLE` | 否 | `true` | 是否启用推送 |
 | `PUSH_MARKDOWN` | 否 | `true` | 是否使用 Markdown 格式推送 |
-| `PUSH_URL` | 否* | — | shoutrrr URL，支持多渠道逗号分隔（如 `ntfy://ntfy.sh/Weather,tgram://bot-token/chatid`） |
+| `PUSH_URL` | 否* | — | apprise URL，支持多渠道逗号分隔（如 `ntfy://ntfy.sh/Weather,tgram://bot-token/chatid`） |
 | `SEND_TEST_ON_START` | 否 | `false` | 启动时推送测试消息 |
 | `PUSH_ERROR` | 否 | `true` | 请求错误时推送 |
 
@@ -91,7 +91,7 @@ services:
 
 ## 消息推送
 
-使用 [shoutrrr](https://github.com/containrrr/shoutrrr) Go 原生通知库，支持 30+ 通知渠道，无需额外部署，支持多渠道同时推送。
+使用 [apprise-go](https://github.com/unraid/apprise-go) Go 原生通知库，支持 100+ 通知渠道，无需额外部署，支持多渠道同时推送。
 
 **配置环境变量：**
 
@@ -117,7 +117,7 @@ PUSH_URL=ntfy://ntfy.sh/Weather,tgram://bot-token/chatid
 | Pushover | `pover://token@userkey` |
 | Gotify | `gotify://gotify-server/token` |
 
-更多渠道请参考 [shoutrrr 文档](https://containrrr.dev/shoutrrr/)。
+更多渠道请参考 [apprise-go 文档](https://github.com/unraid/apprise-go)。
 
 ### 通知等级
 

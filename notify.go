@@ -5,8 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/containrrr/shoutrrr"
-	"github.com/containrrr/shoutrrr/pkg/types"
+	apprise "github.com/unraid/apprise-go"
 )
 
 // Notifier 通用通知接口
@@ -20,7 +19,7 @@ func NewNotifier(cfg *PushConfig, logger *log.Logger) Notifier {
 	if cfg.PushURL == "" {
 		return nil
 	}
-	return &ShoutrrrNotifier{
+	return &AppriseNotifier{
 		PushURL: cfg.PushURL,
 		logger:  logger,
 	}
@@ -46,103 +45,39 @@ func stripMarkdown(s string) string {
 	return strings.Join(result, "\n")
 }
 
-// ShoutrrrNotifier 基于 shoutrrr 的通知实现
-type ShoutrrrNotifier struct {
+// AppriseNotifier 基于 apprise-go 的通知实现
+type AppriseNotifier struct {
 	PushURL string
 	logger  *log.Logger
 }
 
-func (s *ShoutrrrNotifier) Name() string { return "shoutrrr" }
+func (s *AppriseNotifier) Name() string { return "apprise" }
 
-func (s *ShoutrrrNotifier) Send(title, body string, priority int, tags []string, markdown bool) error {
+func (s *AppriseNotifier) Send(title, body string, priority int, tags []string, markdown bool) error {
 	if s.PushURL == "" {
 		return fmt.Errorf("未设置 PUSH_URL")
 	}
 
-	// shoutrrr 使用逗号分隔多个 URL
+	// apprise-go 使用逗号分隔多个 URL
 	urls := strings.Split(s.PushURL, ",")
-
-	sender, err := shoutrrr.CreateSender(urls...)
-	if err != nil {
-		return fmt.Errorf("创建通知器失败: %w", err)
-	}
 
 	// 构建完整消息
 	message := fmt.Sprintf("%s\n\n%s", title, body)
 
-	// 构建参数
-	params := &types.Params{
-		"title": title,
-	}
-
-	// 优先级映射
-	switch {
-	case priority >= 5:
-		(*params)["priority"] = "5"
-	case priority >= 4:
-		(*params)["priority"] = "4"
-	case priority >= 3:
-		(*params)["priority"] = "3"
-	case priority >= 2:
-		(*params)["priority"] = "2"
-	default:
-		(*params)["priority"] = "1"
-	}
-
-	if len(tags) > 0 {
-		(*params)["tags"] = strings.Join(tags, ",")
-	}
-
-	// 先尝试带 markdown 参数发送
+	// 根据 markdown 参数决定输入格式
+	var opts []apprise.Option
+	opts = append(opts, apprise.WithTitle(title))
 	if markdown {
-		markdownParams := *params
-		markdownParams["markdown"] = "yes"
-		errs := sender.Send(message, &markdownParams)
-		if !hasUnsupportedParamError(errs) {
-			if err := s.checkErrors(errs); err != nil {
-				return err
-			}
-			s.logSuccess(priority)
-			return nil
-		}
-		// 如果因为参数不支持而失败，降级为纯文本（清除 markdown 符号）重试
-		s.logger.Printf("[推送降级] 目标不支持 markdown 参数，降级为纯文本推送")
+		opts = append(opts, apprise.WithInputFormat("markdown"))
+	} else {
 		message = stripMarkdown(message)
 	}
 
-	// 不带 markdown 发送
-	errs := sender.Send(message, params)
-	if err := s.checkErrors(errs); err != nil {
-		return err
+	// 发送通知
+	if err := apprise.Send(urls, message, opts...); err != nil {
+		return fmt.Errorf("推送失败: %w", err)
 	}
-	s.logSuccess(priority)
-	return nil
-}
 
-// hasUnsupportedParamError 检查错误中是否包含不支持的参数错误
-func hasUnsupportedParamError(errs []error) bool {
-	for _, e := range errs {
-		if e != nil && strings.Contains(e.Error(), "is not a valid config key") {
-			return true
-		}
-	}
-	return false
-}
-
-// checkErrors 检查错误列表，有错误则返回汇总错误
-func (s *ShoutrrrNotifier) checkErrors(errs []error) error {
-	var errMessages []string
-	for _, e := range errs {
-		if e != nil {
-			errMessages = append(errMessages, e.Error())
-		}
-	}
-	if len(errMessages) > 0 {
-		return fmt.Errorf("推送失败: %s", strings.Join(errMessages, "; "))
-	}
-	return nil
-}
-
-func (s *ShoutrrrNotifier) logSuccess(priority int) {
 	s.logger.Printf("[推送成功] 通知已发送, 优先级: %d", priority)
+	return nil
 }
