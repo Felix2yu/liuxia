@@ -84,9 +84,14 @@ func LoadConfig() (*Config, error) {
 
 	dataRetention := 365
 	if v := os.Getenv("DATA_RETENTION_DAYS"); v != "" {
-		if days, err := strconv.Atoi(v); err == nil {
-			dataRetention = days
+		days, err := strconv.Atoi(v)
+		if err != nil {
+			return nil, fmt.Errorf("DATA_RETENTION_DAYS 非法: %q，应为非负整数", v)
 		}
+		if days < 0 {
+			return nil, fmt.Errorf("DATA_RETENTION_DAYS 不能为负数: %d", days)
+		}
+		dataRetention = days
 	}
 
 	cfg := &Config{

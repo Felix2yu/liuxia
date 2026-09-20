@@ -35,7 +35,7 @@ type WeatherPredictor struct {
 type WeatherData struct {
 	PushStr    string
 	QualityNum *float64
-	AODNum     float64
+	AODNum     *float64
 	DateStr    string
 	TimeStr    string
 }
@@ -123,7 +123,7 @@ func (wp *WeatherPredictor) parseWeatherData(content string) *WeatherData {
 	if len(eventTime) >= 10 {
 		dateStr = eventTime[:10]
 	}
-	if len(eventTime) >= 11 {
+	if len(eventTime) >= 11 && eventTime[10] == ' ' {
 		timeStr = eventTime[11:]
 	}
 
@@ -150,7 +150,7 @@ func (wp *WeatherPredictor) parseWeatherData(content string) *WeatherData {
 	return &WeatherData{
 		PushStr:    pushStr.String(),
 		QualityNum: qualityNum,
-		AODNum:     derefFloat(aodNum),
+		AODNum:     aodNum,
 		DateStr:    dateStr,
 		TimeStr:    timeStr,
 	}
@@ -286,7 +286,7 @@ type dateEntry struct {
 	model      string
 	pushStr    string
 	qualityNum *float64
-	aodNum     float64
+	aodNum     *float64
 	timeStr    string
 }
 
@@ -337,7 +337,7 @@ func (wp *WeatherPredictor) buildMarkdownResponse(city string, urls map[string]s
 				EventType: eventType,
 				Model:     model,
 				Quality:   result.QualityNum,
-				AOD:       floatPtr(result.AODNum),
+				AOD:       result.AODNum,
 			})
 		}
 
@@ -399,17 +399,6 @@ func (wp *WeatherPredictor) buildMarkdownResponse(city string, urls map[string]s
 	}
 
 	return markdownLines, maxPriority, hasData
-}
-
-func derefFloat(f *float64) float64 {
-	if f != nil {
-		return *f
-	}
-	return 0
-}
-
-func floatPtr(f float64) *float64 {
-	return &f
 }
 
 var minValidDate = time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)

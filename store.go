@@ -30,10 +30,14 @@ type SunsetRecord struct {
 }
 
 func InitStore(dbPath string) (*Store, error) {
-	db, err := sql.Open("sqlite", dbPath)
+	// WAL 模式提升并发读写能力，busy_timeout 让写冲突时自动等待而非立即报
+	// "database is locked"。该应用写入量低，限制单连接即可彻底避免写锁竞争。
+	dsn := fmt.Sprintf("file:%s?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)", dbPath)
+	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("open db: %w", err)
 	}
+	db.SetMaxOpenConns(1)
 
 	schema := `
 	CREATE TABLE IF NOT EXISTS sunset_data (
@@ -146,9 +150,9 @@ func (s *Store) ExportCSV(w io.Writer, city, eventType, startDate, endDate strin
 	}
 
 	writer := csv.NewWriter(w)
-	defer writer.Flush()
-
-	writer.Write([]string{"city", "date", "time", "event_type", "model", "quality", "aod", "created_at", "updated_at"})
+	if err := writer.Write([]string{"city", "date", "time", "event_type", "model", "quality", "aod", "created_at", "updated_at"}); err != nil {
+		return err
+	}
 	for _, r := range records {
 		qStr := ""
 		if r.Quality != nil {
@@ -158,7 +162,13 @@ func (s *Store) ExportCSV(w io.Writer, city, eventType, startDate, endDate strin
 		if r.AOD != nil {
 			aStr = fmt.Sprintf("%.4f", *r.AOD)
 		}
-		writer.Write([]string{r.City, r.Date, r.Time, r.EventType, r.Model, qStr, aStr, r.CreatedAt, r.UpdatedAt})
+		if err := writer.Write([]string{r.City, r.Date, r.Time, r.EventType, r.Model, qStr, aStr, r.CreatedAt, r.UpdatedAt}); err != nil {
+			return err
+		}
+	}
+	writer.Flush()
+	if err := writer.Error(); err != nil {
+		return err
 	}
 	return nil
 }
@@ -307,6 +317,12 @@ func (s *Store) GetStatistics(city, eventType, startDate, endDate string) (*Stat
 		stats.Monthly = append(stats.Monthly, m)
 	}
 
+	if stats.Models == nil {
+		stats.Models = []ModelStats{}
+	}
+	if stats.Monthly == nil {
+		stats.Monthly = []MonthlyStats{}
+	}
 	return stats, nil
 }
 
@@ -324,6 +340,9 @@ func (s *Store) GetCities() ([]string, error) {
 			return nil, err
 		}
 		cities = append(cities, city)
+	}
+	if cities == nil {
+		cities = []string{}
 	}
 	return cities, rows.Err()
 }
@@ -343,6 +362,8 @@ func (s *Store) DeleteOldRecords(daysToKeep int) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
+	// 数据已变更，失效缓存以保证看板立即反映最新状态。
+	s.Cache.Clear()
 	return result.RowsAffected()
 }
 
@@ -396,6 +417,9 @@ func (s *Store) GetCityComparison(eventType, startDate, endDate string) ([]CityC
 			return nil, err
 		}
 		results = append(results, c)
+	}
+	if results == nil {
+		results = []CityComparison{}
 	}
 	return results, rows.Err()
 }
@@ -561,5 +585,14 @@ func (s *Store) GetRankings(city, eventType string, limit int) (*Rankings, error
 		return nil, err
 	}
 
+	if rankings.BestDates == nil {
+		rankings.BestDates = []DateRanking{}
+	}
+	if rankings.Monthly == nil {
+		rankings.Monthly = []MonthRanking{}
+	}
+	if rankings.Seasonal == nil {
+		rankings.Seasonal = []SeasonRanking{}
+	}
 	return rankings, nil
 }

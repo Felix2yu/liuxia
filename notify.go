@@ -61,8 +61,9 @@ func (s *AppriseNotifier) Send(title, body string, priority int, tags []string, 
 	// apprise-go 使用逗号分隔多个 URL
 	urls := strings.Split(s.PushURL, ",")
 
-	// 构建完整消息
-	message := fmt.Sprintf("%s\n\n%s", title, body)
+	// 构建完整消息：title 已通过 WithTitle 单独传递，body 不再重复拼接标题，
+	// 避免接收端显示两遍标题。
+	message := body
 
 	// 根据 markdown 参数决定输入格式
 	var opts []apprise.Option

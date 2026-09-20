@@ -23,7 +23,10 @@ func TestBuildCronSpec(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := buildCronSpec(tt.timeStr)
+			result, err := buildCronSpec(tt.timeStr)
+			if err != nil {
+				t.Fatalf("buildCronSpec(%q) 返回错误: %v", tt.timeStr, err)
+			}
 			if result != tt.expected {
 				t.Errorf("buildCronSpec(%q) = %q, want %q", tt.timeStr, result, tt.expected)
 			}
@@ -31,23 +34,26 @@ func TestBuildCronSpec(t *testing.T) {
 	}
 }
 
-func TestBuildCronSpecEdgeCases(t *testing.T) {
+func TestBuildCronSpecRejectsInvalid(t *testing.T) {
 	tests := []struct {
-		name     string
-		timeStr  string
-		expected string
+		name    string
+		timeStr string
 	}{
-		{"空字符串", "", "0 0  * * *"},
-		{"只有冒号", ":", "0   * * *"},
-		{"两个冒号", "::", "   * * *"},
-		{"无效格式", "abc", "0 0 abc * * *"},
+		{"空字符串", ""},
+		{"只有冒号", ":"},
+		{"两个冒号", "::"},
+		{"无效格式", "abc"},
+		{"小时越界", "25:00"},
+		{"分钟越界", "18:60"},
+		{"秒越界", "18:30:60"},
+		{"负数", "-1:00"},
+		{"过多段", "1:2:3:4"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := buildCronSpec(tt.timeStr)
-			if result != tt.expected {
-				t.Errorf("buildCronSpec(%q) = %q, want %q", tt.timeStr, result, tt.expected)
+			if _, err := buildCronSpec(tt.timeStr); err == nil {
+				t.Errorf("buildCronSpec(%q) 应该返回错误", tt.timeStr)
 			}
 		})
 	}

@@ -262,4 +262,55 @@ func TestLoadConfig(t *testing.T) {
 			t.Error("LoadConfig() 在推送已启用但未配置 PUSH_URL 时应返回错误")
 		}
 	})
+
+	t.Run("DATA_RETENTION_DAYS为负数返回错误", func(t *testing.T) {
+		os.Setenv("CITY", "北京")
+		os.Setenv("PUSH_ENABLE", "false")
+		os.Setenv("DATA_RETENTION_DAYS", "-30")
+		defer func() {
+			os.Unsetenv("CITY")
+			os.Unsetenv("PUSH_ENABLE")
+			os.Unsetenv("DATA_RETENTION_DAYS")
+		}()
+
+		_, err := LoadConfig()
+		if err == nil {
+			t.Error("LoadConfig() 在 DATA_RETENTION_DAYS 为负数时应返回错误")
+		}
+	})
+
+	t.Run("DATA_RETENTION_DAYS为非数字返回错误", func(t *testing.T) {
+		os.Setenv("CITY", "北京")
+		os.Setenv("PUSH_ENABLE", "false")
+		os.Setenv("DATA_RETENTION_DAYS", "abc")
+		defer func() {
+			os.Unsetenv("CITY")
+			os.Unsetenv("PUSH_ENABLE")
+			os.Unsetenv("DATA_RETENTION_DAYS")
+		}()
+
+		_, err := LoadConfig()
+		if err == nil {
+			t.Error("LoadConfig() 在 DATA_RETENTION_DAYS 非数字时应返回错误")
+		}
+	})
+
+	t.Run("DATA_RETENTION_DAYS为0表示禁用清理", func(t *testing.T) {
+		os.Setenv("CITY", "北京")
+		os.Setenv("PUSH_ENABLE", "false")
+		os.Setenv("DATA_RETENTION_DAYS", "0")
+		defer func() {
+			os.Unsetenv("CITY")
+			os.Unsetenv("PUSH_ENABLE")
+			os.Unsetenv("DATA_RETENTION_DAYS")
+		}()
+
+		cfg, err := LoadConfig()
+		if err != nil {
+			t.Fatalf("LoadConfig() 意外错误: %v", err)
+		}
+		if cfg.Schedule.DataRetention != 0 {
+			t.Errorf("Schedule.DataRetention = %d, want 0", cfg.Schedule.DataRetention)
+		}
+	})
 }

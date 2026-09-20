@@ -37,20 +37,22 @@ func validateEventType(eventType string) bool {
 	return validEventTypes[eventType]
 }
 
-func methodNotAllowed(w http.ResponseWriter, r *http.Request) {
+// methodNotAllowed 在非 GET 请求时写 405 并返回 false，便于调用方直接
+// `if !methodNotAllowed(w, r) { return }`，避免在每个 handler 里重复判断 Method。
+func methodNotAllowed(w http.ResponseWriter, r *http.Request) bool {
 	if r.Method != http.MethodGet {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		return
+		return false
 	}
+	return true
 }
 
-func StartWebServer(port string, store *Store, logger *log.Logger) {
+func StartWebServer(port string, store *Store, logger *log.Logger) error {
 	cache := store.Cache
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		methodNotAllowed(w, r)
-		if r.Method != http.MethodGet {
+		if !methodNotAllowed(w, r) {
 			return
 		}
 		if r.URL.Path != "/" {
@@ -63,8 +65,7 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	mux.HandleFunc("/manifest.json", func(w http.ResponseWriter, r *http.Request) {
-		methodNotAllowed(w, r)
-		if r.Method != http.MethodGet {
+		if !methodNotAllowed(w, r) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -90,8 +91,7 @@ func StartWebServer(port string, store *Store, logger *log.Logger) {
 	})
 
 	mux.HandleFunc("/service-worker.js", func(w http.ResponseWriter, r *http.Request) {
-		methodNotAllowed(w, r)
-		if r.Method != http.MethodGet {
+		if !methodNotAllowed(w, r) {
 			return
 		}
 		// 用 HTML 文件的修改时间作为版本号，HTML 一改版本自动变
@@ -191,8 +191,7 @@ async function syncPendingData() {
 	})
 
 	mux.HandleFunc("/offline.html", func(w http.ResponseWriter, r *http.Request) {
-		methodNotAllowed(w, r)
-		if r.Method != http.MethodGet {
+		if !methodNotAllowed(w, r) {
 			return
 		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -226,8 +225,7 @@ async function syncPendingData() {
 	})
 
 	mux.HandleFunc("/api/data", func(w http.ResponseWriter, r *http.Request) {
-		methodNotAllowed(w, r)
-		if r.Method != http.MethodGet {
+		if !methodNotAllowed(w, r) {
 			return
 		}
 		atomic.AddInt64(&httpRequestsTotal, 1)
@@ -274,8 +272,7 @@ async function syncPendingData() {
 	})
 
 	mux.HandleFunc("/api/export", func(w http.ResponseWriter, r *http.Request) {
-		methodNotAllowed(w, r)
-		if r.Method != http.MethodGet {
+		if !methodNotAllowed(w, r) {
 			return
 		}
 		format := r.URL.Query().Get("format")
@@ -305,8 +302,7 @@ async function syncPendingData() {
 	})
 
 	mux.HandleFunc("/api/statistics", func(w http.ResponseWriter, r *http.Request) {
-		methodNotAllowed(w, r)
-		if r.Method != http.MethodGet {
+		if !methodNotAllowed(w, r) {
 			return
 		}
 		atomic.AddInt64(&httpRequestsTotal, 1)
@@ -350,8 +346,7 @@ async function syncPendingData() {
 	})
 
 	mux.HandleFunc("/api/cities", func(w http.ResponseWriter, r *http.Request) {
-		methodNotAllowed(w, r)
-		if r.Method != http.MethodGet {
+		if !methodNotAllowed(w, r) {
 			return
 		}
 		atomic.AddInt64(&httpRequestsTotal, 1)
@@ -379,8 +374,7 @@ async function syncPendingData() {
 	})
 
 	mux.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) {
-		methodNotAllowed(w, r)
-		if r.Method != http.MethodGet {
+		if !methodNotAllowed(w, r) {
 			return
 		}
 		totalRecords, _ := store.GetTotalRecords()
@@ -394,8 +388,7 @@ async function syncPendingData() {
 	})
 
 	mux.HandleFunc("/api/city-comparison", func(w http.ResponseWriter, r *http.Request) {
-		methodNotAllowed(w, r)
-		if r.Method != http.MethodGet {
+		if !methodNotAllowed(w, r) {
 			return
 		}
 		atomic.AddInt64(&httpRequestsTotal, 1)
@@ -438,8 +431,7 @@ async function syncPendingData() {
 	})
 
 	mux.HandleFunc("/api/today", func(w http.ResponseWriter, r *http.Request) {
-		methodNotAllowed(w, r)
-		if r.Method != http.MethodGet {
+		if !methodNotAllowed(w, r) {
 			return
 		}
 		atomic.AddInt64(&httpRequestsTotal, 1)
@@ -484,8 +476,7 @@ async function syncPendingData() {
 	})
 
 	mux.HandleFunc("/api/rankings", func(w http.ResponseWriter, r *http.Request) {
-		methodNotAllowed(w, r)
-		if r.Method != http.MethodGet {
+		if !methodNotAllowed(w, r) {
 			return
 		}
 		atomic.AddInt64(&httpRequestsTotal, 1)
@@ -522,8 +513,7 @@ async function syncPendingData() {
 	})
 
 	mux.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
-		methodNotAllowed(w, r)
-		if r.Method != http.MethodGet {
+		if !methodNotAllowed(w, r) {
 			return
 		}
 		totalRecords, err := store.GetTotalRecords()
@@ -570,10 +560,19 @@ async function syncPendingData() {
 	})
 
 	addr := ":" + port
-	logger.Printf("[Web] 服务启动于 http://localhost%s", addr)
-	if err := http.ListenAndServe(addr, mux); err != nil {
-		logger.Printf("[Web] 服务异常: %v", err)
+	srv := &http.Server{
+		Addr:              addr,
+		Handler:           mux,
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       120 * time.Second,
 	}
+	logger.Printf("[Web] 服务启动于 http://localhost%s", addr)
+	if err := srv.ListenAndServe(); err != nil {
+		return fmt.Errorf("[Web] 服务异常: %w", err)
+	}
+	return nil
 }
 
 func serveIndex(w http.ResponseWriter, r *http.Request) {

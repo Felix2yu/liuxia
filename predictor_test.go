@@ -36,52 +36,6 @@ func TestCalculatePriority(t *testing.T) {
 	}
 }
 
-func TestDerefFloat(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    *float64
-		expected float64
-	}{
-		{"nil指针返回0", nil, 0},
-		{"非nil指针返回值", float64Ptr(3.14), 3.14},
-		{"零值指针返回0", float64Ptr(0), 0},
-		{"负值指针返回负值", float64Ptr(-1.5), -1.5},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := derefFloat(tt.input)
-			if result != tt.expected {
-				t.Errorf("derefFloat(%v) = %f, want %f", tt.input, result, tt.expected)
-			}
-		})
-	}
-}
-
-func TestFloatPtr(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    float64
-		expected float64
-	}{
-		{"正数", 3.14, 3.14},
-		{"零值", 0, 0},
-		{"负数", -1.5, -1.5},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := floatPtr(tt.input)
-			if result == nil {
-				t.Fatal("floatPtr() 返回 nil")
-			}
-			if *result != tt.expected {
-				t.Errorf("floatPtr(%f) = %f, want %f", tt.input, *result, tt.expected)
-			}
-		})
-	}
-}
-
 func TestIsReasonableDate(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -127,10 +81,6 @@ func TestMinValidDate(t *testing.T) {
 	if minValidDate.Format("2006-01-02") != expected {
 		t.Errorf("minValidDate = %v, want %v", minValidDate.Format("2006-01-02"), expected)
 	}
-}
-
-func float64Ptr(f float64) *float64 {
-	return &f
 }
 
 func TestNewWeatherPredictor(t *testing.T) {
@@ -647,8 +597,8 @@ func TestParseWeatherDataEdgeCases(t *testing.T) {
 		if result == nil {
 			t.Fatal("parseWeatherData() 返回 nil")
 		}
-		if result.AODNum != 0 {
-			t.Errorf("AODNum = %f, want 0", result.AODNum)
+		if result.AODNum != nil {
+			t.Errorf("AODNum = %v, want nil", *result.AODNum)
 		}
 	})
 
@@ -698,8 +648,11 @@ func TestParseWeatherDataEdgeCases(t *testing.T) {
 		if result == nil {
 			t.Fatal("parseWeatherData() 返回 nil")
 		}
-		if result.AODNum > 0.4 {
-			t.Errorf("低AOD数据应该小于等于 0.4, got %f", result.AODNum)
+		if result.AODNum == nil {
+			t.Fatal("AODNum 不应该为 nil")
+		}
+		if *result.AODNum > 0.4 {
+			t.Errorf("低AOD数据应该小于等于 0.4, got %f", *result.AODNum)
 		}
 	})
 }
