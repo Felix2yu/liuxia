@@ -98,7 +98,7 @@
 
   body::before {
     content: '';
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     right: 0;
@@ -838,16 +838,24 @@
     overflow: hidden;
     border: 1px solid var(--border);
     box-shadow: var(--shadow-md);
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1.5;
+    table-layout: fixed;
   }
+
+  .data-table colgroup .col-date { width: 13%; }
+  .data-table colgroup .col-event { width: 8%; }
+  .data-table colgroup .col-time { width: 12%; }
+  .data-table colgroup .col-model { width: 8%; }
+  .data-table colgroup .col-quality { width: 30%; }
+  .data-table colgroup .col-aod { width: 29%; }
 
   .data-table thead th {
     background: var(--bg-secondary);
-    padding: 14px 20px;
+    padding: 14px 16px;
     text-align: left;
     font-weight: 700;
-    font-size: 13px;
+    font-size: 14px;
     color: var(--text-secondary);
     letter-spacing: 0.5px;
     text-transform: uppercase;
@@ -888,7 +896,7 @@
   }
 
   .data-table tbody td {
-    padding: 14px 20px;
+    padding: 12px 16px;
     border-bottom: 1px solid var(--border);
     vertical-align: middle;
     transition: background 0.12s ease;
@@ -910,7 +918,7 @@
 
   .cell-date {
     font-weight: 700;
-    font-size: 15px;
+    font-size: 16px;
     color: var(--text-primary);
     font-family: var(--font-display);
     letter-spacing: 0.3px;
@@ -925,7 +933,7 @@
 
   .cell-time {
     font-family: var(--font-mono);
-    font-size: 13px;
+    font-size: 14px;
     color: var(--text-tertiary);
     white-space: nowrap;
   }
@@ -933,7 +941,7 @@
   .cell-model {
     font-weight: 700;
     font-family: var(--font-mono);
-    font-size: 13px;
+    font-size: 14px;
     letter-spacing: 0.5px;
     color: var(--text-primary);
     white-space: nowrap;
@@ -941,9 +949,9 @@
 
   .tag {
     display: inline-block;
-    padding: 4px 12px;
+    padding: 4px 14px;
     border-radius: 20px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     letter-spacing: 0.5px;
   }
@@ -959,7 +967,7 @@
   }
 
   .bar-cell {
-    min-width: 150px;
+    min-width: 0;
   }
 
   .bar-wrap {
@@ -970,25 +978,25 @@
 
   .bar-track {
     flex: 1;
-    height: 8px;
+    height: 10px;
     background: var(--bg-tertiary);
-    border-radius: 4px;
+    border-radius: 5px;
     overflow: hidden;
-    min-width: 60px;
+    min-width: 50px;
   }
 
   .bar-fill {
     height: 100%;
-    border-radius: 4px;
+    border-radius: 5px;
     transition: width 0.4s ease;
   }
 
   .bar-val {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-tertiary);
     white-space: nowrap;
-    min-width: 36px;
+    min-width: 38px;
     text-align: right;
   }
 
@@ -1002,9 +1010,9 @@
 
   .level-badge {
     display: inline-block;
-    padding: 3px 10px;
+    padding: 3px 12px;
     border-radius: 6px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     white-space: nowrap;
   }
@@ -2238,6 +2246,14 @@ function renderTable() {
 
   wrap.innerHTML = `
     <table class="data-table" role="region" aria-label="每日朝霞晚霞数据" aria-rowcount="${pageRecords.length}">
+      <colgroup>
+        <col class="col-date">
+        <col class="col-event">
+        <col class="col-time">
+        <col class="col-model">
+        <col class="col-quality">
+        <col class="col-aod">
+      </colgroup>
       <thead>
         <tr>
           <th scope="col" class="sortable ${thDateClass}" data-sort="date" tabindex="0" role="columnheader" aria-sort="${sortCol === 'date' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}">日期</th>
