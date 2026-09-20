@@ -829,60 +829,117 @@
     display: none;
   }
 
-  .date-group {
-    background: var(--surface);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: var(--radius-xl);
-    margin-bottom: 16px;
-    box-shadow: var(--shadow-lg);
+  /* ============ DATA TABLE ============ */
+  .data-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: var(--radius-lg);
     overflow: hidden;
     border: 1px solid var(--border);
-    transition: background 0.4s ease;
+    box-shadow: var(--shadow-md);
+    font-size: 13px;
+    line-height: 1.5;
   }
 
-  .date-header {
-    background: linear-gradient(135deg, var(--accent-morning) 0%, var(--accent-morning-deep) 100%);
-    color: #fff;
-    padding: 14px 24px;
+  .data-table thead th {
+    background: var(--bg-secondary);
+    padding: 12px 16px;
+    text-align: left;
     font-weight: 700;
-    font-size: 15px;
-    font-family: var(--font-display);
-    letter-spacing: 1px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--border-strong);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 2;
   }
 
-  .date-header::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.8);
-    box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+  .data-table thead th.sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s ease;
   }
 
-  .event-section {
+  .data-table thead th.sortable:hover {
+    color: var(--accent-morning);
+  }
+
+  .data-table thead th.sortable::after {
+    content: '\2195';
+    margin-left: 4px;
+    font-size: 11px;
+    opacity: 0.4;
+  }
+
+  .data-table thead th.sort-asc::after {
+    content: '\2191';
+    opacity: 1;
+    color: var(--accent-morning);
+  }
+
+  .data-table thead th.sort-desc::after {
+    content: '\2193';
+    opacity: 1;
+    color: var(--accent-morning);
+  }
+
+  .data-table tbody td {
+    padding: 10px 16px;
     border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    transition: background 0.12s ease;
   }
 
-  .event-section:last-child {
+  .data-table tbody tr:last-child td {
     border-bottom: none;
   }
 
-  .event-label {
-    padding: 10px 24px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    background: var(--bg-secondary);
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  .data-table tbody tr:hover td {
+    background: rgba(255, 123, 61, 0.03);
   }
 
-  .event-label .tag {
+  .data-table tbody td[tabindex]:focus-visible {
+    outline: 2px solid var(--accent-morning);
+    outline-offset: -2px;
+    border-radius: 4px;
+  }
+
+  .cell-date {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    letter-spacing: 0.3px;
+    background: var(--surface);
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .cell-event {
+    vertical-align: middle;
+  }
+
+  .cell-time {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+  }
+
+  .cell-model {
+    font-weight: 700;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    color: var(--text-primary);
+    white-space: nowrap;
+  }
+
+  .tag {
     display: inline-block;
     padding: 3px 10px;
     border-radius: 20px;
@@ -891,83 +948,156 @@
     letter-spacing: 0.5px;
   }
 
-  .event-label .tag-morning {
+  .tag-morning {
     background: rgba(255, 123, 61, 0.15);
     color: var(--accent-morning-deep);
   }
 
-  .event-label .tag-evening {
+  .tag-evening {
     background: rgba(124, 58, 237, 0.15);
     color: var(--accent-evening-deep);
   }
 
-  .model-row {
-    display: grid;
-    grid-template-columns: 80px 1fr 1fr;
-    padding: 14px 24px;
-    border-bottom: 1px solid var(--border);
-    font-size: 13px;
+  .bar-cell {
+    min-width: 120px;
+  }
+
+  .bar-wrap {
+    display: flex;
     align-items: center;
-    transition: background 0.15s ease;
+    gap: 8px;
   }
 
-  .model-row:hover {
-    background: rgba(255, 123, 61, 0.03);
+  .bar-track {
+    flex: 1;
+    height: 6px;
+    background: var(--bg-tertiary);
+    border-radius: 3px;
+    overflow: hidden;
+    min-width: 50px;
   }
 
-  .model-row:last-child {
+  .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+
+  .bar-val {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+    min-width: 36px;
+    text-align: right;
+  }
+
+  .bar-q-low { background: #94a3b8; }
+  .bar-q-mid { background: #f59e0b; }
+  .bar-q-high { background: #ff7b3d; }
+
+  .bar-aod-low { background: #0ea5e9; }
+  .bar-aod-mid { background: #94a3b8; }
+  .bar-aod-high { background: #64748b; }
+
+  .level-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .level-q-low { background: rgba(148, 163, 184, 0.2); color: #64748b; }
+  .level-q-mid { background: rgba(251, 191, 36, 0.2); color: #d97706; }
+  .level-q-high { background: rgba(255, 123, 61, 0.2); color: #e85d1c; }
+
+  .level-aod-low { background: rgba(14, 165, 233, 0.15); color: #0284c7; }
+  .level-aod-mid { background: rgba(148, 163, 184, 0.2); color: #64748b; }
+  .level-aod-high { background: rgba(100, 116, 139, 0.25); color: #475569; }
+
+  /* ============ MOBILE CARDS ============ */
+  .date-group {
+    background: var(--surface);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .card-date-header {
+    background: linear-gradient(135deg, var(--accent-morning) 0%, var(--accent-morning-deep) 100%);
+    color: #fff;
+    padding: 12px 18px;
+    font-weight: 700;
+    font-size: 14px;
+    font-family: var(--font-display);
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-date-header::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+  }
+
+  .card-event-block {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-event-block:last-child {
     border-bottom: none;
   }
 
-  .model-cell {
+  .card-event-header {
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
     display: flex;
-    flex-direction: column;
-    gap: 3px;
+    align-items: center;
+    gap: 8px;
   }
 
-  .model-cell .model-name {
+  .card-models {
+    padding: 8px 18px 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .card-model-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .card-model-name {
     font-weight: 700;
-    font-size: 13px;
-    color: var(--text-primary);
+    font-size: 12px;
     font-family: var(--font-mono);
+    color: var(--text-primary);
     letter-spacing: 0.5px;
   }
 
-  .model-cell .metric {
-    font-size: 12px;
+  .card-metric {
+    font-size: 11px;
     color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
-
-  .model-cell .metric b {
-    color: var(--text-primary);
-    font-weight: 600;
-  }
-
-  .quality-badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    font-family: var(--font-mono);
-  }
-
-  .q-low { background: rgba(148, 163, 184, 0.2); color: #64748b; }
-  .q-mid { background: rgba(251, 191, 36, 0.2); color: #d97706; }
-  .q-high { background: rgba(255, 123, 61, 0.2); color: #e85d1c; }
-
-  .aod-badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    font-family: var(--font-mono);
-  }
-
-  .aod-low { background: rgba(14, 165, 233, 0.15); color: #0284c7; }
-  .aod-mid { background: rgba(148, 163, 184, 0.2); color: #64748b; }
-  .aod-high { background: rgba(100, 116, 139, 0.25); color: #475569; }
 
   /* ============ MODAL ============ */
   .modal-overlay {
@@ -1333,18 +1463,18 @@
       padding: 14px 16px 18px;
     }
 
-    .date-header {
-      padding: 12px 18px;
-      font-size: 14px;
+    .card-date-header {
+      padding: 10px 16px;
+      font-size: 13px;
     }
 
-    .event-label {
-      padding: 8px 18px;
+    .card-event-header {
+      padding: 8px 16px;
+      font-size: 12px;
     }
 
-    .model-row {
-      padding: 12px 18px;
-      grid-template-columns: 1fr 1fr;
+    .card-models {
+      padding: 6px 16px 10px;
     }
 
     .today-tomorrow {
@@ -1636,6 +1766,8 @@
 let qualityChart, aodChart, modelCompareChart, monthlyChart, cityCompareChart, bestDatesChart, seasonChart;
 let allRecords = [];
 let currentPage = 1;
+let sortCol = null;
+let sortDir = 'asc';
 const pageSize = 20;
 
 async function loadTodayTomorrow() {
@@ -1916,6 +2048,8 @@ async function loadData() {
       return a.time < b.time ? -1 : 1;
     });
     currentPage = 1;
+    sortCol = null;
+    sortDir = 'asc';
     renderTable();
     renderCards();
     renderCharts(allRecords);
@@ -1955,22 +2089,27 @@ function renderCards() {
   let html = '';
   Object.keys(groups).sort().reverse().forEach(date => {
     const evts = groups[date];
-    html += `<div class="date-group"><div class="date-header">${escapeHtml(date)}</div>`;
+    html += `<div class="date-group"><div class="card-date-header">${escapeHtml(date)}</div>`;
     ['morning', 'evening'].forEach(eType => {
       if (!evts[eType]) return;
       const models = evts[eType];
       const time = Object.values(models)[0]?.time || '';
       const tagClass = eType === 'morning' ? 'tag-morning' : 'tag-evening';
-      html += `<div class="event-section">`;
-      html += `<div class="event-label"><span class="tag ${tagClass}">${typeMap[eType]}</span> ${escapeHtml(time)}</div>`;
-      html += `<div class="model-row" style="grid-template-columns:1fr 1fr">`;
+      html += `<div class="card-event-block">`;
+      html += `<div class="card-event-header"><span class="tag ${tagClass}">${typeMap[eType]}</span> ${escapeHtml(time)}</div>`;
+      html += `<div class="card-models">`;
       ['GFS', 'EC'].forEach(m => {
         const r = models[m];
-        if (!r) { html += `<div class="model-cell"><span class="model-name">${m}</span><span class="metric">-</span></div>`; return; }
-        const qBadge = r.quality != null
-          ? `<span class="quality-badge ${r.quality < 0.2 ? 'q-low' : r.quality < 0.8 ? 'q-mid' : 'q-high'}">${r.quality.toFixed(4)}</span>`
-          : '-';
-        html += `<div class="model-cell"><span class="model-name">${m}</span><span class="metric">鲜艳度 ${qBadge} ${qualityLabel(r.quality)}</span><span class="metric">气溶胶 <span class="aod-badge ${r.aod < 0.3 ? 'aod-low' : r.aod < 0.6 ? 'aod-mid' : 'aod-high'}">${r.aod != null ? r.aod.toFixed(4) : '-'}</span> ${aodLabel(r.aod)}</span></div>`;
+        html += `<div class="card-model-cell"><span class="card-model-name">${m}</span>`;
+        if (!r) {
+          html += `<span class="card-metric">-</span>`;
+        } else {
+          const qLevel = qualityLabel(r.quality);
+          const aodLevel = aodLabel(r.aod);
+          html += `<span class="card-metric">鲜艳度 ${qLevel}</span>`;
+          html += `<span class="card-metric">气溶胶 ${aodLevel}</span>`;
+        }
+        html += `</div>`;
       });
       html += `</div></div>`;
     });
@@ -1997,60 +2136,141 @@ function renderTable() {
   const totalPages = Math.ceil(allRecords.length / pageSize);
   const start = (currentPage - 1) * pageSize;
   const end = start + pageSize;
-  const pageRecords = allRecords.slice(start, end);
+  let pageRecords = allRecords.slice(start, end);
 
-  const sorted = [...pageRecords].sort((a, b) => {
-    if (a.date !== b.date) return a.date < b.date ? 1 : -1;
-    const aOrder = a.event_type === 'morning' ? 0 : 1;
-    const bOrder = b.event_type === 'morning' ? 0 : 1;
-    if (aOrder !== bOrder) return aOrder - bOrder;
-    if (a.time !== b.time) return a.time < b.time ? -1 : 1;
-    return a.model < b.model ? -1 : 1;
-  });
+  if (sortCol) {
+    pageRecords = [...pageRecords].sort((a, b) => {
+      let va, vb;
+      if (sortCol === 'date') { va = a.date + a.time; vb = b.date + b.time; }
+      else if (sortCol === 'quality') { va = a.quality ?? -1; vb = b.quality ?? -1; }
+      else if (sortCol === 'aod') { va = a.aod ?? -1; vb = b.aod ?? -1; }
+      else return 0;
+      if (va < vb) return sortDir === 'asc' ? -1 : 1;
+      if (va > vb) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  } else {
+    pageRecords = [...pageRecords].sort((a, b) => {
+      if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+      const aO = a.event_type === 'morning' ? 0 : 1;
+      const bO = b.event_type === 'morning' ? 0 : 1;
+      if (aO !== bO) return aO - bO;
+      if (a.time !== b.time) return a.time < b.time ? -1 : 1;
+      return a.model < b.model ? -1 : 1;
+    });
+  }
 
   const groups = {};
-  sorted.forEach(r => {
-    const key = r.date;
-    if (!groups[key]) groups[key] = {};
-    const eKey = r.event_type;
-    if (!groups[key][eKey]) groups[key][eKey] = {};
-    groups[key][eKey][r.model] = r;
+  pageRecords.forEach(r => {
+    if (!groups[r.date]) groups[r.date] = {};
+    if (!groups[r.date][r.event_type]) groups[r.date][r.event_type] = {};
+    groups[r.date][r.event_type][r.model] = r;
   });
 
-  let html = '';
+  function qBarHTML(val) {
+    if (val == null) return '<span style="color:var(--text-tertiary)">-</span>';
+    const pct = Math.min(val / 2.5 * 100, 100);
+    const cls = val < 0.2 ? 'bar-q-low' : val < 0.8 ? 'bar-q-mid' : 'bar-q-high';
+    const label = qualityLabel(val);
+    return `<div class="bar-wrap">
+      <div class="bar-track"><div class="bar-fill ${cls}" style="width:${pct}%"></div></div>
+      <span class="bar-val">${val.toFixed(2)}</span>
+    </div><span class="level-badge level-${cls.replace('bar-', '')}">${label}</span>`;
+  }
+
+  function aodBarHTML(val) {
+    if (val == null) return '<span style="color:var(--text-tertiary)">-</span>';
+    const pct = Math.min(val / 1.0 * 100, 100);
+    const cls = val < 0.3 ? 'bar-aod-low' : val < 0.6 ? 'bar-aod-mid' : 'bar-aod-high';
+    const label = aodLabel(val);
+    return `<div class="bar-wrap">
+      <div class="bar-track"><div class="bar-fill ${cls}" style="width:${pct}%"></div></div>
+      <span class="bar-val">${val.toFixed(2)}</span>
+    </div><span class="level-badge level-${cls.replace('bar-', '')}">${label}</span>`;
+  }
+
+  let tableRows = '';
   const dates = Object.keys(groups).sort().reverse();
   dates.forEach(date => {
     const evts = groups[date];
-    html += `<div class="date-group"><div class="date-header">${escapeHtml(date)}</div>`;
     const eventOrder = ['morning', 'evening'];
-    eventOrder.forEach(eType => {
-      if (!evts[eType]) return;
+    const dateEvents = eventOrder.filter(e => evts[e]);
+    let dateRowCount = 0;
+    dateEvents.forEach(eType => {
       const models = evts[eType];
+      dateRowCount += Object.keys(models).length;
+    });
+
+    let firstDateRow = true;
+    dateEvents.forEach(eType => {
+      const models = evts[eType];
+      const modelKeys = Object.keys(models).sort();
       const typeName = typeMap[eType];
       const tagClass = eType === 'morning' ? 'tag-morning' : 'tag-evening';
       const time = Object.values(models)[0]?.time || '';
-      html += `<div class="event-section">`;
-      html += `<div class="event-label"><span class="tag ${tagClass}">${typeName}</span> ${escapeHtml(time)}</div>`;
-      html += `<div class="model-row"><div style="font-size:12px;color:var(--text-tertiary);font-family:var(--font-mono);letter-spacing:0.5px">模型</div>`;
-      ['GFS', 'EC'].forEach(m => {
+
+      modelKeys.forEach((m, mIdx) => {
         const r = models[m];
-        if (!r) { html += `<div class="model-cell"><span class="model-name">${m}</span><span class="metric">-</span></div>`; return; }
-        const qBadge = r.quality != null
-          ? `<span class="quality-badge ${r.quality < 0.2 ? 'q-low' : r.quality < 0.8 ? 'q-mid' : 'q-high'}">${r.quality.toFixed(4)}</span>`
-          : '-';
-        const qLabel = qualityLabel(r.quality);
-        const aodBadge = r.aod != null
-          ? `<span class="aod-badge ${r.aod < 0.3 ? 'aod-low' : r.aod < 0.6 ? 'aod-mid' : 'aod-high'}">${r.aod.toFixed(4)}</span>`
-          : '-';
-        const aodLbl = aodLabel(r.aod);
-        html += `<div class="model-cell"><span class="model-name">${m}</span><span class="metric">鲜艳度 ${qBadge} ${qLabel}</span><span class="metric">气溶胶 ${aodBadge} ${aodLbl}</span></div>`;
+        tableRows += '<tr>';
+        if (firstDateRow && mIdx === 0) {
+          tableRows += `<td class="cell-date" rowspan="${dateRowCount}" scope="row">${escapeHtml(date)}</td>`;
+        }
+        if (mIdx === 0) {
+          tableRows += `<td class="cell-event" rowspan="${modelKeys.length}"><span class="tag ${tagClass}">${typeName}</span></td>`;
+          tableRows += `<td class="cell-time" rowspan="${modelKeys.length}">${escapeHtml(time)}</td>`;
+        }
+        tableRows += `<td class="cell-model">${m}</td>`;
+        if (r) {
+          tableRows += `<td class="bar-cell" aria-label="鲜艳度: ${qualityLabel(r.quality)} (${r.quality != null ? r.quality.toFixed(4) : '无数据'})">${qBarHTML(r.quality)}</td>`;
+          tableRows += `<td aria-label="气溶胶: ${aodLabel(r.aod)} (${r.aod != null ? r.aod.toFixed(4) : '无数据'})">${aodBarHTML(r.aod)}</td>`;
+        } else {
+          tableRows += '<td><span style="color:var(--text-tertiary)">-</span></td><td><span style="color:var(--text-tertiary)">-</span></td>';
+        }
+        tableRows += '</tr>';
       });
-      html += `</div></div>`;
+      firstDateRow = false;
     });
-    html += `</div>`;
   });
 
-  wrap.innerHTML = html;
+  const thDateClass = sortCol === 'date' ? (sortDir === 'asc' ? 'sort-asc' : 'sort-desc') : '';
+  const thQClass = sortCol === 'quality' ? (sortDir === 'asc' ? 'sort-asc' : 'sort-desc') : '';
+  const thAodClass = sortCol === 'aod' ? (sortDir === 'asc' ? 'sort-asc' : 'sort-desc') : '';
+
+  wrap.innerHTML = `
+    <table class="data-table" role="region" aria-label="每日朝霞晚霞数据" aria-rowcount="${pageRecords.length}">
+      <thead>
+        <tr>
+          <th scope="col" class="sortable ${thDateClass}" data-sort="date" tabindex="0" role="columnheader" aria-sort="${sortCol === 'date' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}">日期</th>
+          <th scope="col" role="columnheader">类型</th>
+          <th scope="col" role="columnheader">时间</th>
+          <th scope="col" role="columnheader">模型</th>
+          <th scope="col" class="sortable ${thQClass}" data-sort="quality" tabindex="0" role="columnheader" aria-sort="${sortCol === 'quality' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}">鲜艳度</th>
+          <th scope="col" class="sortable ${thAodClass}" data-sort="aod" tabindex="0" role="columnheader" aria-sort="${sortCol === 'aod' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}">气溶胶</th>
+        </tr>
+      </thead>
+      <tbody>${tableRows}</tbody>
+    </table>`;
+
+  wrap.querySelectorAll('th.sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.sort;
+      if (sortCol === col) {
+        sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortCol = col;
+        sortDir = 'asc';
+      }
+      renderTable();
+    });
+    th.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        th.click();
+      }
+    });
+  });
+
+  initTableKeyboardNav(wrap);
 
   if (totalPages > 1) {
     let paginationHTML = '';
@@ -2082,6 +2302,56 @@ function goToPage(page) {
   currentPage = page;
   renderTable();
   renderCards();
+}
+
+function initTableKeyboardNav(wrap) {
+  const cells = wrap.querySelectorAll('td[tabindex]');
+  if (cells.length === 0) return;
+  const table = wrap.querySelector('table');
+  if (!table) return;
+
+  table.addEventListener('keydown', e => {
+    const focused = document.activeElement;
+    if (!focused || !focused.closest('td')) return;
+    const tdList = [...table.querySelectorAll('tbody td')];
+    const idx = tdList.indexOf(focused);
+    if (idx === -1) return;
+
+    const rows = table.querySelectorAll('tbody tr');
+    let curRow = -1, curCol = 0, colCount = 0;
+    let rowIdx = 0;
+    for (const row of rows) {
+      const tds = [...row.querySelectorAll('td')];
+      const pos = tds.indexOf(focused);
+      if (pos !== -1) {
+        curRow = rowIdx;
+        curCol = pos;
+        colCount = tds.length;
+        break;
+      }
+      rowIdx++;
+    }
+
+    let nextRow = curRow, nextCol = curCol;
+    if (e.key === 'ArrowRight') { nextCol++; e.preventDefault(); }
+    else if (e.key === 'ArrowLeft') { nextCol--; e.preventDefault(); }
+    else if (e.key === 'ArrowDown') { nextRow++; e.preventDefault(); }
+    else if (e.key === 'ArrowUp') { nextRow--; e.preventDefault(); }
+    else if (e.key === 'Home') { nextCol = 0; e.preventDefault(); }
+    else if (e.key === 'End') { nextCol = colCount - 1; e.preventDefault(); }
+    else return;
+
+    if (nextRow < 0 || nextRow >= rows.length) return;
+    if (nextCol < 0 || nextCol >= colCount) return;
+
+    const targetTds = [...rows[nextRow].querySelectorAll('td')];
+    const target = targetTds[nextCol];
+    if (target) {
+      target.setAttribute('tabindex', '0');
+      focused.setAttribute('tabindex', '-1');
+      target.focus();
+    }
+  });
 }
 
 async function loadStatistics() {
