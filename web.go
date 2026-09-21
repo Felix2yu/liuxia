@@ -482,6 +482,8 @@ async function syncPendingData() {
 		atomic.AddInt64(&httpRequestsTotal, 1)
 		city := r.URL.Query().Get("city")
 		eventType := r.URL.Query().Get("event_type")
+		start := r.URL.Query().Get("start")
+		end := r.URL.Query().Get("end")
 
 		if !validateEventType(eventType) {
 			atomic.AddInt64(&httpRequestErrors, 1)
@@ -489,7 +491,13 @@ async function syncPendingData() {
 			return
 		}
 
-		cacheKey := fmt.Sprintf("rankings:%s:%s", city, eventType)
+		if !validateDate(start) || !validateDate(end) {
+			atomic.AddInt64(&httpRequestErrors, 1)
+			http.Error(w, "invalid date format", http.StatusBadRequest)
+			return
+		}
+
+		cacheKey := fmt.Sprintf("rankings:%s:%s:%s:%s", city, eventType, start, end)
 		if cached, ok := cache.Get(cacheKey); ok {
 			atomic.AddInt64(&cacheHits, 1)
 			w.Header().Set("Content-Type", "application/json")
@@ -499,7 +507,7 @@ async function syncPendingData() {
 		}
 		atomic.AddInt64(&cacheMisses, 1)
 
-		rankings, err := store.GetRankings(city, eventType, 10)
+		rankings, err := store.GetRankings(city, eventType, start, end, 10)
 		if err != nil {
 			atomic.AddInt64(&httpRequestErrors, 1)
 			logger.Printf("[Web] GetRankings error: %v", err)

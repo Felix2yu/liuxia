@@ -607,13 +607,15 @@ func TestAllAPIEndpoints(t *testing.T) {
 		}
 		city := r.URL.Query().Get("city")
 		eventType := r.URL.Query().Get("event_type")
+		start := r.URL.Query().Get("start")
+		end := r.URL.Query().Get("end")
 
 		if !validateEventType(eventType) {
 			http.Error(w, "invalid event_type", http.StatusBadRequest)
 			return
 		}
 
-		rankings, err := store.GetRankings(city, eventType, 10)
+		rankings, err := store.GetRankings(city, eventType, start, end, 10)
 		if err != nil {
 			http.Error(w, "internal server error", 500)
 			return

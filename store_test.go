@@ -376,7 +376,7 @@ func TestGetRankings(t *testing.T) {
 	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality1})
 	store.UpsertRecord(SunsetRecord{City: "上海", Date: "2024-01-01", Time: "18:35", EventType: "evening", Model: "EC", Quality: &quality2})
 
-	rankings, err := store.GetRankings("", "", 10)
+	rankings, err := store.GetRankings("", "", "", "", 10)
 	if err != nil {
 		t.Fatalf("GetRankings() 失败: %v", err)
 	}
@@ -490,7 +490,7 @@ func TestGetRankingsWithFilters(t *testing.T) {
 	store.UpsertRecord(SunsetRecord{City: "上海", Date: "2024-01-02", Time: "18:35", EventType: "morning", Model: "EC", Quality: &quality2})
 
 	t.Run("按城市过滤", func(t *testing.T) {
-		rankings, err := store.GetRankings("北京", "", 10)
+		rankings, err := store.GetRankings("北京", "", "", "", 10)
 		if err != nil {
 			t.Fatalf("GetRankings() 失败: %v", err)
 		}
@@ -500,12 +500,45 @@ func TestGetRankingsWithFilters(t *testing.T) {
 	})
 
 	t.Run("按事件类型过滤", func(t *testing.T) {
-		rankings, err := store.GetRankings("", "evening", 10)
+		rankings, err := store.GetRankings("", "evening", "", "", 10)
 		if err != nil {
 			t.Fatalf("GetRankings() 失败: %v", err)
 		}
 		if len(rankings.BestDates) != 1 {
 			t.Errorf("BestDates 长度 = %d, want 1", len(rankings.BestDates))
+		}
+	})
+}
+
+func TestGetRankingsWithDateRange(t *testing.T) {
+	store, cleanup := setupTestStore(t)
+	defer cleanup()
+
+	q1 := 0.95
+	q2 := 0.85
+	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &q1})
+	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-03-01", Time: "18:35", EventType: "evening", Model: "GFS", Quality: &q2})
+
+	t.Run("日期范围过滤最佳日期", func(t *testing.T) {
+		rankings, err := store.GetRankings("", "", "2024-02-01", "2024-04-01", 10)
+		if err != nil {
+			t.Fatalf("GetRankings() 失败: %v", err)
+		}
+		if len(rankings.BestDates) != 1 || rankings.BestDates[0].Date != "2024-03-01" {
+			t.Errorf("日期范围过滤失效: %+v", rankings.BestDates)
+		}
+	})
+
+	t.Run("日期范围同时作用于月度与季节聚合", func(t *testing.T) {
+		rankings, err := store.GetRankings("", "", "2024-02-01", "2024-04-01", 10)
+		if err != nil {
+			t.Fatalf("GetRankings() 失败: %v", err)
+		}
+		if len(rankings.Monthly) != 1 || rankings.Monthly[0].Month != "2024-03" {
+			t.Errorf("Monthly 未按日期范围过滤: %+v", rankings.Monthly)
+		}
+		if len(rankings.Seasonal) != 1 || rankings.Seasonal[0].Season != "春季" {
+			t.Errorf("Seasonal 未按日期范围过滤: %+v", rankings.Seasonal)
 		}
 	})
 }
@@ -574,7 +607,7 @@ func TestGetRankingsWithEmptyData(t *testing.T) {
 	store, cleanup := setupTestStore(t)
 	defer cleanup()
 
-	rankings, err := store.GetRankings("", "", 10)
+	rankings, err := store.GetRankings("", "", "", "", 10)
 	if err != nil {
 		t.Fatalf("GetRankings() 失败: %v", err)
 	}
@@ -694,7 +727,7 @@ func TestGetRankingsWithSeasonalData(t *testing.T) {
 	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-09-15", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
 	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-12-15", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
 
-	rankings, err := store.GetRankings("", "", 10)
+	rankings, err := store.GetRankings("", "", "", "", 10)
 	if err != nil {
 		t.Fatalf("GetRankings() 失败: %v", err)
 	}

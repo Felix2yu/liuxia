@@ -340,6 +340,100 @@
     font-size: 13px;
   }
 
+  /* ============ 弹出式子菜单（时间 / 导出） ============ */
+  .pop-wrap {
+    position: relative;
+    flex: 0 0 auto;
+  }
+
+  .pop-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .pop-trigger .caret {
+    font-size: 10px;
+    opacity: 0.7;
+    transition: transform 0.2s ease;
+  }
+
+  .pop-wrap.open .pop-trigger .caret {
+    transform: rotate(180deg);
+  }
+
+  .pop-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 60;
+    min-width: 168px;
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px;
+    background: var(--surface-solid);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .pop-wrap.open .pop-menu {
+    display: flex;
+  }
+
+  .pop-menu .quick-range {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+  }
+
+  .pop-menu .quick-range button {
+    width: 100%;
+    text-align: left;
+    padding: 9px 12px;
+    font-size: 13px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-primary);
+    box-shadow: none;
+  }
+
+  .pop-menu .quick-range button:hover {
+    background: var(--bg-secondary);
+  }
+
+  .pop-menu .quick-range button.active {
+    background: linear-gradient(135deg, var(--accent-morning) 0%, var(--accent-morning-deep) 100%);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 4px 12px -4px rgba(255, 123, 61, 0.5);
+  }
+
+  .pop-menu > button {
+    width: 100%;
+    text-align: left;
+    padding: 9px 12px;
+    font-size: 13px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: var(--font-body);
+  }
+
+  .pop-menu > button:hover {
+    background: var(--bg-secondary);
+  }
+
+  .pop-sep {
+    height: 1px;
+    background: var(--border);
+    margin: 3px 2px;
+  }
+
   .control-group {
     display: flex;
     align-items: center;
@@ -555,8 +649,15 @@
     color: #64748b;
   }
 
+  .tt-gauge-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   .tt-gauge {
     position: relative;
+    flex: 1;
     height: 26px;
     border-radius: 13px;
     overflow: hidden;
@@ -567,23 +668,19 @@
     height: 100%;
     border-radius: 13px;
     transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-    display: flex;
-    align-items: center;
-    padding: 0 10px;
     min-width: 0;
   }
 
-  .tt-gauge-fill span {
+  .tt-gauge-val {
+    flex: 0 0 auto;
+    min-width: 34px;
+    text-align: right;
     font-size: 11px;
     font-weight: 700;
-    color: #fff;
-    text-shadow: 0 1px 2px rgba(0,0,0,.25);
-    white-space: nowrap;
     font-family: var(--font-mono);
+    color: var(--text-primary);
+    white-space: nowrap;
   }
-
-  .tt-gauge-fill.g-right { justify-content: flex-end; }
-  .tt-gauge-fill.g-left { justify-content: flex-start; }
 
   .tt-gauge-quality-low .tt-gauge-fill {
     background: linear-gradient(90deg, #94a3b8, #64748b);
@@ -667,10 +764,130 @@
     box-shadow: var(--shadow-xl);
   }
 
-  .chart-box[data-chart="quality"],
-  .chart-box[data-chart="aod"],
-  .chart-box[data-chart="bestDates"] {
+  .chart-box.span-2 {
     grid-column: span 2;
+  }
+
+  /* ============ 分面子图（SMALL MULTIPLES） ============ */
+  .facet-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .facet-grid.cols-1 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .facet {
+    position: relative;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px 14px 10px;
+    transition: border-color 0.25s ease, background 0.4s ease;
+  }
+
+  .facet:hover {
+    border-color: var(--border-strong);
+  }
+
+  .facet-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .facet-title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 0.3px;
+  }
+
+  .facet-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+  }
+
+  .facet-stat {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+  }
+
+  .facet-canvas {
+    position: relative;
+    height: 216px;
+  }
+
+  .facet-empty {
+    height: 216px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-tertiary);
+    font-size: 12px;
+  }
+
+  /* ============ 分段切换控件 ============ */
+  .seg {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    background: var(--bg-tertiary);
+    border-radius: 10px;
+    margin-right: 8px;
+  }
+
+  .seg button {
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 12px;
+    line-height: 1.4;
+    padding: 4px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+  }
+
+  .seg button:hover {
+    color: var(--text-primary);
+  }
+
+  .seg button.active {
+    background: var(--surface-solid);
+    color: var(--text-primary);
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .chart-note {
+    margin-top: 14px;
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--text-tertiary);
+  }
+
+  .chart-note b {
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+
+  .chart-box[data-chart="bestDates"] .chart-body {
+    min-height: 320px;
   }
 
   .chart-header {
@@ -747,6 +964,14 @@
 
   .chart-body {
     padding: 20px 24px 24px;
+  }
+
+  /* 单图容器：固定高度，避免 Chart.js maintainAspectRatio:false 在
+     无高度父元素下无限撑高（表现为图表区域高达几十页）。 */
+  .chart-canvas {
+    position: relative;
+    width: 100%;
+    height: 340px;
   }
 
   .chart-box.collapsed .chart-body {
@@ -927,6 +1152,21 @@
     white-space: nowrap;
   }
 
+  .cell-date .d-year {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    letter-spacing: 1px;
+    line-height: 1.2;
+  }
+
+  .cell-date .d-md {
+    display: block;
+    font-size: 17px;
+    line-height: 1.3;
+  }
+
   .cell-event {
     vertical-align: middle;
   }
@@ -954,6 +1194,7 @@
     font-size: 13px;
     font-weight: 600;
     letter-spacing: 0.5px;
+    white-space: nowrap;
   }
 
   .tag-morning {
@@ -1284,6 +1525,7 @@
 
   .controls-wrap {
     position: relative;
+    z-index: 70;
   }
 
   .controls-toggle-btn {
@@ -1316,61 +1558,139 @@
     transform: rotate(180deg);
   }
 
+  /* ============ 日历热力图 ============ */
+  .cal-wrap {
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .cal-grid {
+    display: grid;
+    grid-auto-rows: auto;
+    gap: 3px;
+    min-width: 520px;
+  }
+
+  .cal-month {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    text-align: left;
+    line-height: 1.6;
+    white-space: nowrap;
+  }
+
+  .cal-wd {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 4px;
+  }
+
+  .cal-cell {
+    aspect-ratio: 1 / 1;
+    border-radius: 3px;
+    background: var(--bg-tertiary);
+    min-height: 14px;
+  }
+
+  .cal-cell.blank {
+    background: transparent;
+  }
+
+  .cal-cell.has-data {
+    cursor: default;
+  }
+
+  .cal-legend {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+    font-size: 11px;
+    color: var(--text-tertiary);
+  }
+
+  .cal-legend i {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+  }
+
   /* ============ RESPONSIVE ============ */
+  @media (max-width: 1100px) and (min-width: 769px) {
+    .data-table {
+      font-size: 14px;
+    }
+
+    .data-table colgroup .col-date { width: 12%; }
+    .data-table colgroup .col-event { width: 9%; }
+    .data-table colgroup .col-time { width: 10%; }
+    .data-table colgroup .col-model { width: 9%; }
+    .data-table colgroup .col-quality { width: 31%; }
+    .data-table colgroup .col-aod { width: 29%; }
+
+    .data-table thead th {
+      padding: 12px 10px;
+      font-size: 13px;
+      letter-spacing: 0.2px;
+    }
+
+    .data-table tbody td {
+      padding: 10px 10px;
+    }
+
+    .cell-date {
+      font-size: 15px;
+      letter-spacing: 0;
+    }
+
+    .cell-date .d-md {
+      font-size: 15px;
+    }
+
+    .cell-date .d-year {
+      font-size: 10px;
+    }
+
+    .tag {
+      padding: 3px 9px;
+      font-size: 12px;
+      letter-spacing: 0;
+    }
+
+    .cell-time {
+      font-size: 13px;
+    }
+
+    .bar-wrap {
+      gap: 8px;
+    }
+
+    .bar-track {
+      min-width: 40px;
+    }
+  }
+
   @media (max-width: 900px) {
     .charts-grid {
       grid-template-columns: 1fr;
     }
 
-    .chart-box[data-chart="quality"],
-    .chart-box[data-chart="aod"],
-    .chart-box[data-chart="bestDates"] {
+    .chart-box.span-2 {
       grid-column: span 1;
     }
   }
 
-  @media (max-width: 768px) {
-    .app-shell {
-      padding: 0 16px 40px;
-    }
-
+  @media (max-width: 1100px) {
     .hero {
-      padding: 28px 0 20px;
+      padding: 20px 0 16px;
     }
 
-    .hero-inner {
-      gap: 16px;
-    }
-
-    .brand-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-    }
-
-    .brand-icon img {
-      width: 100%;
-      height: 100%;
-    }
-
-    .brand-text h1 {
-      font-size: 32px;
-      letter-spacing: 3px;
-    }
-
-    .hero-meta {
-      align-items: flex-start;
-      width: 100%;
-    }
-
-    .current-time {
-      text-align: left;
-    }
-
-    .current-time .time {
-      font-size: 22px;
-    }
-
+    /* 窄屏下筛选卡片默认折叠为一行按钮，点开才占空间 */
     .controls-toggle-btn {
       display: flex;
     }
@@ -1389,35 +1709,125 @@
     .controls.open {
       max-height: 600px;
       opacity: 1;
-      padding: 14px;
-      gap: 10px;
-      margin-bottom: 20px;
+      padding: 12px 14px;
+      gap: 8px;
+      margin-bottom: 18px;
+      overflow: visible;
+      position: relative;
+      z-index: 70;
+    }
+
+    .controls select,
+    .controls input {
+      min-width: 0;
+      flex: 1 1 calc(50% - 8px);
+      font-size: 13px;
+      padding: 9px 34px 9px 12px;
+    }
+
+    .controls button {
+      font-size: 13px;
+      padding: 9px 16px;
+    }
+
+    /* 第二行：时间 / 查询 / 导出，弹出子菜单，窄屏允许换行 */
+    .control-group.actions {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .quick-range button {
+      font-size: 12px;
+      padding: 8px 12px;
+    }
+
+    .pop-trigger {
+      white-space: nowrap;
     }
 
     .control-group {
       flex-wrap: wrap;
       width: 100%;
     }
+  }
+
+  @media (max-width: 768px) {
+    .app-shell {
+      padding: 0 16px 40px;
+    }
+
+    .hero {
+      padding: 14px 0 12px;
+    }
+
+    /* 头部压成一行：品牌在左、时间在右，不单独占行 */
+    .hero-inner {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: nowrap;
+    }
+
+    .hero-tagline {
+      display: none;
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 11px;
+    }
+
+    .brand-icon img {
+      width: 100%;
+      height: 100%;
+    }
+
+    .brand-text h1 {
+      font-size: 26px;
+      letter-spacing: 2px;
+    }
+
+    .hero-meta {
+      align-items: flex-end;
+      width: auto;
+    }
+
+    .current-time {
+      text-align: right;
+    }
+
+    .current-time .time {
+      font-size: 20px;
+    }
 
     .controls select,
     .controls input {
       min-width: 0;
-      flex: 1 1 calc(50% - 4px);
+      flex: 1 1 calc(50% - 8px);
       font-size: 13px;
       padding: 9px 34px 9px 12px;
     }
 
     .quick-range {
       width: 100%;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      display: flex;
+      flex-wrap: nowrap;
+      overflow-x: auto;
       gap: 6px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .quick-range::-webkit-scrollbar {
+      display: none;
     }
 
     .quick-range button {
-      width: 100%;
+      flex: 0 0 auto;
       font-size: 12px;
-      padding: 8px 10px;
+      padding: 7px 12px;
     }
 
     .controls button {
@@ -1459,8 +1869,34 @@
       min-height: 280px;
     }
 
+    .facet-grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 12px;
+    }
+
+    .facet-canvas,
+    .facet-empty {
+      height: 200px;
+    }
+
+    .chart-canvas {
+      height: 260px;
+    }
+
     .chart-header {
       padding: 14px 18px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chart-header .actions {
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .seg button {
+      padding: 4px 8px;
+      font-size: 11px;
     }
 
     .chart-header h2 {
@@ -1586,20 +2022,35 @@
           <option value="evening">晚霞</option>
         </select>
       </div>
-      <div class="control-group">
-        <div class="quick-range">
-          <button class="secondary" onclick="quickRange(30, this)">近1月</button>
-          <button class="secondary" onclick="quickRange(90, this)">近3月</button>
-          <button class="secondary" onclick="quickRange(180, this)">近半年</button>
-          <button class="secondary" onclick="quickRange(365, this)">近1年</button>
-          <button class="secondary" onclick="quickRange(0, this)">全部</button>
+      <div class="control-group actions">
+        <div class="pop-wrap" id="timePopWrap">
+          <button class="secondary pop-trigger" id="timeTrigger" type="button" onclick="togglePop('timePopWrap')">
+            <span id="timeTriggerLabel">🕒 全部</span>
+            <span class="caret">▾</span>
+          </button>
+          <div class="pop-menu">
+            <div class="quick-range">
+              <button class="secondary" onclick="quickRange(30, this); closePop('timePopWrap')">近1月</button>
+              <button class="secondary" onclick="quickRange(90, this); closePop('timePopWrap')">近3月</button>
+              <button class="secondary" onclick="quickRange(180, this); closePop('timePopWrap')">近半年</button>
+              <button class="secondary" onclick="quickRange(365, this); closePop('timePopWrap')">近1年</button>
+              <button class="secondary" onclick="quickRange(0, this); closePop('timePopWrap')">全部</button>
+            </div>
+            <div class="pop-sep"></div>
+            <button class="secondary" onclick="openDateModal(); closePop('timePopWrap')">📅 自定义日期…</button>
+          </div>
         </div>
-        <button class="secondary date-btn" onclick="openDateModal()" id="dateBtn">📅 自定义日期</button>
-      </div>
-      <div class="control-group">
         <button onclick="loadData()">查询</button>
-        <button onclick="exportData('csv')">导出 CSV</button>
-        <button onclick="exportData('json')">导出 JSON</button>
+        <div class="pop-wrap" id="exportPopWrap">
+          <button class="pop-trigger" id="exportTrigger" type="button" onclick="togglePop('exportPopWrap')">
+            <span>导出</span>
+            <span class="caret">▾</span>
+          </button>
+          <div class="pop-menu">
+            <button onclick="exportData('csv'); closePop('exportPopWrap')">CSV</button>
+            <button onclick="exportData('json'); closePop('exportPopWrap')">JSON</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1617,67 +2068,113 @@
 
   <!-- CHARTS GRID -->
   <div class="charts-grid">
-    <div class="chart-box fade-in-up delay-3" data-chart="quality">
-      <div class="chart-header" onclick="toggleChart('quality')">
-        <h2>鲜艳度趋势</h2>
+    <!-- 1. 趋势分面矩阵：现象 × 模型 -->
+    <div class="chart-box span-2 fade-in-up delay-3" data-chart="trendFacets">
+      <div class="chart-header" onclick="toggleChart('trendFacets')">
+        <h2>趋势分面矩阵 · 现象 × 模型</h2>
         <div class="actions">
-          <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadChart('qualityChart', '鲜艳度趋势')">
+          <div class="seg" id="trendMetricSeg" onclick="event.stopPropagation()">
+            <button type="button" data-metric="both" class="active" onclick="setTrendMetric('both')">双指标</button>
+            <button type="button" data-metric="quality" onclick="setTrendMetric('quality')">鲜艳度</button>
+            <button type="button" data-metric="clarity" onclick="setTrendMetric('clarity')">通透度</button>
+          </div>
+          <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadFacetGroup('trendFacets', '趋势分面矩阵')">
             <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           </button>
-          <button class="chart-icon-btn" id="toggle-quality" title="收起">
+          <button class="chart-icon-btn" id="toggle-trendFacets" title="收起">
             <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
         </div>
       </div>
-      <div class="chart-body"><canvas id="qualityChart"></canvas></div>
+      <div class="chart-body">
+        <div class="facet-grid" id="trendFacetGrid"></div>
+        <p class="chart-note" id="trendFacetsNote">每张子图只呈现<b>一种「现象 × 模型」组合</b>，四条趋势线互不重叠。左轴为<b>鲜艳度</b>，右轴为<b>通透度</b>（1 − 气溶胶，以灰色虚线表示）；同一天多次预报取当日最新一次。</p>
+      </div>
     </div>
 
-    <div class="chart-box fade-in-up delay-3" data-chart="aod">
-      <div class="chart-header" onclick="toggleChart('aod')">
-        <h2>通透度趋势</h2>
+    <!-- 2. 模型对比：GFS vs EC -->
+    <div class="chart-box span-2 fade-in-up delay-4" data-chart="modelFacets">
+      <div class="chart-header" onclick="toggleChart('modelFacets')">
+        <h2>模型对比 · GFS vs EC</h2>
         <div class="actions">
-          <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadChart('aodChart', '气溶胶趋势')">
+          <div class="seg" id="modelViewSeg" onclick="event.stopPropagation()">
+            <button type="button" data-view="line" class="active" onclick="setModelView('line')">趋势对比</button>
+            <button type="button" data-view="diff" onclick="setModelView('diff')">偏差分布</button>
+          </div>
+          <div class="seg" id="modelMetricSeg" onclick="event.stopPropagation()">
+            <button type="button" data-metric="quality" class="active" onclick="setModelMetric('quality')">鲜艳度</button>
+            <button type="button" data-metric="clarity" onclick="setModelMetric('clarity')">通透度</button>
+          </div>
+          <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadFacetGroup('modelFacets', '模型对比')">
             <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           </button>
-          <button class="chart-icon-btn" id="toggle-aod" title="收起">
+          <button class="chart-icon-btn" id="toggle-modelFacets" title="收起">
             <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
         </div>
       </div>
-      <div class="chart-body"><canvas id="aodChart"></canvas></div>
+      <div class="chart-body">
+        <div class="facet-grid" id="modelFacetGrid"></div>
+        <p class="chart-note" id="modelFacetsNote"></p>
+      </div>
     </div>
 
-    <div class="chart-box fade-in-up delay-4" data-chart="modelCompare">
-      <div class="chart-header" onclick="toggleChart('modelCompare')">
-        <h2>模型对比统计</h2>
+    <!-- 3. 月度趋势分面 -->
+    <div class="chart-box span-2 fade-in-up delay-4" data-chart="monthlyFacets">
+      <div class="chart-header" onclick="toggleChart('monthlyFacets')">
+        <h2>月度趋势 · 按组合分面</h2>
         <div class="actions">
-          <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadChart('modelCompareChart', '模型对比统计')">
+          <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadFacetGroup('monthlyFacets', '月度趋势')">
             <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           </button>
-          <button class="chart-icon-btn" id="toggle-modelCompare" title="收起">
+          <button class="chart-icon-btn" id="toggle-monthlyFacets" title="收起">
             <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
         </div>
       </div>
-      <div class="chart-body"><canvas id="modelCompareChart"></canvas></div>
+      <div class="chart-body">
+        <div class="facet-grid" id="monthlyFacetGrid"></div>
+        <p class="chart-note">柱状为当月<b>平均鲜艳度</b>（左轴），折线为当月<b>平均通透度</b>（右轴）。每个组合单独成图，避免四条曲线互相遮挡。</p>
+      </div>
     </div>
 
-    <div class="chart-box fade-in-up delay-4" data-chart="monthly">
-      <div class="chart-header" onclick="toggleChart('monthly')">
-        <h2>月度趋势</h2>
+    <!-- 4. 季节对比分面 -->
+    <div class="chart-box span-2 fade-in-up delay-5" data-chart="seasonFacets">
+      <div class="chart-header" onclick="toggleChart('seasonFacets')">
+        <h2>季节对比 · 按组合分面</h2>
         <div class="actions">
-          <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadChart('monthlyChart', '月度趋势')">
+          <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadFacetGroup('seasonFacets', '季节对比')">
             <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           </button>
-          <button class="chart-icon-btn" id="toggle-monthly" title="收起">
+          <button class="chart-icon-btn" id="toggle-seasonFacets" title="收起">
             <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
         </div>
       </div>
-      <div class="chart-body"><canvas id="monthlyChart"></canvas></div>
+      <div class="chart-body">
+        <div class="facet-grid" id="seasonFacetGrid"></div>
+        <p class="chart-note">每面子图为<b>一个组合</b>的四季平均鲜艳度；子图右上角同时给出该组合的平均通透度与样本数。</p>
+      </div>
     </div>
 
-    <div class="chart-box fade-in-up delay-5" data-chart="cityCompare" id="cityCompareBox">
+    <!-- 5. 组合汇总对比 -->
+    <div class="chart-box fade-in-up delay-5" data-chart="summary" id="summaryBox">
+      <div class="chart-header" onclick="toggleChart('summary')">
+        <h2>组合汇总对比</h2>
+        <div class="actions">
+          <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadChart('summaryChart', '组合汇总对比')">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
+          <button class="chart-icon-btn" id="toggle-summary" title="收起">
+            <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="chart-body"><canvas id="summaryChart"></canvas></div>
+    </div>
+
+    <!-- 6. 城市对比 -->
+    <div class="chart-box fade-in-up delay-6" data-chart="cityCompare" id="cityCompareBox">
       <div class="chart-header" onclick="toggleChart('cityCompare')">
         <h2>城市对比</h2>
         <div class="actions">
@@ -1692,22 +2189,8 @@
       <div class="chart-body"><canvas id="cityCompareChart"></canvas></div>
     </div>
 
-    <div class="chart-box fade-in-up delay-5" data-chart="season">
-      <div class="chart-header" onclick="toggleChart('season')">
-        <h2>季节对比</h2>
-        <div class="actions">
-          <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadChart('seasonChart', '季节对比')">
-            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          </button>
-          <button class="chart-icon-btn" id="toggle-season" title="收起">
-            <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-        </div>
-      </div>
-      <div class="chart-body"><canvas id="seasonChart"></canvas></div>
-    </div>
-
-    <div class="chart-box fade-in-up delay-6" data-chart="bestDates">
+    <!-- 7. 最佳观赏排行 -->
+    <div class="chart-box span-2 fade-in-up delay-6" data-chart="bestDates">
       <div class="chart-header" onclick="toggleChart('bestDates')">
         <h2>最佳观赏排行</h2>
         <div class="actions">
@@ -1720,6 +2203,117 @@
         </div>
       </div>
       <div class="chart-body"><canvas id="bestDatesChart"></canvas></div>
+    </div>
+
+    <!-- 8. 鲜艳度 × 通透度散点 -->
+    <div class="chart-box fade-in-up delay-6" data-chart="scatter" id="scatterBox">
+      <div class="chart-header" onclick="toggleChart('scatter')">
+        <h2>鲜艳度 × 通透度</h2>
+        <div class="actions">
+          <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadChart('scatterChart', '鲜艳度与通透度散点')">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
+          <button class="chart-icon-btn" id="toggle-scatter" title="收起">
+            <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="chart-body">
+        <div class="chart-canvas" id="scatterCanvasWrap"><canvas id="scatterChart"></canvas></div>
+        <p class="chart-note" id="scatterNote"></p>
+      </div>
+    </div>
+
+    <!-- 9. 鲜艳度分布与达标率 -->
+    <div class="chart-box fade-in-up delay-6" data-chart="dist" id="distBox">
+      <div class="chart-header" onclick="toggleChart('dist')">
+        <h2>鲜艳度分布与达标率</h2>
+        <div class="actions">
+          <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadChart('distChart', '鲜艳度分布')">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
+          <button class="chart-icon-btn" id="toggle-dist" title="收起">
+            <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="chart-body">
+        <div class="chart-canvas" id="distCanvasWrap"><canvas id="distChart"></canvas></div>
+        <p class="chart-note" id="distNote"></p>
+      </div>
+    </div>
+
+    <!-- 10. 日历热力图 -->
+    <div class="chart-box span-2 fade-in-up delay-6" data-chart="calendar">
+      <div class="chart-header" onclick="toggleChart('calendar')">
+        <h2>日历热力图 · 每日最佳鲜艳度</h2>
+        <div class="actions">
+          <button class="chart-icon-btn" id="toggle-calendar" title="收起">
+            <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="chart-body">
+        <div id="calendarHeatmap"></div>
+        <p class="chart-note" id="calendarNote"></p>
+      </div>
+    </div>
+
+    <!-- 11. 蹲点时刻表 -->
+    <div class="chart-box span-2 fade-in-up delay-6" data-chart="eventTime">
+      <div class="chart-header" onclick="toggleChart('eventTime')">
+        <h2>蹲点时刻表 · 日出日落漂移</h2>
+        <div class="actions">
+          <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadChart('eventTimeChart', '蹲点时刻表')">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
+          <button class="chart-icon-btn" id="toggle-eventTime" title="收起">
+            <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="chart-body">
+        <div class="chart-canvas" id="eventTimeCanvasWrap"><canvas id="eventTimeChart"></canvas></div>
+        <p class="chart-note">两条曲线为每天<b>日出（朝霞）与日落（晚霞）时刻</b>。最佳观赏窗口通常在<b>日出前 20–30 分钟</b>与<b>日落后 15–30 分钟</b>，建议按曲线时刻提前到位。</p>
+      </div>
+    </div>
+
+    <!-- 12. 数据覆盖度 -->
+    <div class="chart-box fade-in-up delay-6" data-chart="coverage" id="coverageBox">
+      <div class="chart-header" onclick="toggleChart('coverage')">
+        <h2>数据覆盖度</h2>
+        <div class="actions">
+          <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadChart('coverageChart', '数据覆盖度')">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
+          <button class="chart-icon-btn" id="toggle-coverage" title="收起">
+            <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="chart-body">
+        <div class="chart-canvas" id="coverageCanvasWrap"><canvas id="coverageChart"></canvas></div>
+        <p class="chart-note" id="coverageNote"></p>
+      </div>
+    </div>
+
+    <!-- 13. 星期效应 -->
+    <div class="chart-box fade-in-up delay-6" data-chart="weekday" id="weekdayBox">
+      <div class="chart-header" onclick="toggleChart('weekday')">
+        <h2>星期效应</h2>
+        <div class="actions">
+          <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadChart('weekdayChart', '星期效应')">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
+          <button class="chart-icon-btn" id="toggle-weekday" title="收起">
+            <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="chart-body">
+        <div class="chart-canvas" id="weekdayCanvasWrap"><canvas id="weekdayChart"></canvas></div>
+        <p class="chart-note" id="weekdayNote"></p>
+      </div>
     </div>
   </div>
 
@@ -1771,7 +2365,12 @@
   updateHeroTime();
   setInterval(updateHeroTime, 30000);
 
-let qualityChart, aodChart, modelCompareChart, monthlyChart, cityCompareChart, bestDatesChart, seasonChart;
+let lastRecords = [];
+let lastBestDates = [];
+let lastComparison = [];
+let trendMetric = 'both';      // both | quality | clarity
+let modelView = 'line';        // line | diff
+let modelMetric = 'quality';   // quality | clarity
 let allRecords = [];
 let currentPage = 1;
 let sortCol = null;
@@ -1888,22 +2487,24 @@ function renderTodayTomorrow(records, today, tomorrow) {
         <div class="tt-event-head">
           <div class="tt-event-icon ${eType}">${icon}</div>
           <span class="tt-event-title">${typeName}</span>
-          <span class="tt-event-time">${time}</span>
+          <span class="tt-event-time">${escapeHtml(fmtTime(time))}</span>
           <span class="tt-verdict ${verdictClass}">${verdict}</span>
         </div>
-        <div class="tt-gauge ${qGaugeClass}">
-          <div class="tt-gauge-fill g-right" style="width:${bestQ != null ? Math.max(qPct, 8) : 0}%">
-            ${bestQ != null ? `<span>${bestQ.toFixed(2)}</span>` : ''}
+        <div class="tt-gauge-row">
+          <div class="tt-gauge ${qGaugeClass}">
+            <div class="tt-gauge-fill" style="width:${bestQ != null ? Math.max(qPct, 4) : 0}%"></div>
           </div>
+          <span class="tt-gauge-val">${bestQ != null ? bestQ.toFixed(2) : '—'}</span>
         </div>
         <div style="font-size:11px;color:var(--text-tertiary);margin:4px 0 8px;display:flex;justify-content:space-between;font-family:var(--font-mono);letter-spacing:0.3px">
           <span>鲜艳度 · ${qualityLabel(bestQ)}</span>
           <span style="opacity:.7">${modelTexts || '暂无数据'}</span>
         </div>
-        <div class="tt-gauge ${cGaugeClass}">
-          <div class="tt-gauge-fill g-right" style="width:${clarity != null ? Math.max(cPct, 8) : 0}%">
-            ${clarity != null ? `<span>${bestA.toFixed(2)}</span>` : ''}
+        <div class="tt-gauge-row">
+          <div class="tt-gauge ${cGaugeClass}">
+            <div class="tt-gauge-fill" style="width:${clarity != null ? Math.max(cPct, 4) : 0}%"></div>
           </div>
+          <span class="tt-gauge-val">${clarity != null ? bestA.toFixed(2) : '—'}</span>
         </div>
         <div style="font-size:11px;color:var(--text-tertiary);margin:4px 0 0;display:flex;justify-content:space-between;font-family:var(--font-mono);letter-spacing:0.3px">
           <span>通透度 · ${clarityLabel(clarity)}</span>
@@ -1926,6 +2527,12 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+// 展示用时间：仅保留 时:分，去掉秒（数据本身仍按完整 HH:MM:SS 参与排序）
+function fmtTime(t) {
+  const s = String(t || '');
+  return /^\d{2}:\d{2}(:\d{2})?$/.test(s) ? s.slice(0, 5) : s;
 }
 
 function toggleChart(id) {
@@ -1958,23 +2565,10 @@ function initTheme() {
 }
 
 function updateChartColors() {
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  const textColor = isDark ? '#f5f0ff' : '#1a1410';
-  const gridColor = isDark ? 'rgba(245, 240, 255, 0.08)' : 'rgba(26, 20, 16, 0.06)';
-
-  [qualityChart, aodChart, modelCompareChart, monthlyChart, cityCompareChart, bestDatesChart, seasonChart].forEach(chart => {
-    if (chart) {
-      chart.options.scales.x && (chart.options.scales.x.ticks = { color: textColor });
-      chart.options.scales.x && (chart.options.scales.x.grid = { color: gridColor });
-      Object.values(chart.options.scales).forEach(scale => {
-        if (scale.ticks) scale.ticks.color = textColor;
-        if (scale.grid) scale.grid.color = gridColor;
-        if (scale.title) scale.title.color = textColor;
-      });
-      chart.options.plugins.legend.labels.color = textColor;
-      chart.update();
-    }
-  });
+  // 主题色写死在图表配置里，切换深浅色时整体重绘以保证一致性
+  if (lastRecords.length) renderCharts(lastRecords);
+  if (lastBestDates.length) renderBestDates(lastBestDates);
+  if (lastComparison.length) renderCityComparison(lastComparison);
 }
 
 function openDateModal() {
@@ -2003,13 +2597,15 @@ function confirmDate() {
 function updateDateBtnLabel() {
   const s = document.getElementById('startDate').value;
   const e = document.getElementById('endDate').value;
-  const btn = document.getElementById('dateBtn');
+  const lbl = document.getElementById('timeTriggerLabel');
+  if (!lbl) return;
+  const trig = document.getElementById('timeTrigger');
   if (s || e) {
-    btn.textContent = '📅 ' + (s || '...') + ' ~ ' + (e || '...');
-    btn.classList.add('active');
+    lbl.textContent = '📅 ' + (s || '…') + ' ~ ' + (e || '…');
+    trig.classList.add('active');
   } else {
-    btn.textContent = '📅 自定义日期';
-    btn.classList.remove('active');
+    lbl.textContent = '🕒 全部';
+    trig.classList.remove('active');
   }
 }
 
@@ -2104,7 +2700,7 @@ function renderCards() {
       const time = Object.values(models)[0]?.time || '';
       const tagClass = eType === 'morning' ? 'tag-morning' : 'tag-evening';
       html += `<div class="card-event-block">`;
-      html += `<div class="card-event-header"><span class="tag ${tagClass}">${typeMap[eType]}</span> ${escapeHtml(time)}</div>`;
+      html += `<div class="card-event-header"><span class="tag ${tagClass}">${typeMap[eType]}</span> ${escapeHtml(fmtTime(time))}</div>`;
       html += `<div class="card-models">`;
       ['GFS', 'EC'].forEach(m => {
         const r = models[m];
@@ -2221,11 +2817,14 @@ function renderTable() {
         const r = models[m];
         tableRows += '<tr>';
         if (firstDateRow && mIdx === 0) {
-          tableRows += `<td class="cell-date" rowspan="${dateRowCount}" scope="row">${escapeHtml(date)}</td>`;
+          const dateParts = String(date).split('-');
+          const dateYear = dateParts.length === 3 ? dateParts[0] : '';
+          const dateMd = dateParts.length === 3 ? dateParts.slice(1).join('-') : date;
+          tableRows += `<td class="cell-date" rowspan="${dateRowCount}" scope="row"><span class="d-year">${escapeHtml(dateYear)}</span><span class="d-md">${escapeHtml(dateMd)}</span></td>`;
         }
         if (mIdx === 0) {
           tableRows += `<td class="cell-event" rowspan="${modelKeys.length}"><span class="tag ${tagClass}">${typeName}</span></td>`;
-          tableRows += `<td class="cell-time" rowspan="${modelKeys.length}">${escapeHtml(time)}</td>`;
+          tableRows += `<td class="cell-time" rowspan="${modelKeys.length}">${escapeHtml(fmtTime(time))}</td>`;
         }
         tableRows += `<td class="cell-model">${m}</td>`;
         if (r) {
@@ -2371,11 +2970,8 @@ function initTableKeyboardNav(wrap) {
 }
 
 async function loadStatistics() {
-  const params = getFilters();
-  const res = await fetch('/api/statistics?' + qs(params));
-  const stats = await res.json();
-  renderModelCompare(stats.models);
-  renderMonthly(stats.monthly);
+  // 月度 / 季节 / 模型汇总均已改为前端按「现象 × 模型」组合实时聚合，
+  // 以保证与当前筛选条件（城市、日期范围、现象）完全一致
   loadCityComparison();
   loadRankings();
 }
@@ -2392,100 +2988,1331 @@ async function loadRankings() {
   const res = await fetch('/api/rankings?' + qs(params));
   const rankings = await res.json();
   renderBestDates(rankings.best_dates);
-  renderSeasonChart(rankings.seasonal);
 }
 
-function renderCityComparison(comparison) {
-  const box = document.getElementById('cityCompareBox');
-  if (!comparison || comparison.length <= 1) {
-    box.style.display = 'none';
-    return;
+/* ============================================================
+   图表设计体系
+   核心：把「现象 × 模型」的 4 种组合拆到独立的分面子图
+   （small multiples），每张子图只画一个组合，趋势线互不遮挡；
+   现象由子图位置+标题区分，模型由标题+专属色区分。
+   ============================================================ */
+const typeMap = { morning: '朝霞', evening: '晚霞' };
+const PHENOMENA = ['morning', 'evening'];
+const MODELS = ['GFS', 'EC'];
+
+/* 每个组合一个专属色相：朝霞暖色系，晚霞冷色系 */
+const COMBO_COLORS = {
+  'morning|GFS': '#ff7b3d',
+  'morning|EC': '#f59e0b',
+  'evening|GFS': '#7c3aed',
+  'evening|EC': '#ec4899',
+};
+const SEASON_COLORS = { '春季': '#10b981', '夏季': '#ef4444', '秋季': '#f59e0b', '冬季': '#0ea5e9' };
+const SEASON_ORDER = ['春季', '夏季', '秋季', '冬季'];
+const CITY_COLORS = ['#ff7b3d', '#7c3aed', '#10b981', '#0ea5e9', '#f59e0b', '#ec4899', '#14b8a6', '#e85d1c'];
+
+function comboKey(et, m) { return et + '|' + m; }
+function comboLabel(et, m) { return (typeMap[et] || et) + ' · ' + m; }
+function comboColor(et, m) { return COMBO_COLORS[comboKey(et, m)] || '#8a7a6a'; }
+
+function themeInk() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  return {
+    isDark: isDark,
+    text: isDark ? '#f5f0ff' : '#1a1410',
+    muted: isDark ? '#b8aed4' : '#5c4f42',
+    grid: isDark ? 'rgba(245, 240, 255, 0.08)' : 'rgba(26, 20, 16, 0.07)',
+    zero: isDark ? 'rgba(245, 240, 255, 0.32)' : 'rgba(26, 20, 16, 0.28)',
+    bg: isDark ? '#1a1230' : '#ffffff',
+  };
+}
+
+function clarityInk(ink) { return ink.isDark ? '#cbd5e1' : '#64748b'; }
+
+function withAlpha(color, alpha) {
+  const hex = String(color).replace('#', '');
+  if (hex.length !== 6) return color;
+  const r = parseInt(hex.slice(0, 2), 16);
+  const g = parseInt(hex.slice(2, 4), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
+  return 'rgba(' + r + ', ' + g + ', ' + b + ', ' + alpha + ')';
+}
+
+/* ---------------- 图表实例登记（便于销毁与主题重绘） ---------------- */
+const chartGroups = {};
+function destroyCharts(name) {
+  (chartGroups[name] || []).forEach(c => { try { c.destroy(); } catch (e) { /* noop */ } });
+  chartGroups[name] = [];
+}
+function trackChart(name, chart) {
+  if (!chartGroups[name]) chartGroups[name] = [];
+  chartGroups[name].push(chart);
+  return chart;
+}
+
+/* ---------------- 数据工具 ---------------- */
+function r4(v) { return v == null ? null : Math.round(v * 10000) / 10000; }
+function toClarity(v) { return Math.max(0, 1 - v); }
+function avg(list) {
+  const vals = (list || []).filter(v => v != null && !isNaN(v));
+  if (!vals.length) return null;
+  return r4(vals.reduce((a, b) => a + b, 0) / vals.length);
+}
+function fmt(v, d) { return v == null ? '—' : Number(v).toFixed(d == null ? 2 : d); }
+
+function sortedDates(records) {
+  return [...new Set((records || []).map(r => r.date).filter(Boolean))].sort();
+}
+
+function seasonOf(date) {
+  const m = parseInt(String(date || '').slice(5, 7), 10);
+  if (m >= 3 && m <= 5) return '春季';
+  if (m >= 6 && m <= 8) return '夏季';
+  if (m >= 9 && m <= 11) return '秋季';
+  return '冬季';
+}
+
+/* 同一天可能多次预报（如 08:00/11:30/16:00），取当日最新一次 */
+function latestByDate(items) {
+  const map = new Map();
+  (items || []).forEach(r => {
+    const prev = map.get(r.date);
+    if (!prev || String(r.time || '') >= String(prev.time || '')) map.set(r.date, r);
+  });
+  return map;
+}
+
+function pick(map, date, field, transform) {
+  const rec = map.get(date);
+  if (!rec) return null;
+  const v = rec[field];
+  if (v == null) return null;
+  return r4(transform ? transform(v) : v);
+}
+
+/* 当前筛选下实际存在的「现象 × 模型」组合 */
+function presentCombos(records) {
+  const out = [];
+  PHENOMENA.forEach(et => {
+    MODELS.forEach(m => {
+      const items = (records || []).filter(r => r.event_type === et && r.model === m);
+      if (!items.length) return;
+      out.push({ event: et, model: m, items: items, label: comboLabel(et, m), color: comboColor(et, m) });
+    });
+  });
+  return out;
+}
+
+/* ---------------- 图表配置工具 ---------------- */
+function pointRadius(n) { return n > 90 ? 0 : n > 40 ? 1.5 : 2.5; }
+
+function xScale(ink) {
+  return {
+    ticks: { color: ink.text, autoSkip: true, maxTicksLimit: 6, maxRotation: 0, minRotation: 0, font: { size: 10 } },
+    grid: { display: false },
+    border: { color: ink.grid },
+  };
+}
+
+function yScale(ink, title, extra) {
+  return Object.assign({
+    beginAtZero: true,
+    position: 'left',
+    title: { display: !!title, text: title, color: ink.text, font: { size: 10 }, padding: { bottom: 4 } },
+    ticks: { color: ink.text, font: { size: 10 }, maxTicksLimit: 5 },
+    grid: { color: ink.grid },
+  }, extra || {});
+}
+
+function clarityScale(ink, title) {
+  return yScale(ink, title, {
+    position: 'right',
+    min: 0,
+    max: 1,
+    grid: { drawOnChartArea: false },
+  });
+}
+
+/* ---------------- 缺失日桥接 ----------------
+   实线只连接「相邻且都有数据」的两点；跨越缺失日的连接改为虚线并降低不透明度，
+   既保持曲线连续可读，又不把缺失伪装成观测值。 */
+function crossesGap(hasData, ctx) {
+  const i0 = ctx.p0DataIndex;
+  const i1 = ctx.p1DataIndex;
+  if (i0 == null || i1 == null) return false;
+  const a = Math.min(i0, i1);
+  const b = Math.max(i0, i1);
+  for (let i = a; i <= b; i++) { if (!hasData[i]) return true; }
+  return false;
+}
+
+function gapSegments(hasData, color) {
+  return {
+    borderDash: ctx => (crossesGap(hasData, ctx) ? [4, 4] : undefined),
+    borderColor: ctx => (crossesGap(hasData, ctx) ? withAlpha(color, 0.45) : color),
+    borderWidth: ctx => (crossesGap(hasData, ctx) ? 1.4 : undefined),
+  };
+}
+
+/* pointStyle = 'line' 时图例呈线段样式，更适合折线子图；柱状子图用默认色块 */
+function facetLegend(ink, display, asLine) {
+  return {
+    display: !!display,
+    position: 'bottom',
+    labels: {
+      color: ink.text,
+      usePointStyle: !!asLine,
+      pointStyle: asLine ? 'line' : 'circle',
+      boxWidth: asLine ? 26 : 8,
+      boxHeight: asLine ? 2 : 8,
+      padding: 12,
+      font: { size: 10 },
+    },
+  };
+}
+
+function tooltipCfg(ink, extra) {
+  const base = {
+    mode: 'index',
+    intersect: false,
+    backgroundColor: ink.isDark ? 'rgba(22, 15, 42, 0.95)' : 'rgba(255, 255, 255, 0.97)',
+    titleColor: ink.text,
+    bodyColor: ink.text,
+    borderColor: ink.grid,
+    borderWidth: 1,
+    padding: 10,
+    cornerRadius: 8,
+    titleFont: { size: 12 },
+    bodyFont: { size: 11 },
+    callbacks: {
+      label: function (ctx) {
+        // 直接取原始数据，兼容纵向柱状图与横向条形图
+        const ds = ctx.dataset || {};
+        const raw = ds.data ? ds.data[ctx.dataIndex] : null;
+        const v = raw == null ? null : Number(raw);
+        return ' ' + ds.label + '：' + (v == null || isNaN(v) ? '—' : v.toFixed(3));
+      },
+    },
+  };
+  return Object.assign(base, extra || {});
+}
+
+function emptyGrid(gridEl, text) {
+  if (!gridEl) return;
+  gridEl.classList.remove('cols-1');
+  gridEl.innerHTML = '<div class="facet" style="grid-column:1 / -1;"><div class="facet-empty">' + escapeHtml(text || '暂无数据') + '</div></div>';
+}
+
+/* 构建分面子图卡片，返回已创建的 canvas 列表 */
+function buildFacets(gridEl, specs) {
+  if (!gridEl) return [];
+  gridEl.innerHTML = '';
+  gridEl.classList.toggle('cols-1', specs.length === 1);
+  const built = [];
+  specs.forEach(spec => {
+    const card = document.createElement('div');
+    card.className = 'facet';
+    const head =
+      '<div class="facet-head">' +
+        '<span class="facet-title"><span class="facet-dot" style="background:' + spec.color + '"></span>' + escapeHtml(spec.title) + '</span>' +
+        '<span class="facet-stat">' + escapeHtml(spec.stat || '') + '</span>' +
+      '</div>';
+    if (spec.hasData) {
+      card.innerHTML = head + '<div class="facet-canvas"><canvas id="' + spec.canvasId + '"></canvas></div>';
+    } else {
+      card.innerHTML = head + '<div class="facet-empty">该组合暂无数据</div>';
+    }
+    gridEl.appendChild(card);
+    if (spec.hasData) built.push({ spec: spec, canvas: card.querySelector('canvas') });
+  });
+  return built;
+}
+
+/* ==================== 1. 趋势分面矩阵 ==================== */
+function setTrendMetric(metric) {
+  trendMetric = metric;
+  document.querySelectorAll('#trendMetricSeg button').forEach(b => b.classList.toggle('active', b.dataset.metric === metric));
+  renderTrendFacets(lastRecords);
+}
+
+function renderTrendFacets(records) {
+  const ink = themeInk();
+  destroyCharts('trend');
+  const grid = document.getElementById('trendFacetGrid');
+  if (!grid) return;
+  if (!records || !records.length) { emptyGrid(grid, '当前筛选条件下暂无数据'); return; }
+
+  const labels = sortedDates(records);
+  const combos = presentCombos(records);
+  const clarity = clarityInk(ink);
+  const pr = pointRadius(labels.length);
+
+  const cityCount = new Set(records.map(r => r.city).filter(Boolean)).size;
+  const note = document.getElementById('trendFacetsNote');
+  if (note) {
+    const base = '每张子图只呈现<b>一种「现象 × 模型」组合</b>，四条趋势线互不重叠。左轴为<b>鲜艳度</b>，'
+      + '右轴为<b>通透度</b>（1 − 气溶胶，灰色线）。'
+      + '<b>实线</b>连接相邻都有数据的两天，<b>虚线</b>表示该段跨越了缺失日（中间那天没有预报），不代表插值。'
+      + '同一天多次预报取当日最新一次。';
+    note.innerHTML = base + (cityCount > 1
+      ? ' <b>注意：当前未筛选城市</b>，同一日期含 ' + cityCount + ' 个城市的记录，趋势线按当日最新一条取值，建议先选择具体城市后再看趋势。'
+      : '');
   }
-  box.style.display = '';
 
-  if (cityCompareChart) cityCompareChart.destroy();
+  const specs = combos.map(c => {
+    const map = latestByDate(c.items);
+    const q = labels.map(d => pick(map, d, 'quality'));
+    const k = labels.map(d => pick(map, d, 'aod', toClarity));
+    return {
+      canvasId: 'trend-' + c.event + '-' + c.model,
+      title: c.label,
+      color: c.color,
+      stat: '鲜艳度 ' + fmt(avg(q)) + ' · 通透度 ' + fmt(avg(k)) + ' · n=' + c.items.length,
+      hasData: q.some(v => v != null) || k.some(v => v != null),
+      quality: q,
+      clarity: k,
+    };
+  });
 
-  const cityColors = ['#ff7b3d', '#7c3aed', '#10b981', '#ef4444', '#0ea5e9', '#f59e0b', '#ec4899', '#14b8a6'];
+  buildFacets(grid, specs).forEach(item => {
+    const spec = item.spec;
+    const datasets = [];
 
-  cityCompareChart = new Chart(document.getElementById('cityCompareChart'), {
+    if (trendMetric !== 'clarity') {
+      const raw = spec.quality;
+      const hasQ = raw.map(v => v != null);
+      datasets.push({
+        label: '鲜艳度',
+        data: raw,
+        yAxisID: 'y',
+        borderColor: spec.color,
+        backgroundColor: withAlpha(spec.color, 0.16),
+        fill: true,
+        tension: 0.32,
+        borderWidth: 2,
+        spanGaps: true,
+        segment: gapSegments(hasQ, spec.color),
+        pointRadius: pr,
+        pointHoverRadius: 5,
+        pointBackgroundColor: spec.color,
+        pointBorderColor: spec.color,
+      });
+    }
+
+    if (trendMetric !== 'quality') {
+      const solo = trendMetric === 'clarity';
+      const raw = spec.clarity;
+      const hasK = raw.map(v => v != null);
+      datasets.push({
+        label: '通透度',
+        data: raw,
+        yAxisID: solo ? 'y' : 'y1',
+        borderColor: clarity,
+        backgroundColor: solo ? withAlpha(clarity, 0.14) : 'transparent',
+        fill: solo,
+        tension: 0.32,
+        borderWidth: 1.8,
+        spanGaps: true,
+        segment: gapSegments(hasK, clarity),
+        pointRadius: pr,
+        pointHoverRadius: 5,
+        pointStyle: 'rect',
+        pointBackgroundColor: clarity,
+        pointBorderColor: clarity,
+      });
+    }
+
+    const scales = { x: xScale(ink) };
+    if (trendMetric === 'clarity') {
+      scales.y = yScale(ink, '通透度', { min: 0, max: 1 });
+    } else {
+      scales.y = yScale(ink, '鲜艳度');
+      if (trendMetric === 'both') scales.y1 = clarityScale(ink, '通透度');
+    }
+
+    trackChart('trend', new Chart(item.canvas, {
+      type: 'line',
+      data: { labels: labels, datasets: datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: facetLegend(ink, datasets.length > 1, true), tooltip: tooltipCfg(ink) },
+        scales: scales,
+      },
+    }));
+  });
+}
+
+/* ==================== 2. 模型对比（GFS vs EC） ==================== */
+function setModelView(view) {
+  modelView = view;
+  document.querySelectorAll('#modelViewSeg button').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  renderModelFacets(lastRecords);
+}
+
+function setModelMetric(metric) {
+  modelMetric = metric;
+  document.querySelectorAll('#modelMetricSeg button').forEach(b => b.classList.toggle('active', b.dataset.metric === metric));
+  renderModelFacets(lastRecords);
+}
+
+function renderModelFacets(records) {
+  const ink = themeInk();
+  destroyCharts('model');
+  const grid = document.getElementById('modelFacetGrid');
+  const note = document.getElementById('modelFacetsNote');
+  if (!grid) return;
+
+  const metricName = modelMetric === 'quality' ? '鲜艳度' : '通透度';
+  if (note) {
+    note.innerHTML = modelView === 'diff'
+      ? '柱形为同一天 <b>GFS − EC</b> 的差值：<b>正值</b>（GFS 色）表示 GFS 预报更高，<b>负值</b>（EC 色）表示 EC 更高，柱越高代表两模型分歧越大。'
+      : '同一现象下两条曲线：<b>圆点 = GFS</b>，<b>三角 = EC</b>（颜色与点形区分模型）。'
+        + '<b>实线</b>连接相邻都有数据的两天，<b>虚线</b>表示跨越缺失日，不代表插值。';
+  }
+
+  if (!records || !records.length) { emptyGrid(grid, '当前筛选条件下暂无数据'); return; }
+
+  const events = PHENOMENA.filter(et => records.some(r => r.event_type === et));
+  const labels = sortedDates(records);
+  const field = modelMetric === 'quality' ? 'quality' : 'aod';
+  const transform = modelMetric === 'quality' ? null : toClarity;
+  const pr = pointRadius(labels.length);
+
+  const specs = events.map(et => {
+    const series = {};
+    MODELS.forEach(m => {
+      const map = latestByDate(records.filter(r => r.event_type === et && r.model === m));
+      series[m] = labels.map(d => pick(map, d, field, transform));
+    });
+    const gfs = series.GFS || [];
+    const ec = series.EC || [];
+    const diffs = labels.map((d, i) => (gfs[i] != null && ec[i] != null) ? r4(gfs[i] - ec[i]) : null);
+    const hasLine = gfs.some(v => v != null) || ec.some(v => v != null);
+    const hasDiff = diffs.some(v => v != null);
+    const absDiffs = diffs.filter(v => v != null).map(v => Math.abs(v));
+    const stat = modelView === 'diff'
+      ? '平均偏差 ' + fmt(avg(diffs)) + ' · 平均绝对偏差 ' + fmt(avg(absDiffs)) + ' · ' + absDiffs.length + ' 天可比'
+      : 'GFS ' + fmt(avg(gfs)) + ' · EC ' + fmt(avg(ec));
+
+    return {
+      canvasId: 'model-' + et,
+      event: et,
+      title: (typeMap[et] || et) + ' · GFS vs EC',
+      color: comboColor(et, 'GFS'),
+      stat: stat,
+      hasData: modelView === 'diff' ? hasDiff : hasLine,
+      gfs: gfs,
+      ec: ec,
+      diffs: diffs,
+    };
+  });
+
+  buildFacets(grid, specs).forEach(item => {
+    const spec = item.spec;
+    let datasets;
+    let scales;
+
+    if (modelView === 'diff') {
+      datasets = [{
+        label: 'GFS − EC（' + metricName + '）',
+        data: spec.diffs,
+        backgroundColor: spec.diffs.map(v => v == null ? 'transparent' : (v >= 0 ? comboColor(spec.event, 'GFS') : comboColor(spec.event, 'EC'))),
+        borderRadius: 3,
+        borderSkipped: false,
+        barPercentage: 0.92,
+        categoryPercentage: 0.82,
+      }];
+      scales = {
+        x: xScale(ink),
+        y: yScale(ink, 'GFS − EC', {
+          grid: { color: ctx => (ctx.tick && ctx.tick.value === 0 ? ink.zero : ink.grid) },
+        }),
+      };
+    } else {
+      datasets = [];
+      const isQuality = modelMetric === 'quality';
+      MODELS.forEach(m => {
+        const raw = m === 'GFS' ? spec.gfs : spec.ec;
+        if (!raw.some(v => v != null)) return;
+        const color = comboColor(spec.event, m);
+        datasets.push({
+          label: m,
+          data: raw,
+          borderColor: color,
+          backgroundColor: withAlpha(color, 0.12),
+          fill: true,
+          tension: 0.3,
+          borderWidth: 2,
+          spanGaps: true,
+          segment: gapSegments(raw.map(v => v != null), color),
+          pointRadius: pr,
+          pointHoverRadius: 5,
+          pointStyle: m === 'EC' ? 'triangle' : 'circle',
+          pointBackgroundColor: color,
+          pointBorderColor: color,
+        });
+      });
+      scales = {
+        x: xScale(ink),
+        y: isQuality ? yScale(ink, '鲜艳度') : yScale(ink, '通透度', { min: 0, max: 1 }),
+      };
+    }
+
+    trackChart('model', new Chart(item.canvas, {
+      type: modelView === 'diff' ? 'bar' : 'line',
+      data: { labels: labels, datasets: datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: facetLegend(ink, datasets.length > 1, modelView !== 'diff'), tooltip: tooltipCfg(ink) },
+        scales: scales,
+      },
+    }));
+  });
+}
+
+/* ==================== 3. 月度趋势分面 ==================== */
+function renderMonthlyFacets(records) {
+  const ink = themeInk();
+  destroyCharts('monthly');
+  const grid = document.getElementById('monthlyFacetGrid');
+  if (!grid) return;
+  if (!records || !records.length) { emptyGrid(grid, '当前筛选条件下暂无数据'); return; }
+
+  const months = [...new Set(records.map(r => String(r.date || '').slice(0, 7)).filter(m => m.length === 7))].sort();
+  if (!months.length) { emptyGrid(grid, '当前筛选条件下暂无数据'); return; }
+
+  const clarity = clarityInk(ink);
+  const combos = presentCombos(records);
+
+  const specs = combos.map(c => {
+    const q = [], k = [];
+    months.forEach(mo => {
+      const items = c.items.filter(r => String(r.date || '').slice(0, 7) === mo);
+      q.push(avg(items.map(r => r.quality)));
+      k.push(avg(items.map(r => r.aod == null ? null : toClarity(r.aod))));
+    });
+    return {
+      canvasId: 'monthly-' + c.event + '-' + c.model,
+      title: c.label,
+      color: c.color,
+      stat: '月均鲜艳度 ' + fmt(avg(q)) + ' · 月均通透度 ' + fmt(avg(k)),
+      hasData: q.some(v => v != null) || k.some(v => v != null),
+      quality: q,
+      clarity: k,
+    };
+  });
+
+  buildFacets(grid, specs).forEach(item => {
+    const spec = item.spec;
+    trackChart('monthly', new Chart(item.canvas, {
+      type: 'bar',
+      data: {
+        labels: months,
+        datasets: [
+          {
+            type: 'bar',
+            label: '平均鲜艳度',
+            data: spec.quality,
+            yAxisID: 'y',
+            backgroundColor: withAlpha(spec.color, 0.85),
+            hoverBackgroundColor: spec.color,
+            borderRadius: 5,
+            borderSkipped: false,
+            barPercentage: 0.72,
+            categoryPercentage: 0.8,
+            order: 2,
+          },
+          {
+            type: 'line',
+            label: '平均通透度',
+            data: spec.clarity,
+            yAxisID: 'y1',
+            borderColor: clarity,
+            backgroundColor: clarity,
+            borderDash: [5, 4],
+            borderWidth: 1.8,
+            tension: 0.3,
+            fill: false,
+            pointRadius: 2.5,
+            pointHoverRadius: 5,
+            pointStyle: 'rect',
+            order: 1,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: facetLegend(ink, true, false), tooltip: tooltipCfg(ink) },
+        scales: {
+          x: xScale(ink),
+          y: yScale(ink, '鲜艳度'),
+          y1: clarityScale(ink, '通透度'),
+        },
+      },
+    }));
+  });
+}
+
+/* ==================== 4. 季节对比分面 ==================== */
+function renderSeasonFacets(records) {
+  const ink = themeInk();
+  destroyCharts('season');
+  const grid = document.getElementById('seasonFacetGrid');
+  if (!grid) return;
+  if (!records || !records.length) { emptyGrid(grid, '当前筛选条件下暂无数据'); return; }
+
+  const seasons = SEASON_ORDER.filter(s => records.some(r => seasonOf(r.date) === s));
+  if (!seasons.length) { emptyGrid(grid, '当前筛选条件下暂无数据'); return; }
+
+  const combos = presentCombos(records);
+
+  const specs = combos.map(c => {
+    const q = [], k = [];
+    seasons.forEach(s => {
+      const items = c.items.filter(r => seasonOf(r.date) === s);
+      q.push(avg(items.map(r => r.quality)));
+      k.push(avg(items.map(r => r.aod == null ? null : toClarity(r.aod))));
+    });
+    return {
+      canvasId: 'season-' + c.event + '-' + c.model,
+      title: c.label,
+      color: c.color,
+      stat: '通透度均 ' + fmt(avg(k)) + ' · n=' + c.items.length,
+      hasData: q.some(v => v != null),
+      quality: q,
+      clarity: k,
+    };
+  });
+
+  buildFacets(grid, specs).forEach(item => {
+    const spec = item.spec;
+    trackChart('season', new Chart(item.canvas, {
+      type: 'bar',
+      data: {
+        labels: seasons,
+        datasets: [{
+          label: '平均鲜艳度',
+          data: spec.quality,
+          backgroundColor: spec.color,
+          borderRadius: 6,
+          borderSkipped: false,
+          barPercentage: 0.68,
+          categoryPercentage: 0.78,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: tooltipCfg(ink, {
+            callbacks: {
+              label: ctx => ' 平均鲜艳度：' + (ctx.parsed.y == null ? '—' : ctx.parsed.y.toFixed(3)),
+              afterBody: ctx => ' 平均通透度：' + fmt(spec.clarity[ctx[0].dataIndex]),
+            },
+          }),
+        },
+        scales: {
+          x: { ticks: { color: ink.text, font: { size: 11 } }, grid: { display: false }, border: { color: ink.grid } },
+          y: yScale(ink, '鲜艳度'),
+        },
+      },
+    }));
+  });
+}
+
+/* ==================== 5. 组合汇总对比 ==================== */
+function renderSummary(records) {
+  const ink = themeInk();
+  destroyCharts('summary');
+  const canvas = document.getElementById('summaryChart');
+  if (!canvas) return;
+  if (!records || !records.length) return;
+
+  const combos = presentCombos(records);
+  if (!combos.length) return;
+
+  const clarity = clarityInk(ink);
+  const q = combos.map(c => avg(c.items.map(r => r.quality)));
+  const k = combos.map(c => avg(c.items.map(r => r.aod == null ? null : toClarity(r.aod))));
+
+  trackChart('summary', new Chart(canvas, {
     type: 'bar',
     data: {
-      labels: comparison.map(c => c.city),
+      labels: combos.map(c => c.label),
       datasets: [
         {
           label: '平均鲜艳度',
-          data: comparison.map(c => c.avg_quality ? parseFloat(c.avg_quality.toFixed(4)) : 0),
-          backgroundColor: comparison.map((_, i) => cityColors[i % cityColors.length]),
+          data: q,
+          backgroundColor: combos.map(c => c.color),
           borderRadius: 8,
           borderSkipped: false,
+          barPercentage: 0.7,
+          categoryPercentage: 0.72,
+        },
+        {
+          label: '平均通透度',
+          data: k,
+          backgroundColor: withAlpha(clarity, 0.6),
+          borderRadius: 8,
+          borderSkipped: false,
+          barPercentage: 0.7,
+          categoryPercentage: 0.72,
         },
       ],
     },
     options: {
       responsive: true,
-      plugins: { legend: { position: 'top' } },
-      scales: { y: { beginAtZero: true } },
+      plugins: {
+        legend: { position: 'top', labels: { color: ink.text, usePointStyle: true, pointStyle: 'circle', boxWidth: 8, padding: 14, font: { size: 11 } } },
+        tooltip: tooltipCfg(ink, {
+          callbacks: {
+            afterBody: ctx => ' 样本数：' + combos[ctx[0].dataIndex].items.length,
+          },
+        }),
+      },
+      scales: {
+        x: { ticks: { color: ink.text, font: { size: 11 } }, grid: { display: false }, border: { color: ink.grid } },
+        y: yScale(ink, '均值'),
+      },
     },
-  });
+  }));
 }
 
-function renderBestDates(dates) {
-  if (!dates || dates.length === 0) return;
-  if (bestDatesChart) bestDatesChart.destroy();
+/* ==================== 6. 城市对比 ==================== */
+function renderCityComparison(comparison) {
+  const box = document.getElementById('cityCompareBox');
+  const summaryBox = document.getElementById('summaryBox');
+  lastComparison = comparison || [];
 
-  const isMobile = window.innerWidth <= 768;
-  const labels = dates.map(d => {
-    const shortDate = d.date.slice(5);
-    const typeName = typeMap[d.event_type];
-    if (isMobile) {
-      const shortModel = d.model === 'GFS' ? 'G' : d.model === 'EC' ? 'E' : d.model;
-      return shortDate + ' ' + typeName + ' ' + shortModel;
-    }
-    return d.date + ' ' + typeName + ' ' + d.model;
-  });
-  const qualityData = dates.map(d => d.quality != null ? parseFloat(d.quality.toFixed(4)) : 0);
-  const aodData = dates.map(d => d.aod != null ? parseFloat((Math.max(0, 1 - d.aod)).toFixed(4)) : 0);
+  const visible = lastComparison.length > 1;
+  if (box) box.style.display = visible ? '' : 'none';
+  if (summaryBox) summaryBox.classList.toggle('span-2', !visible);
+  if (!visible) return;
 
-  bestDatesChart = new Chart(document.getElementById('bestDatesChart'), {
+  const ink = themeInk();
+  destroyCharts('city');
+  const canvas = document.getElementById('cityCompareChart');
+  if (!canvas) return;
+
+  const rows = [...lastComparison].sort((a, b) => (b.avg_quality || 0) - (a.avg_quality || 0));
+  const clarity = clarityInk(ink);
+
+  trackChart('city', new Chart(canvas, {
     type: 'bar',
     data: {
-      labels,
+      labels: rows.map(c => c.city),
       datasets: [
-        { label: '鲜艳度', data: qualityData, backgroundColor: '#ff7b3d', borderRadius: 6, borderSkipped: false },
-        { label: '通透度', data: aodData, backgroundColor: '#7c3aed', borderRadius: 6, borderSkipped: false },
+        {
+          label: '平均鲜艳度',
+          data: rows.map(c => r4(c.avg_quality)),
+          backgroundColor: rows.map((_, i) => CITY_COLORS[i % CITY_COLORS.length]),
+          borderRadius: 8,
+          borderSkipped: false,
+          barPercentage: 0.62,
+          categoryPercentage: 0.7,
+        },
+        {
+          label: '平均通透度',
+          data: rows.map(c => (c.avg_aod == null ? null : r4(toClarity(c.avg_aod)))),
+          backgroundColor: withAlpha(clarity, 0.55),
+          borderRadius: 8,
+          borderSkipped: false,
+          barPercentage: 0.62,
+          categoryPercentage: 0.7,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'top', labels: { color: ink.text, usePointStyle: true, pointStyle: 'circle', boxWidth: 8, padding: 14, font: { size: 11 } } },
+        tooltip: tooltipCfg(ink, { callbacks: { afterBody: ctx => ' 样本数：' + (rows[ctx[0].dataIndex].count || 0) } }),
+      },
+      scales: {
+        x: { ticks: { color: ink.text, font: { size: 11 } }, grid: { display: false }, border: { color: ink.grid } },
+        y: yScale(ink, '均值'),
+      },
+    },
+  }));
+}
+
+/* ==================== 7. 最佳观赏排行 ==================== */
+function renderBestDates(dates) {
+  lastBestDates = dates || [];
+  if (!lastBestDates.length) return;
+
+  const ink = themeInk();
+  destroyCharts('best');
+  const canvas = document.getElementById('bestDatesChart');
+  if (!canvas) return;
+
+  const isMobile = window.innerWidth <= 768;
+  const clarity = clarityInk(ink);
+  const rows = [...lastBestDates].sort((a, b) => (b.quality || 0) - (a.quality || 0));
+  const labels = rows.map(d => {
+    const shortDate = String(d.date || '').slice(5);
+    const typeName = typeMap[d.event_type] || d.event_type;
+    return isMobile ? shortDate + ' ' + typeName + ' ' + d.model : String(d.date) + ' ' + typeName + ' · ' + d.model;
+  });
+  const colors = rows.map(d => comboColor(d.event_type, d.model));
+
+  trackChart('best', new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: '鲜艳度',
+          data: rows.map(d => r4(d.quality)),
+          backgroundColor: colors,
+          borderRadius: 6,
+          borderSkipped: false,
+          barPercentage: 0.8,
+          categoryPercentage: 0.78,
+        },
+        {
+          label: '通透度',
+          data: rows.map(d => (d.aod == null ? null : r4(toClarity(d.aod)))),
+          backgroundColor: withAlpha(clarity, 0.5),
+          borderRadius: 6,
+          borderSkipped: false,
+          barPercentage: 0.8,
+          categoryPercentage: 0.78,
+        },
       ],
     },
     options: {
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { position: 'top' } },
-      scales: { x: { beginAtZero: true } },
+      plugins: {
+        legend: { position: 'top', labels: { color: ink.text, usePointStyle: true, pointStyle: 'circle', boxWidth: 8, padding: 14, font: { size: 11 } } },
+        tooltip: tooltipCfg(ink, { mode: 'nearest', intersect: true }),
+      },
+      scales: {
+        x: { beginAtZero: true, ticks: { color: ink.text, font: { size: 10 } }, grid: { color: ink.grid } },
+        y: { ticks: { color: ink.text, font: { size: 11 } }, grid: { display: false }, border: { color: ink.grid } },
+      },
     },
-  });
+  }));
 }
 
-function renderSeasonChart(seasons) {
-  if (!seasons || seasons.length === 0) return;
-  if (seasonChart) seasonChart.destroy();
+/* ==================== 8. 鲜艳度 × 通透度散点 ==================== */
+function pearson(xs, ys) {
+  const n = Math.min(xs.length, ys.length);
+  if (n < 3) return null;
+  let sx = 0, sy = 0;
+  for (let i = 0; i < n; i++) { sx += xs[i]; sy += ys[i]; }
+  const mx = sx / n, my = sy / n;
+  let num = 0, dx = 0, dy = 0;
+  for (let i = 0; i < n; i++) {
+    const a = xs[i] - mx, b = ys[i] - my;
+    num += a * b; dx += a * a; dy += b * b;
+  }
+  if (dx === 0 || dy === 0) return null;
+  return r4(num / Math.sqrt(dx * dy));
+}
 
-  const seasonColors = { '春季': '#10b981', '夏季': '#ef4444', '秋季': '#f59e0b', '冬季': '#0ea5e9' };
+function renderScatter(records) {
+  const ink = themeInk();
+  destroyCharts('scatter');
+  const canvas = document.getElementById('scatterChart');
+  const note = document.getElementById('scatterNote');
+  if (!canvas) return;
+  if (!records || !records.length) { if (note) note.textContent = '当前筛选条件下暂无数据'; return; }
 
-  seasonChart = new Chart(document.getElementById('seasonChart'), {
+  const combos = presentCombos(records);
+  const datasets = [];
+  const corrs = [];
+  combos.forEach(c => {
+    const pts = c.items
+      .filter(r => r.quality != null && r.aod != null)
+      .map(r => ({ x: r4(toClarity(r.aod)), y: r4(r.quality), d: r.date, t: fmtTime(r.time) }));
+    if (!pts.length) return;
+    corrs.push({ label: c.label, r: pearson(pts.map(p => p.x), pts.map(p => p.y)), n: pts.length });
+    datasets.push({
+      label: c.label,
+      data: pts,
+      backgroundColor: withAlpha(c.color, 0.55),
+      borderColor: c.color,
+      borderWidth: 1,
+      pointRadius: 3.2,
+      pointHoverRadius: 6,
+    });
+  });
+
+  const all = datasets.reduce((acc, d) => acc.concat(d.data), []);
+  const rAll = pearson(all.map(p => p.x), all.map(p => p.y));
+  if (note) {
+    note.innerHTML = '每个点 = <b>一条预报记录</b>，横轴为<b>通透度</b>（1 − 气溶胶），纵轴为<b>鲜艳度</b>。'
+      + '整体相关系数 <b>r = ' + fmt(rAll, 2) + '</b>（n=' + all.length + '）；'
+      + (corrs.length ? '分组：' + corrs.map(x => x.label + ' ' + fmt(x.r, 2)).join('、') : '')
+      + '。r 越接近 +1，说明通透越好鲜艳度越高。';
+  }
+
+  trackChart('scatter', new Chart(canvas, {
+    type: 'scatter',
+    data: { datasets: datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { color: ink.text, usePointStyle: true, pointStyle: 'circle', boxWidth: 8, padding: 12, font: { size: 11 } } },
+        tooltip: tooltipCfg(ink, {
+          mode: 'nearest',
+          intersect: true,
+          callbacks: {
+            title: ctx => (ctx[0] && ctx[0].raw) ? ctx[0].raw.d + ' ' + ctx[0].raw.t : '',
+            label: ctx => ' ' + ctx.dataset.label + '：鲜艳度 ' + Number(ctx.raw.y).toFixed(3) + ' · 通透度 ' + Number(ctx.raw.x).toFixed(3),
+          },
+        }),
+      },
+      scales: {
+        x: {
+          min: 0, max: 1,
+          title: { display: true, text: '通透度', color: ink.text, font: { size: 10 }, padding: { bottom: 4 } },
+          ticks: { color: ink.text, font: { size: 10 } },
+          grid: { color: ink.grid },
+        },
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: '鲜艳度', color: ink.text, font: { size: 10 }, padding: { bottom: 4 } },
+          ticks: { color: ink.text, font: { size: 10 } },
+          grid: { color: ink.grid },
+        },
+      },
+    },
+  }));
+}
+
+/* ==================== 9. 鲜艳度分布与达标率 ==================== */
+const Q_BINS = [
+  { label: '0', test: v => v <= 0 },
+  { label: '0–0.05', test: v => v > 0 && v < 0.05 },
+  { label: '0.05–0.1', test: v => v >= 0.05 && v < 0.1 },
+  { label: '0.1–0.2', test: v => v >= 0.1 && v < 0.2 },
+  { label: '0.2–0.4', test: v => v >= 0.2 && v < 0.4 },
+  { label: '0.4–0.6', test: v => v >= 0.4 && v < 0.6 },
+  { label: '0.6–1.0', test: v => v >= 0.6 && v < 1.0 },
+  { label: '≥1.0', test: v => v >= 1.0 },
+];
+
+function renderDistribution(records) {
+  const ink = themeInk();
+  destroyCharts('dist');
+  const canvas = document.getElementById('distChart');
+  const note = document.getElementById('distNote');
+  if (!canvas) return;
+  if (!records || !records.length) { if (note) note.textContent = '当前筛选条件下暂无数据'; return; }
+
+  const combos = presentCombos(records);
+  const labels = sortedDates(records);
+
+  const datasets = combos.map(c => {
+    const map = latestByDate(c.items);
+    const vals = labels.map(d => pick(map, d, 'quality')).filter(v => v != null);
+    return {
+      label: c.label,
+      data: Q_BINS.map(b => vals.filter(b.test).length),
+      backgroundColor: c.color,
+      borderRadius: 3,
+      borderSkipped: false,
+      barPercentage: 0.9,
+      categoryPercentage: 0.8,
+    };
+  });
+
+  /* 达标率按「天」统计：当日所有组合中的最高鲜艳度达到阈值即算达标 */
+  const dayBest = labels.map(d => {
+    const vals = records.filter(r => r.date === d && r.quality != null).map(r => r.quality);
+    return vals.length ? Math.max.apply(null, vals) : null;
+  }).filter(v => v != null);
+  const THRESHOLDS = [0.3, 0.6, 1.0];
+  const rateText = THRESHOLDS.map(t => {
+    const hit = dayBest.filter(v => v >= t).length;
+    return '≥' + t.toFixed(1) + '：<b>' + hit + '/' + dayBest.length + ' 天（' + (dayBest.length ? (hit / dayBest.length * 100).toFixed(0) : '0') + '%）</b>';
+  }).join('　');
+
+  if (note) {
+    note.innerHTML = '堆叠柱为<b>各组合的鲜艳度分布</b>（同一天多次预报取最新一次）。'
+      + '达标率（按当日最佳值计）：' + rateText + '。鲜艳度整体偏低时，可先看「≥0.3」这一档判断实际可看频率。';
+  }
+
+  trackChart('dist', new Chart(canvas, {
+    type: 'bar',
+    data: { labels: Q_BINS.map(b => b.label), datasets: datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { color: ink.text, usePointStyle: true, pointStyle: 'circle', boxWidth: 8, padding: 12, font: { size: 11 } } },
+        tooltip: tooltipCfg(ink, { callbacks: { label: ctx => ' ' + ctx.dataset.label + '：' + ctx.parsed.y + ' 天' } }),
+      },
+      scales: {
+        x: { stacked: true, ticks: { color: ink.text, font: { size: 10 }, maxRotation: 45, minRotation: 0 }, grid: { display: false }, border: { color: ink.grid } },
+        y: { stacked: true, beginAtZero: true, title: { display: true, text: '天数', color: ink.text, font: { size: 10 } }, ticks: { color: ink.text, font: { size: 10 }, precision: 0 }, grid: { color: ink.grid } },
+      },
+    },
+  }));
+}
+
+/* ==================== 10. 日历热力图 ==================== */
+const CAL_LEVELS = [
+  { max: 0, alpha: 0.10, name: '无' },
+  { max: 0.05, alpha: 0.22, name: '微微烧' },
+  { max: 0.2, alpha: 0.38, name: '小烧' },
+  { max: 0.4, alpha: 0.55, name: '小烧到中等' },
+  { max: 0.6, alpha: 0.72, name: '中等烧' },
+  { max: 1.0, alpha: 0.88, name: '大烧' },
+  { max: Infinity, alpha: 1, name: '优质大烧' },
+];
+
+function calColor(q) {
+  const lv = CAL_LEVELS.find(l => q <= l.max) || CAL_LEVELS[CAL_LEVELS.length - 1];
+  return 'rgba(255, 132, 54, ' + lv.alpha + ')';
+}
+
+function parseDate(s) {
+  const p = String(s || '').split('-');
+  if (p.length !== 3) return null;
+  return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+}
+
+function dateKey(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function renderCalendar(records) {
+  const box = document.getElementById('calendarHeatmap');
+  const note = document.getElementById('calendarNote');
+  if (!box) return;
+  if (!records || !records.length) {
+    box.innerHTML = '<div class="facet-empty">当前筛选条件下暂无数据</div>';
+    if (note) note.textContent = '';
+    return;
+  }
+
+  /* 当日最佳：所有组合中鲜艳度最高的一条 */
+  const best = new Map();
+  records.forEach(r => {
+    if (r.quality == null || !r.date) return;
+    const prev = best.get(r.date);
+    if (!prev || r.quality > prev.q) {
+      best.set(r.date, { q: r4(r.quality), label: comboLabel(r.event_type, r.model), t: fmtTime(r.time) });
+    }
+  });
+
+  const dates = [...best.keys()].sort();
+  const start = parseDate(dates[0]);
+  const end = parseDate(dates[dates.length - 1]);
+  if (!start || !end) { box.innerHTML = '<div class="facet-empty">暂无数据</div>'; return; }
+
+  /* 列 = 周（周一起），行 = 周一..周日 */
+  const gridStart = new Date(start);
+  gridStart.setDate(gridStart.getDate() - ((start.getDay() + 6) % 7));
+  const weeks = [];
+  let cur = new Date(gridStart);
+  while (cur <= end) { weeks.push(new Date(cur)); cur.setDate(cur.getDate() + 7); }
+
+  const WD = ['一', '二', '三', '四', '五', '六', '日'];
+  let html = '<div class="cal-wrap"><div class="cal-grid" style="grid-template-columns: 26px repeat(' + weeks.length + ', minmax(0, 1fr));">';
+
+  html += '<div></div>';
+  let lastMonth = -1;
+  weeks.forEach(w => {
+    if (w.getMonth() !== lastMonth) { html += '<div class="cal-month">' + (w.getMonth() + 1) + '月</div>'; lastMonth = w.getMonth(); }
+    else { html += '<div></div>'; }
+  });
+
+  WD.forEach((wd, rowIdx) => {
+    html += '<div class="cal-wd">' + wd + '</div>';
+    weeks.forEach(w => {
+      const d = new Date(w);
+      d.setDate(d.getDate() + rowIdx);
+      const key = dateKey(d);
+      if (d < start || d > end) { html += '<div class="cal-cell blank"></div>'; return; }
+      const b = best.get(key);
+      if (!b) {
+        html += '<div class="cal-cell" title="' + key + ' 无预报数据"></div>';
+      } else {
+        html += '<div class="cal-cell has-data" style="background:' + calColor(b.q) + '" title="'
+          + key + ' · ' + b.t + ' · ' + b.label + ' · 鲜艳度 ' + b.q.toFixed(3) + '"></div>';
+      }
+    });
+  });
+  html += '</div></div>';
+
+  html += '<div class="cal-legend"><span>弱</span>'
+    + CAL_LEVELS.map(l => '<i style="background:rgba(255, 132, 54, ' + l.alpha + ')"></i>').join('')
+    + '<span>强</span><span style="margin-left:10px">（' + CAL_LEVELS.map(l => l.name).join(' / ') + '，取当日各组合最高鲜艳度）</span></div>';
+
+  box.innerHTML = html;
+
+  if (note) {
+    const vals = [...best.values()].map(v => v.q).sort((a, b) => b - a);
+    const top = dates.slice().sort((a, b) => best.get(b).q - best.get(a).q).slice(0, 3);
+    note.innerHTML = '共 <b>' + dates.length + '</b> 天有预报，最佳日：'
+      + top.map(d => d + '（' + best.get(d).q.toFixed(2) + ' ' + best.get(d).label + '）').join('、')
+      + '。横向成片的深色块表示<b>连续的好天气过程</b>，零散深色块多为偶发。';
+  }
+}
+
+/* ==================== 11. 蹲点时刻表 ==================== */
+function toMinutes(t) {
+  const p = String(t || '').split(':');
+  if (p.length < 2) return null;
+  const h = parseInt(p[0], 10), m = parseInt(p[1], 10);
+  if (isNaN(h) || isNaN(m)) return null;
+  return h * 60 + m;
+}
+
+function fromMinutes(v) {
+  if (v == null) return '';
+  const h = Math.floor(v / 60), m = Math.round(v % 60);
+  return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+}
+
+function renderEventTime(records) {
+  const ink = themeInk();
+  destroyCharts('eventTime');
+  const canvas = document.getElementById('eventTimeChart');
+  if (!canvas) return;
+  if (!records || !records.length) return;
+
+  const labels = sortedDates(records);
+  const pickTime = et => labels.map(d => {
+    const times = records.filter(r => r.date === d && r.event_type === et).map(r => toMinutes(r.time)).filter(v => v != null);
+    return times.length ? Math.min.apply(null, times) : null;
+  });
+
+  const sunrise = pickTime('morning');
+  const sunset = pickTime('evening');
+  const morningColor = '#ff7b3d';
+  const eveningColor = '#7c3aed';
+
+  const mk = (label, data, color) => ({
+    label: label,
+    data: data,
+    borderColor: color,
+    backgroundColor: withAlpha(color, 0.12),
+    fill: false,
+    tension: 0.3,
+    borderWidth: 2,
+    spanGaps: true,
+    segment: gapSegments(data.map(v => v != null), color),
+    pointRadius: labels.length > 60 ? 0 : 2,
+    pointHoverRadius: 5,
+    pointBackgroundColor: color,
+    pointBorderColor: color,
+  });
+
+  const datasets = [];
+  if (sunrise.some(v => v != null)) datasets.push(mk('日出（朝霞）', sunrise, morningColor));
+  if (sunset.some(v => v != null)) datasets.push(mk('日落（晚霞）', sunset, eveningColor));
+
+  trackChart('eventTime', new Chart(canvas, {
+    type: 'line',
+    data: { labels: labels, datasets: datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { color: ink.text, usePointStyle: true, pointStyle: 'line', boxWidth: 24, boxHeight: 2, padding: 14, font: { size: 11 } } },
+        tooltip: tooltipCfg(ink, { callbacks: { label: ctx => ' ' + ctx.dataset.label + '：' + fromMinutes(ctx.parsed.y) } }),
+      },
+      scales: {
+        x: xScale(ink),
+        y: {
+          title: { display: true, text: '时刻', color: ink.text, font: { size: 10 }, padding: { bottom: 4 } },
+          ticks: { color: ink.text, font: { size: 10 }, callback: fromMinutes },
+          grid: { color: ink.grid },
+        },
+      },
+    },
+  }));
+}
+
+/* ==================== 12. 数据覆盖度 ==================== */
+function renderCoverage(records) {
+  const ink = themeInk();
+  destroyCharts('coverage');
+  const canvas = document.getElementById('coverageChart');
+  const note = document.getElementById('coverageNote');
+  if (!canvas) return;
+  if (!records || !records.length) { if (note) note.textContent = '当前筛选条件下暂无数据'; return; }
+
+  const labels = sortedDates(records);
+  const total = labels.length;
+  const combos = presentCombos(records);
+
+  const present = combos.map(c => {
+    const map = latestByDate(c.items);
+    return labels.filter(d => map.get(d)).length;
+  });
+  const missing = present.map(v => total - v);
+
+  const stats = combos.map((c, i) => c.label + ' ' + present[i] + '/' + total + ' 天（' + (present[i] / total * 100).toFixed(0) + '%）');
+  if (note) {
+    const worst = present.indexOf(Math.min.apply(null, present));
+    note.innerHTML = '按<b>当前筛选出的 ' + total + ' 天</b>统计：' + stats.join('、')
+      + '。缺失的日期在趋势图里以<b>虚线桥接</b>表示，不代表当天真的没有霞；'
+      + (missing[worst] > 0 ? '其中 <b>' + combos[worst].label + '</b> 缺 ' + missing[worst] + ' 天最多。' : '');
+  }
+
+  trackChart('coverage', new Chart(canvas, {
     type: 'bar',
     data: {
-      labels: seasons.map(s => s.season),
+      labels: combos.map(c => c.label),
       datasets: [
-        { label: '平均鲜艳度', data: seasons.map(s => s.avg_quality ? parseFloat(s.avg_quality.toFixed(4)) : 0), backgroundColor: seasons.map(s => seasonColors[s.season] || '#999'), borderRadius: 8, borderSkipped: false },
-        { label: '平均通透度', data: seasons.map(s => s.avg_aod != null ? parseFloat((Math.max(0, 1 - s.avg_aod)).toFixed(4)) : 0), backgroundColor: seasons.map(s => (seasonColors[s.season] || '#999') + '80'), borderRadius: 8, borderSkipped: false },
+        {
+          label: '有数据',
+          data: present,
+          backgroundColor: combos.map(c => c.color),
+          borderRadius: 3,
+          borderSkipped: false,
+        },
+        {
+          label: '缺失',
+          data: missing,
+          backgroundColor: 'rgba(136, 135, 128, 0.35)',
+          borderRadius: 3,
+          borderSkipped: false,
+        },
       ],
     },
     options: {
+      indexAxis: 'y',
       responsive: true,
-      plugins: { legend: { position: 'top' } },
-      scales: { y: { beginAtZero: true } },
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { color: ink.text, usePointStyle: true, pointStyle: 'circle', boxWidth: 8, padding: 12, font: { size: 11 } } },
+        tooltip: tooltipCfg(ink, { callbacks: { label: ctx => ' ' + ctx.dataset.label + '：' + ctx.parsed.x + ' 天' } }),
+      },
+      scales: {
+        x: { stacked: true, max: total, beginAtZero: true, title: { display: true, text: '天数', color: ink.text, font: { size: 10 } }, ticks: { color: ink.text, font: { size: 10 }, precision: 0 }, grid: { color: ink.grid } },
+        y: { stacked: true, ticks: { color: ink.text, font: { size: 10 } }, grid: { display: false }, border: { color: ink.grid } },
+      },
     },
+  }));
+}
+
+/* ==================== 13. 星期效应 ==================== */
+const WD_LABELS = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+
+function weekdayIndex(dateStr) {
+  const d = parseDate(dateStr);
+  if (!d) return null;
+  return (d.getDay() + 6) % 7; // 0 = 周一
+}
+
+function renderWeekday(records) {
+  const ink = themeInk();
+  destroyCharts('weekday');
+  const canvas = document.getElementById('weekdayChart');
+  const note = document.getElementById('weekdayNote');
+  if (!canvas) return;
+  if (!records || !records.length) { if (note) note.textContent = '当前筛选条件下暂无数据'; return; }
+
+  const combos = presentCombos(records);
+  const labels = sortedDates(records);
+
+  const datasets = combos.map(c => {
+    const map = latestByDate(c.items);
+    return {
+      type: 'bar',
+      label: c.label,
+      data: WD_LABELS.map((_, i) => {
+        const vals = labels.filter(d => weekdayIndex(d) === i).map(d => pick(map, d, 'quality')).filter(v => v != null);
+        return vals.length ? r4(avg(vals)) : null;
+      }),
+      backgroundColor: c.color,
+      borderRadius: 3,
+      borderSkipped: false,
+      barPercentage: 0.9,
+      categoryPercentage: 0.78,
+    };
   });
+
+  /* 达标率：当日最佳鲜艳度 ≥ 0.3 的比例 */
+  const hitRate = WD_LABELS.map((_, i) => {
+    const days = labels.filter(d => weekdayIndex(d) === i);
+    if (!days.length) return null;
+    const hit = days.filter(d => {
+      const vals = records.filter(r => r.date === d && r.quality != null).map(r => r.quality);
+      return vals.length && Math.max.apply(null, vals) >= 0.3;
+    }).length;
+    return r4(hit / days.length * 100);
+  });
+
+  datasets.push({
+    type: 'line',
+    label: '当日达标率（≥0.3）',
+    data: hitRate,
+    yAxisID: 'y1',
+    borderColor: ink.isDark ? '#cbd5e1' : '#64748b',
+    backgroundColor: 'transparent',
+    borderDash: [5, 4],
+    borderWidth: 1.8,
+    tension: 0.3,
+    pointRadius: 3,
+    pointHoverRadius: 5,
+    pointStyle: 'rect',
+  });
+
+  if (note) {
+    const valid = hitRate.map((v, i) => ({ v: v, i: i })).filter(x => x.v != null).sort((a, b) => b.v - a.v);
+    note.innerHTML = '柱状为各组合<b>按星期几的平均鲜艳度</b>，灰色虚线为当日<b>最佳鲜艳度 ≥ 0.3 的比例</b>（右轴 %）。'
+      + (valid.length ? '达标率最高：<b>' + WD_LABELS[valid[0].i] + ' ' + valid[0].v.toFixed(0) + '%</b>；最低：' + WD_LABELS[valid[valid.length - 1].i] + ' ' + valid[valid.length - 1].v.toFixed(0) + '%。' : '')
+      + '若工作日明显高于周末，通常反映人为排放带来的气溶胶周循环。';
+  }
+
+  trackChart('weekday', new Chart(canvas, {
+    data: { labels: WD_LABELS, datasets: datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { color: ink.text, usePointStyle: true, pointStyle: 'circle', boxWidth: 8, padding: 10, font: { size: 10 } } },
+        tooltip: tooltipCfg(ink, {
+          callbacks: {
+            label: ctx => ctx.dataset.yAxisID === 'y1'
+              ? ' ' + ctx.dataset.label + '：' + fmt(ctx.parsed.y, 0) + '%'
+              : ' ' + ctx.dataset.label + '：' + fmt(ctx.parsed.y, 3),
+          },
+        }),
+      },
+      scales: {
+        x: { ticks: { color: ink.text, font: { size: 10 } }, grid: { display: false }, border: { color: ink.grid } },
+        y: yScale(ink, '平均鲜艳度'),
+        y1: { position: 'right', min: 0, max: 100, title: { display: true, text: '达标率 %', color: ink.text, font: { size: 10 } }, ticks: { color: ink.text, font: { size: 10 } }, grid: { drawOnChartArea: false } },
+      },
+    },
+  }));
+}
+
+/* ==================== 图表统一入口 ==================== */
+function renderCharts(records) {
+  lastRecords = records || [];
+  renderTrendFacets(lastRecords);
+  renderModelFacets(lastRecords);
+  renderMonthlyFacets(lastRecords);
+  renderSeasonFacets(lastRecords);
+  renderSummary(lastRecords);
+  renderScatter(lastRecords);
+  renderDistribution(lastRecords);
+  renderCalendar(lastRecords);
+  renderEventTime(lastRecords);
+  renderCoverage(lastRecords);
+  renderWeekday(lastRecords);
 }
 
 function qualityLabel(v) {
@@ -2523,208 +4350,6 @@ function clarityLabel(c) {
   return '浑浊';
 }
 
-const typeMap = { morning: '朝霞', evening: '晚霞' };
-const lineColors = {
-  morning: { GFS: '#ff7b3d', EC: '#e85d1c' },
-  evening: { GFS: '#7c3aed', EC: '#5b21b6' },
-};
-
-function renderCharts(records) {
-  const grouped = {};
-  records.forEach(r => {
-    const key = r.model + '_' + r.event_type;
-    if (!grouped[key]) grouped[key] = [];
-    grouped[key].push(r);
-  });
-
-  const labels = [...new Set(records.map(r => r.date))].sort();
-
-  const makeDatasets = (field, transform) => Object.entries(grouped).map(([key, items]) => {
-    const [model, eventType] = key.split('_');
-    const label = `${typeMap[eventType] || eventType} ${model}`;
-    const color = (lineColors[eventType] && lineColors[eventType][model]) || '#999';
-
-    const data = labels.map(d => { const rec = items.find(i => i.date === d); const v = rec ? rec[field] : null; return v != null && transform ? transform(v) : v; });
-
-    let hasInternalGap = false;
-    let firstIdx = -1, lastIdx = -1;
-    for (let i = 0; i < data.length; i++) {
-      if (data[i] != null) {
-        if (firstIdx === -1) firstIdx = i;
-        lastIdx = i;
-      }
-    }
-    if (firstIdx !== -1 && lastIdx !== -1) {
-      for (let i = firstIdx; i <= lastIdx; i++) {
-        if (data[i] === null) { hasInternalGap = true; break; }
-      }
-    }
-
-    return {
-      label,
-      data,
-      borderColor: color,
-      backgroundColor: color,
-      borderDash: hasInternalGap ? [6, 3] : undefined,
-      tension: 0.35,
-      fill: false,
-      pointRadius: 2.5,
-      pointHoverRadius: 5,
-      borderWidth: 2,
-    };
-  });
-
-  if (qualityChart) qualityChart.destroy();
-  if (aodChart) aodChart.destroy();
-
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  const textColor = isDark ? '#f5f0ff' : '#1a1410';
-  const gridColor = isDark ? 'rgba(245, 240, 255, 0.06)' : 'rgba(26, 20, 16, 0.05)';
-
-  qualityChart = new Chart(document.getElementById('qualityChart'), {
-    type: 'line', data: { labels, datasets: makeDatasets('quality') },
-    options: {
-      responsive: true,
-      plugins: { legend: { position: 'top', labels: { color: textColor, usePointStyle: true, padding: 16 } } },
-      scales: {
-        y: { beginAtZero: true, ticks: { color: textColor }, grid: { color: gridColor } },
-        x: { ticks: { color: textColor, maxRotation: 45, minRotation: 45 }, grid: { color: gridColor } }
-      }
-    }
-  });
-
-  aodChart = new Chart(document.getElementById('aodChart'), {
-    type: 'line', data: { labels, datasets: makeDatasets('aod', v => Math.max(0, 1 - v)) },
-    options: {
-      responsive: true,
-      plugins: { legend: { position: 'top', labels: { color: textColor, usePointStyle: true, padding: 16 } } },
-      scales: {
-        y: { beginAtZero: true, max: 1, ticks: { color: textColor }, grid: { color: gridColor } },
-        x: { ticks: { color: textColor, maxRotation: 45, minRotation: 45 }, grid: { color: gridColor } }
-      }
-    }
-  });
-}
-
-function renderModelCompare(models) {
-  if (!models || models.length === 0) return;
-
-  const grouped = {};
-  models.forEach(m => {
-    const key = m.event_type;
-    if (!grouped[key]) grouped[key] = [];
-    grouped[key].push(m);
-  });
-
-  const eventTypes = Object.keys(grouped);
-  const modelNames = [...new Set(models.map(m => m.model))];
-
-  const qualityData = modelNames.map(model => ({
-    label: model + ' 鲜艳度',
-    data: eventTypes.map(et => {
-      const found = grouped[et]?.find(m => m.model === model);
-      return found ? parseFloat(found.avg_quality?.toFixed(4)) : 0;
-    }),
-    backgroundColor: eventTypes.map(et => (lineColors[et] && lineColors[et][model]) || '#999'),
-    borderRadius: 8,
-    borderSkipped: false,
-  }));
-
-  const aodData = modelNames.map(model => ({
-    label: model + ' 通透度',
-    data: eventTypes.map(et => {
-      const found = grouped[et]?.find(m => m.model === model);
-      return found && found.avg_aod != null ? parseFloat((Math.max(0, 1 - found.avg_aod)).toFixed(4)) : 0;
-    }),
-    backgroundColor: eventTypes.map(et => ((lineColors[et] && lineColors[et][model]) || '#999') + '80'),
-    borderRadius: 8,
-    borderSkipped: false,
-  }));
-
-  if (modelCompareChart) modelCompareChart.destroy();
-
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  const textColor = isDark ? '#f5f0ff' : '#1a1410';
-
-  modelCompareChart = new Chart(document.getElementById('modelCompareChart'), {
-    type: 'bar',
-    data: {
-      labels: eventTypes.map(et => et === 'morning' ? '朝霞' : '晚霞'),
-      datasets: [...qualityData, ...aodData],
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { position: 'top', labels: { color: textColor, usePointStyle: true, padding: 12 } } },
-      scales: { y: { beginAtZero: true } },
-    },
-  });
-}
-
-function renderMonthly(monthly) {
-  if (!monthly || monthly.length === 0) return;
-
-  if (monthlyChart) monthlyChart.destroy();
-
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  const textColor = isDark ? '#f5f0ff' : '#1a1410';
-  const gridColor = isDark ? 'rgba(245, 240, 255, 0.06)' : 'rgba(26, 20, 16, 0.05)';
-
-  monthlyChart = new Chart(document.getElementById('monthlyChart'), {
-    type: 'line',
-    data: {
-      labels: monthly.map(m => m.month),
-      datasets: [
-        {
-          label: '平均鲜艳度',
-          data: monthly.map(m => m.avg_quality ? parseFloat(m.avg_quality.toFixed(4)) : 0),
-          borderColor: '#ff7b3d',
-          backgroundColor: 'rgba(255, 123, 61, 0.1)',
-          tension: 0.35,
-          fill: true,
-          yAxisID: 'y',
-          pointRadius: 3,
-          borderWidth: 2.5,
-        },
-        {
-          label: '平均通透度',
-          data: monthly.map(m => m.avg_aod != null ? parseFloat((Math.max(0, 1 - m.avg_aod)).toFixed(4)) : 0),
-          borderColor: '#7c3aed',
-          backgroundColor: 'rgba(124, 58, 237, 0.1)',
-          tension: 0.35,
-          fill: true,
-          yAxisID: 'y1',
-          pointRadius: 3,
-          borderWidth: 2.5,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { position: 'top', labels: { color: textColor, usePointStyle: true, padding: 16 } } },
-      scales: {
-        y: {
-          type: 'linear',
-          position: 'left',
-          title: { display: true, text: '鲜艳度', color: textColor },
-          ticks: { color: textColor },
-          grid: { color: gridColor },
-        },
-        y1: {
-          type: 'linear',
-          position: 'right',
-          title: { display: true, text: '通透度', color: textColor },
-          grid: { drawOnChartArea: false },
-          ticks: { color: textColor },
-        },
-        x: {
-          ticks: { color: textColor },
-          grid: { color: gridColor },
-        }
-      },
-    },
-  });
-}
-
 function toggleControls() {
   const body = document.getElementById('controlsBody');
   const btn = document.getElementById('controlsToggle');
@@ -2732,18 +4357,105 @@ function toggleControls() {
   btn.classList.toggle('open', isOpen);
 }
 
+function togglePop(id) {
+  const wrap = document.getElementById(id);
+  if (!wrap) return;
+  const wasOpen = wrap.classList.contains('open');
+  closeAllPops();
+  if (!wasOpen) wrap.classList.add('open');
+}
+
+function closePop(id) {
+  const wrap = document.getElementById(id);
+  if (wrap) wrap.classList.remove('open');
+}
+
+function closeAllPops() {
+  document.querySelectorAll('.pop-wrap.open').forEach(w => w.classList.remove('open'));
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.pop-wrap')) closeAllPops();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeAllPops();
+});
+
 function exportData(format) {
   const params = getFilters();
   params.format = format;
   window.location.href = '/api/export?' + qs(params);
 }
 
-function downloadChart(canvasId, filename) {
-  const canvas = document.getElementById(canvasId);
+function saveCanvas(canvas, filename) {
   const link = document.createElement('a');
   link.download = filename + '.png';
   link.href = canvas.toDataURL('image/png');
   link.click();
+}
+
+/* 单图导出：先铺一层主题底色，避免透明背景 */
+function downloadChart(canvasId, filename) {
+  const src = document.getElementById(canvasId);
+  if (!src) return;
+  const ink = themeInk();
+  const out = document.createElement('canvas');
+  out.width = src.width;
+  out.height = src.height;
+  const ctx = out.getContext('2d');
+  ctx.fillStyle = ink.bg;
+  ctx.fillRect(0, 0, out.width, out.height);
+  ctx.drawImage(src, 0, 0);
+  saveCanvas(out, filename);
+}
+
+/* 分面组导出：把一组子图纵向拼成一张长图，保留子图标题与统计信息 */
+function downloadFacetGroup(groupId, filename) {
+  const box = document.querySelector('[data-chart="' + groupId + '"]');
+  if (!box) return;
+
+  const items = [...box.querySelectorAll('.facet')].map(f => ({
+    canvas: f.querySelector('canvas'),
+    title: (f.querySelector('.facet-title') || {}).textContent || '',
+    stat: (f.querySelector('.facet-stat') || {}).textContent || '',
+  })).filter(i => i.canvas);
+
+  if (!items.length) return;
+
+  const ink = themeInk();
+  const pad = 20;
+  const headH = 32;
+  const gap = 16;
+  const width = Math.max(...items.map(i => i.canvas.clientWidth || 480));
+  const height = pad * 2 + items.reduce((h, i) => h + headH + (i.canvas.clientHeight || 216) + gap, 0) - gap;
+
+  const scale = 2;
+  const out = document.createElement('canvas');
+  out.width = width * scale;
+  out.height = height * scale;
+  const ctx = out.getContext('2d');
+  ctx.scale(scale, scale);
+  ctx.fillStyle = ink.bg;
+  ctx.fillRect(0, 0, width, height);
+
+  const bodyFont = '"PingFang SC", "Microsoft YaHei", sans-serif';
+  let y = pad;
+  items.forEach(i => {
+    const h = i.canvas.clientHeight || 216;
+    ctx.textAlign = 'left';
+    ctx.font = '600 13px ' + bodyFont;
+    ctx.fillStyle = ink.text;
+    ctx.fillText(i.title.trim(), pad, y + 15);
+    ctx.textAlign = 'right';
+    ctx.font = '400 11px ' + bodyFont;
+    ctx.fillStyle = ink.muted;
+    ctx.fillText(i.stat.trim(), width - pad, y + 15);
+    ctx.drawImage(i.canvas, pad, y + headH, width - pad * 2, h);
+    y += headH + h + gap;
+  });
+
+  saveCanvas(out, filename);
 }
 
 function quickRange(days, btn) {
@@ -2760,6 +4472,10 @@ function quickRange(days, btn) {
     document.getElementById('endDate').value = '';
   }
   updateDateBtnLabel();
+  const lbl = document.getElementById('timeTriggerLabel');
+  const trig = document.getElementById('timeTrigger');
+  if (lbl) lbl.textContent = '🕒 ' + (btn ? btn.textContent : '全部');
+  if (trig) trig.classList.remove('active');
   loadData();
 }
 

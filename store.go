@@ -487,7 +487,7 @@ func (s *Store) GetTodayTomorrowData(city string) ([]SunsetRecord, error) {
 	return records, rows.Err()
 }
 
-func (s *Store) GetRankings(city, eventType string, limit int) (*Rankings, error) {
+func (s *Store) GetRankings(city, eventType, startDate, endDate string, limit int) (*Rankings, error) {
 	rankings := &Rankings{}
 
 	dateQuery := `SELECT city, date, time, event_type, model, quality, aod
@@ -500,6 +500,14 @@ func (s *Store) GetRankings(city, eventType string, limit int) (*Rankings, error
 	if eventType != "" {
 		dateQuery += ` AND event_type = ?`
 		args = append(args, eventType)
+	}
+	if startDate != "" {
+		dateQuery += ` AND date >= ?`
+		args = append(args, startDate)
+	}
+	if endDate != "" {
+		dateQuery += ` AND date <= ?`
+		args = append(args, endDate)
 	}
 	dateQuery += ` ORDER BY quality DESC LIMIT ?`
 	args = append(args, limit)
@@ -530,6 +538,14 @@ func (s *Store) GetRankings(city, eventType string, limit int) (*Rankings, error
 	if eventType != "" {
 		monthQuery += ` AND event_type = ?`
 		mArgs = append(mArgs, eventType)
+	}
+	if startDate != "" {
+		monthQuery += ` AND date >= ?`
+		mArgs = append(mArgs, startDate)
+	}
+	if endDate != "" {
+		monthQuery += ` AND date <= ?`
+		mArgs = append(mArgs, endDate)
 	}
 	monthQuery += ` GROUP BY month ORDER BY month`
 
@@ -566,6 +582,14 @@ func (s *Store) GetRankings(city, eventType string, limit int) (*Rankings, error
 	if eventType != "" {
 		seasonQuery += ` AND event_type = ?`
 		sArgs = append(sArgs, eventType)
+	}
+	if startDate != "" {
+		seasonQuery += ` AND date >= ?`
+		sArgs = append(sArgs, startDate)
+	}
+	if endDate != "" {
+		seasonQuery += ` AND date <= ?`
+		sArgs = append(sArgs, endDate)
 	}
 	seasonQuery += ` GROUP BY season ORDER BY AVG(quality) DESC`
 
