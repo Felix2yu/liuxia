@@ -31,5 +31,9 @@ ignore:
 flags:
   backend:
     paths:
+      # 根目录与子目录都要覆盖：coverage 路径经 path-fix 后为根目录文件
+      # （如 cache.go），仅写 '**/*.go' 匹配不到无目录层级的文件，
+      # 会导致 flag 归属 0 文件、报告被判 empty/unusable 而丢弃。
+      - '*.go'
       - '**/*.go'
     carryforward: true
