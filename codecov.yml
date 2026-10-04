@@ -31,5 +31,5 @@ ignore:
 flags:
   backend:
     paths:
-      - **/*.go
+      - '**/*.go'
     carryforward: true
