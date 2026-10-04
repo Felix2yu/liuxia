@@ -1,0 +1,24 @@
+# 临时诊断 workflow：查询 Codecov 服务端对该仓库的处理状态，用完即删
+name: codecov-debug
+
+on:
+  workflow_dispatch:
+
+jobs:
+  debug:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Query Codecov API
+        env:
+          TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: |
+          set -u
+          base="https://api.codecov.io/api/v2/github/felix2yu/liuxia"
+          echo "===== 1) repo 信息 ====="
+          curl -s -H "Authorization: token $TOKEN" "$base/" | head -c 2000; echo
+          echo "===== 2) commits 列表 ====="
+          curl -s -H "Authorization: token $TOKEN" "$base/commits/?page_size=5" | head -c 4000; echo
+          echo "===== 3) commit 详情 (13a75a9) ====="
+          curl -s -H "Authorization: token $TOKEN" "$base/commit/13a75a9bd949734f7985f3981a1bc6205d897564/" | head -c 4000; echo
+          echo "===== 4) flags ====="
+          curl -s -H "Authorization: token $TOKEN" "$base/flags/" | head -c 2000; echo
