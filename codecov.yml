@@ -1,5 +1,7 @@
 # Codecov 统一配置 —— 规范由 Felix2yu/.github 维护，各仓库仅 paths 不同。
 codecov:
+  branch: main           # 显式指定默认分支：Codecov 缓存的默认分支可能是改名前的 master，
+                         # 导致仪表盘指向不存在的分支而显示 no data
   require_ci_to_pass: true
 
 coverage:
