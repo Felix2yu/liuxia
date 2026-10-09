@@ -64,6 +64,14 @@ func StartWebServer(port string, store *Store, logger *log.Logger) error {
 
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
+	// 根路径 favicon.ico：浏览器与爬虫的默认探测点，避免 404
+	mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		if !methodNotAllowed(w, r) {
+			return
+		}
+		http.ServeFile(w, r, "static/favicon.ico")
+	})
+
 	mux.HandleFunc("/manifest.json", func(w http.ResponseWriter, r *http.Request) {
 		if !methodNotAllowed(w, r) {
 			return
@@ -85,7 +93,7 @@ func StartWebServer(port string, store *Store, logger *log.Logger) error {
 				{ "src": "/static/icons/icon-180x180.png", "sizes": "180x180", "type": "image/png" },
 				{ "src": "/static/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png" },
 				{ "src": "/static/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png" },
-				{ "src": "/static/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+				{ "src": "/static/icons/icon-maskable-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
 			]
 		}`))
 	})
@@ -107,7 +115,7 @@ func StartWebServer(port string, store *Store, logger *log.Logger) error {
 		fmt.Fprintf(w, `const CACHE_VERSION = '%s';
 const STATIC_CACHE = 'liuxia-static-' + CACHE_VERSION;
 const DATA_CACHE = 'liuxia-data-' + CACHE_VERSION;
-const STATIC_ASSETS = ['/', '/manifest.json', '/static/icons/icon-180x180.png', '/static/icons/icon-192x192.png', '/static/icons/icon-512x512.png', '/offline.html'];
+const STATIC_ASSETS = ['/', '/manifest.json', '/favicon.ico', '/static/icons/favicon.svg', '/static/icons/icon-180x180.png', '/static/icons/icon-192x192.png', '/static/icons/icon-512x512.png', '/static/icons/icon-maskable-512x512.png', '/offline.html'];
 const CDN_ASSETS = ['https://cdn.jsdelivr.net/npm/chart.js@4'];
 
 self.addEventListener('install', e => {

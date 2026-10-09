@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="流霞">
+  <defs>
+    <linearGradient id="lx-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e67e22"/>
+      <stop offset="1" stop-color="#d35400"/>
+    </linearGradient>
+    <!-- 外层光晕：透明度由内向外连续衰减，外缘融入背景，不再出现硬边圆环 -->
+    <radialGradient id="lx-halo" cx="256" cy="200" r="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.19"/>
+      <stop offset="0.55" stop-color="#ffffff" stop-opacity="0.185"/>
+      <stop offset="0.80" stop-color="#ffffff" stop-opacity="0.165"/>
+      <stop offset="0.90" stop-color="#ffffff" stop-opacity="0.085"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <!-- 太阳本体：取消色阶平台，改为连续渐变，外圈渐隐承接光晕 -->
+    <radialGradient id="lx-sun" cx="256" cy="200" r="80" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f9cd8b"/>
+      <stop offset="0.26" stop-color="#f8c472"/>
+      <stop offset="0.50" stop-color="#f7bd63"/>
+      <stop offset="0.72" stop-color="#f6b34a"/>
+      <stop offset="0.86" stop-color="#f5ab35"/>
+      <stop offset="1" stop-color="#f5ab35" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#lx-bg)"/>
+  <circle cx="256" cy="200" r="100" fill="url(#lx-halo)"/>
+  <circle cx="256" cy="200" r="80" fill="url(#lx-sun)"/>
+</svg>
