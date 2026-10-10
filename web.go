@@ -76,24 +76,29 @@ func StartWebServer(port string, store *Store, logger *log.Logger) error {
 		if !methodNotAllowed(w, r) {
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
+		// 必须是 application/manifest+json：application/json 虽能装，但浏览器会记一条
+		// MIME 不合规的告警（契约见 PWA规范.md 第三节）。
+		w.Header().Set("Content-Type", "application/manifest+json")
 		w.Write([]byte(`{
+			"id": "/",
 			"name": "流霞 - 朝霞晚霞数据看板",
 			"short_name": "流霞",
 			"description": "朝霞晚霞预测数据看板，支持多城市、多模型对比",
+			"lang": "zh-CN",
+			"dir": "ltr",
 			"start_url": "/",
 			"scope": "/",
-			"id": "/",
 			"display": "standalone",
+			"display_override": ["standalone", "minimal-ui", "browser"],
 			"background_color": "#f5f5f5",
 			"theme_color": "#e67e22",
 			"orientation": "any",
 			"categories": ["weather", "utilities"],
 			"icons": [
-				{ "src": "/static/icons/icon-180x180.png", "sizes": "180x180", "type": "image/png" },
-				{ "src": "/static/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png" },
-				{ "src": "/static/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png" },
-				{ "src": "/static/icons/icon-maskable-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+				{ "src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+				{ "src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+				{ "src": "/static/icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+				{ "src": "/static/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
 			]
 		}`))
 	})
@@ -115,7 +120,9 @@ func StartWebServer(port string, store *Store, logger *log.Logger) error {
 		fmt.Fprintf(w, `const CACHE_VERSION = '%s';
 const STATIC_CACHE = 'liuxia-static-' + CACHE_VERSION;
 const DATA_CACHE = 'liuxia-data-' + CACHE_VERSION;
-const STATIC_ASSETS = ['/', '/manifest.json', '/favicon.ico', '/static/icons/favicon.svg', '/static/icons/icon-180x180.png', '/static/icons/icon-192x192.png', '/static/icons/icon-512x512.png', '/static/icons/icon-maskable-512x512.png', '/offline.html'];
+// API 响应是无上限的：每次刷新城市都会写入一条新 key，放任不管会把 CacheStorage 撑爆
+const MAX_DATA_ENTRIES = 200;
+const STATIC_ASSETS = ['/', '/manifest.json', '/favicon.ico', '/static/icons/favicon.svg', '/static/icons/icon-192.png', '/static/icons/icon-512.png', '/static/icons/icon-maskable-192.png', '/static/icons/icon-maskable-512.png', '/offline.html'];
 const CDN_ASSETS = ['https://cdn.jsdelivr.net/npm/chart.js@4'];
 
 self.addEventListener('install', e => {
@@ -138,6 +145,17 @@ self.addEventListener('message', e => {
   }
 });
 
+// 超出上限时按写入顺序丢掉最旧的一批，保证 DATA_CACHE 有界
+async function pruneDataCache() {
+  const cache = await caches.open(DATA_CACHE);
+  const keys = await cache.keys();
+  if (keys.length > MAX_DATA_ENTRIES) {
+    for (const req of keys.slice(0, keys.length - MAX_DATA_ENTRIES)) {
+      await cache.delete(req);
+    }
+  }
+}
+
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (url.pathname.startsWith('/api/')) {
@@ -145,7 +163,7 @@ self.addEventListener('fetch', e => {
     e.respondWith(
       fetch(e.request).then(res => {
         const clone = res.clone();
-        caches.open(DATA_CACHE).then(c => c.put(e.request, clone));
+        caches.open(DATA_CACHE).then(c => c.put(e.request, clone)).then(pruneDataCache);
         return res;
       }).catch(() => caches.match(e.request))
     );

@@ -4,25 +4,27 @@
       <stop offset="0" stop-color="#e67e22"/>
       <stop offset="1" stop-color="#d35400"/>
     </linearGradient>
-    <!-- 外层光晕：透明度由内向外连续衰减，外缘融入背景，不再出现硬边圆环 -->
-    <radialGradient id="lx-halo" cx="256" cy="200" r="100" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.19"/>
-      <stop offset="0.55" stop-color="#ffffff" stop-opacity="0.185"/>
-      <stop offset="0.80" stop-color="#ffffff" stop-opacity="0.165"/>
-      <stop offset="0.90" stop-color="#ffffff" stop-opacity="0.085"/>
+    <!-- 外层光晕：不透明度由内向外连续衰减，外缘自然融入背景，消除硬边圆环 -->
+    <radialGradient id="lx-halo" cx="256" cy="200" r="104" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.185"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0.181"/>
+      <stop offset="0.84" stop-color="#ffffff" stop-opacity="0.167"/>
+      <stop offset="0.93" stop-color="#ffffff" stop-opacity="0.085"/>
       <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
     </radialGradient>
-    <!-- 太阳本体：取消色阶平台，改为连续渐变，外圈渐隐承接光晕 -->
-    <radialGradient id="lx-sun" cx="256" cy="200" r="80" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#f9cd8b"/>
-      <stop offset="0.26" stop-color="#f8c472"/>
-      <stop offset="0.50" stop-color="#f7bd63"/>
-      <stop offset="0.72" stop-color="#f6b34a"/>
-      <stop offset="0.86" stop-color="#f5ab35"/>
+    <!-- 太阳本体：取消色阶平台，改为连续过渡；外圈短距离渐隐以承接光晕 -->
+    <radialGradient id="lx-sun" cx="256" cy="200" r="85" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f9cf90"/>
+      <stop offset="0.14" stop-color="#f8c87a"/>
+      <stop offset="0.3" stop-color="#f8c472"/>
+      <stop offset="0.48" stop-color="#f7bd63"/>
+      <stop offset="0.66" stop-color="#f6b44b"/>
+      <stop offset="0.8" stop-color="#f5ae3a"/>
+      <stop offset="0.92" stop-color="#f5ab35"/>
       <stop offset="1" stop-color="#f5ab35" stop-opacity="0"/>
     </radialGradient>
   </defs>
   <rect width="512" height="512" fill="url(#lx-bg)"/>
-  <circle cx="256" cy="200" r="100" fill="url(#lx-halo)"/>
-  <circle cx="256" cy="200" r="80" fill="url(#lx-sun)"/>
+  <circle cx="256" cy="200" r="104" fill="url(#lx-halo)"/>
+  <circle cx="256" cy="200" r="85" fill="url(#lx-sun)"/>
 </svg>
