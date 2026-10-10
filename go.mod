@@ -5,7 +5,7 @@ go 1.27
 require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/unraid/apprise-go v0.3.3
-	modernc.org/sqlite v1.60.0
+	modernc.org/sqlite v1.60.1
 )
 
 require (
