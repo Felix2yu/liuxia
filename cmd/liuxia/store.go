@@ -188,15 +188,15 @@ func (s *Store) Close() error {
 }
 
 type ModelStats struct {
-	Model        string   `json:"model"`
-	EventType    string   `json:"event_type"`
-	Count        int      `json:"count"`
-	MinQuality   *float64 `json:"min_quality"`
-	MaxQuality   *float64 `json:"max_quality"`
-	AvgQuality   *float64 `json:"avg_quality"`
-	MinAOD       *float64 `json:"min_aod"`
-	MaxAOD       *float64 `json:"max_aod"`
-	AvgAOD       *float64 `json:"avg_aod"`
+	Model      string   `json:"model"`
+	EventType  string   `json:"event_type"`
+	Count      int      `json:"count"`
+	MinQuality *float64 `json:"min_quality"`
+	MaxQuality *float64 `json:"max_quality"`
+	AvgQuality *float64 `json:"avg_quality"`
+	MinAOD     *float64 `json:"min_aod"`
+	MaxAOD     *float64 `json:"max_aod"`
+	AvgAOD     *float64 `json:"avg_aod"`
 }
 
 type MonthlyStats struct {
@@ -207,8 +207,8 @@ type MonthlyStats struct {
 }
 
 type Statistics struct {
-	TotalRecords int           `json:"total_records"`
-	Models       []ModelStats  `json:"models"`
+	TotalRecords int            `json:"total_records"`
+	Models       []ModelStats   `json:"models"`
 	Monthly      []MonthlyStats `json:"monthly"`
 }
 
@@ -449,9 +449,9 @@ type SeasonRanking struct {
 }
 
 type Rankings struct {
-	BestDates  []DateRanking  `json:"best_dates"`
-	Monthly    []MonthRanking `json:"monthly"`
-	Seasonal   []SeasonRanking `json:"seasonal"`
+	BestDates []DateRanking   `json:"best_dates"`
+	Monthly   []MonthRanking  `json:"monthly"`
+	Seasonal  []SeasonRanking `json:"seasonal"`
 }
 
 func (s *Store) GetTodayTomorrowData(city string) ([]SunsetRecord, error) {

@@ -186,3 +186,7 @@ PUSH_URL=ntfy://ntfy.sh/Weather,tgram://bot-token/chatid
 | 头 | 说明 |
 |------|------|
 | `X-Cache` | 缓存命中状态：`HIT` 或 `MISS` |
+
+## 许可证
+
+本项目以 [MIT](LICENSE) 发布，© 2026 Felix2yu。

@@ -54,18 +54,18 @@ func main() {
 			if rt == "" {
 				continue
 			}
-		logger.Printf("[启动] 朝霞任务将每天 %s 执行", rt)
-		spec, err := buildCronSpec(rt)
-		if err != nil {
-			logger.Fatalf("朝霞任务时间配置错误: %v", err)
-		}
-		isMorning := true
-		_, err = c.AddFunc(spec, func() {
-			predictor.FetchData(isMorning)
-		})
-		if err != nil {
-			logger.Printf("朝霞任务 %s 调度错误: %v", rt, err)
-		}
+			logger.Printf("[启动] 朝霞任务将每天 %s 执行", rt)
+			spec, err := buildCronSpec(rt)
+			if err != nil {
+				logger.Fatalf("朝霞任务时间配置错误: %v", err)
+			}
+			isMorning := true
+			_, err = c.AddFunc(spec, func() {
+				predictor.FetchData(isMorning)
+			})
+			if err != nil {
+				logger.Printf("朝霞任务 %s 调度错误: %v", rt, err)
+			}
 		}
 	}
 
@@ -75,18 +75,18 @@ func main() {
 			if rt == "" {
 				continue
 			}
-		logger.Printf("[启动] 晚霞任务将每天 %s 执行", rt)
-		spec, err := buildCronSpec(rt)
-		if err != nil {
-			logger.Fatalf("晚霞任务时间配置错误: %v", err)
-		}
-		isMorning := false
-		_, err = c.AddFunc(spec, func() {
-			predictor.FetchData(isMorning)
-		})
-		if err != nil {
-			logger.Printf("晚霞任务 %s 调度错误: %v", rt, err)
-		}
+			logger.Printf("[启动] 晚霞任务将每天 %s 执行", rt)
+			spec, err := buildCronSpec(rt)
+			if err != nil {
+				logger.Fatalf("晚霞任务时间配置错误: %v", err)
+			}
+			isMorning := false
+			_, err = c.AddFunc(spec, func() {
+				predictor.FetchData(isMorning)
+			})
+			if err != nil {
+				logger.Printf("晚霞任务 %s 调度错误: %v", rt, err)
+			}
 		}
 	}
 
