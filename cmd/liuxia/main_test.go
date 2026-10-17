@@ -93,7 +93,7 @@ func TestMainIntegration(t *testing.T) {
 
 	// 发送 SIGTERM 信号来停止程序
 	p, _ := os.FindProcess(os.Getpid())
-	p.Signal(syscall.SIGTERM)
+	_ = p.Signal(syscall.SIGTERM)
 
 	// 等待程序退出
 	select {
@@ -134,7 +134,7 @@ func TestMainIntegrationWithMorningOnly(t *testing.T) {
 	time.Sleep(500 * time.Millisecond)
 
 	p, _ := os.FindProcess(os.Getpid())
-	p.Signal(syscall.SIGTERM)
+	_ = p.Signal(syscall.SIGTERM)
 
 	select {
 	case <-done:
@@ -174,7 +174,7 @@ func TestMainIntegrationWithEveningOnly(t *testing.T) {
 	time.Sleep(500 * time.Millisecond)
 
 	p, _ := os.FindProcess(os.Getpid())
-	p.Signal(syscall.SIGTERM)
+	_ = p.Signal(syscall.SIGTERM)
 
 	select {
 	case <-done:
@@ -214,7 +214,7 @@ func TestMainIntegrationWithNoTask(t *testing.T) {
 	time.Sleep(500 * time.Millisecond)
 
 	p, _ := os.FindProcess(os.Getpid())
-	p.Signal(syscall.SIGTERM)
+	_ = p.Signal(syscall.SIGTERM)
 
 	select {
 	case <-done:

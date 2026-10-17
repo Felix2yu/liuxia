@@ -112,8 +112,8 @@ func TestUpsertRecordUpdate(t *testing.T) {
 		Quality:   &quality2,
 	}
 
-	store.UpsertRecord(record1)
-	store.UpsertRecord(record2)
+	_ = store.UpsertRecord(record1)
+	_ = store.UpsertRecord(record2)
 
 	records, _ := store.QueryRecords("北京", "evening", "2024-01-01", "2024-01-01")
 	if len(records) != 1 {
@@ -136,7 +136,7 @@ func TestQueryRecords(t *testing.T) {
 	}
 
 	for _, r := range records {
-		store.UpsertRecord(r)
+		_ = store.UpsertRecord(r)
 	}
 
 	t.Run("按城市查询", func(t *testing.T) {
@@ -175,7 +175,7 @@ func TestExportCSV(t *testing.T) {
 	defer cleanup()
 
 	quality := 0.85
-	store.UpsertRecord(SunsetRecord{
+	_ = store.UpsertRecord(SunsetRecord{
 		City:      "北京",
 		Date:      "2024-01-01",
 		Time:      "18:30",
@@ -206,7 +206,7 @@ func TestExportJSON(t *testing.T) {
 	defer cleanup()
 
 	quality := 0.85
-	store.UpsertRecord(SunsetRecord{
+	_ = store.UpsertRecord(SunsetRecord{
 		City:      "北京",
 		Date:      "2024-01-01",
 		Time:      "18:30",
@@ -235,9 +235,9 @@ func TestGetCities(t *testing.T) {
 	defer cleanup()
 
 	quality := 0.85
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
-	store.UpsertRecord(SunsetRecord{City: "上海", Date: "2024-01-01", Time: "18:35", EventType: "evening", Model: "EC", Quality: &quality})
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-02", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
+	_ = store.UpsertRecord(SunsetRecord{City: "上海", Date: "2024-01-01", Time: "18:35", EventType: "evening", Model: "EC", Quality: &quality})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-02", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
 
 	cities, err := store.GetCities()
 	if err != nil {
@@ -253,8 +253,8 @@ func TestGetTotalRecords(t *testing.T) {
 	defer cleanup()
 
 	quality := 0.85
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
-	store.UpsertRecord(SunsetRecord{City: "上海", Date: "2024-01-01", Time: "18:35", EventType: "evening", Model: "EC", Quality: &quality})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
+	_ = store.UpsertRecord(SunsetRecord{City: "上海", Date: "2024-01-01", Time: "18:35", EventType: "evening", Model: "EC", Quality: &quality})
 
 	count, err := store.GetTotalRecords()
 	if err != nil {
@@ -272,8 +272,8 @@ func TestDeleteOldRecords(t *testing.T) {
 	quality := 0.85
 	// 使用当前日期附近的日期来测试
 	// 一条记录是很久以前的（会被删除），一条是最近的（不会被删除）
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2020-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2099-12-31", Time: "18:30", EventType: "evening", Model: "EC", Quality: &quality})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: "2020-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: "2099-12-31", Time: "18:30", EventType: "evening", Model: "EC", Quality: &quality})
 
 	deleted, err := store.DeleteOldRecords(365)
 	if err != nil {
@@ -294,8 +294,8 @@ func TestDeleteAbnormalDates(t *testing.T) {
 	defer cleanup()
 
 	quality := 0.85
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2019-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: "2019-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
 
 	deleted, err := store.DeleteAbnormalDates()
 	if err != nil {
@@ -317,8 +317,8 @@ func TestGetStatistics(t *testing.T) {
 
 	quality1 := 0.85
 	quality2 := 0.95
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality1})
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-02", Time: "18:30", EventType: "evening", Model: "EC", Quality: &quality2})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality1})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-02", Time: "18:30", EventType: "evening", Model: "EC", Quality: &quality2})
 
 	stats, err := store.GetStatistics("", "", "", "")
 	if err != nil {
@@ -338,8 +338,8 @@ func TestGetCityComparison(t *testing.T) {
 
 	quality1 := 0.85
 	quality2 := 0.95
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality1})
-	store.UpsertRecord(SunsetRecord{City: "上海", Date: "2024-01-01", Time: "18:35", EventType: "evening", Model: "EC", Quality: &quality2})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality1})
+	_ = store.UpsertRecord(SunsetRecord{City: "上海", Date: "2024-01-01", Time: "18:35", EventType: "evening", Model: "EC", Quality: &quality2})
 
 	result, err := store.GetCityComparison("", "", "")
 	if err != nil {
@@ -356,7 +356,7 @@ func TestGetTodayTomorrowData(t *testing.T) {
 
 	today := "2024-01-15"
 	quality := 0.85
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: today, Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: today, Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
 
 	// 注意：GetTodayTomorrowData 使用当前日期，这里我们只验证基本功能
 	result, err := store.GetTodayTomorrowData("北京")
@@ -373,8 +373,8 @@ func TestGetRankings(t *testing.T) {
 
 	quality1 := 0.85
 	quality2 := 0.95
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality1})
-	store.UpsertRecord(SunsetRecord{City: "上海", Date: "2024-01-01", Time: "18:35", EventType: "evening", Model: "EC", Quality: &quality2})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality1})
+	_ = store.UpsertRecord(SunsetRecord{City: "上海", Date: "2024-01-01", Time: "18:35", EventType: "evening", Model: "EC", Quality: &quality2})
 
 	rankings, err := store.GetRankings("", "", "", "", 10)
 	if err != nil {
@@ -416,8 +416,8 @@ func TestGetStatisticsWithFilters(t *testing.T) {
 
 	quality1 := 0.85
 	quality2 := 0.95
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality1})
-	store.UpsertRecord(SunsetRecord{City: "上海", Date: "2024-01-02", Time: "18:35", EventType: "morning", Model: "EC", Quality: &quality2})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality1})
+	_ = store.UpsertRecord(SunsetRecord{City: "上海", Date: "2024-01-02", Time: "18:35", EventType: "morning", Model: "EC", Quality: &quality2})
 
 	t.Run("按城市过滤", func(t *testing.T) {
 		stats, err := store.GetStatistics("北京", "", "", "")
@@ -456,8 +456,8 @@ func TestGetCityComparisonWithFilters(t *testing.T) {
 
 	quality1 := 0.85
 	quality2 := 0.95
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality1})
-	store.UpsertRecord(SunsetRecord{City: "上海", Date: "2024-01-02", Time: "18:35", EventType: "morning", Model: "EC", Quality: &quality2})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality1})
+	_ = store.UpsertRecord(SunsetRecord{City: "上海", Date: "2024-01-02", Time: "18:35", EventType: "morning", Model: "EC", Quality: &quality2})
 
 	t.Run("按事件类型过滤", func(t *testing.T) {
 		result, err := store.GetCityComparison("evening", "", "")
@@ -486,8 +486,8 @@ func TestGetRankingsWithFilters(t *testing.T) {
 
 	quality1 := 0.85
 	quality2 := 0.95
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality1})
-	store.UpsertRecord(SunsetRecord{City: "上海", Date: "2024-01-02", Time: "18:35", EventType: "morning", Model: "EC", Quality: &quality2})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality1})
+	_ = store.UpsertRecord(SunsetRecord{City: "上海", Date: "2024-01-02", Time: "18:35", EventType: "morning", Model: "EC", Quality: &quality2})
 
 	t.Run("按城市过滤", func(t *testing.T) {
 		rankings, err := store.GetRankings("北京", "", "", "", 10)
@@ -516,8 +516,8 @@ func TestGetRankingsWithDateRange(t *testing.T) {
 
 	q1 := 0.95
 	q2 := 0.85
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &q1})
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-03-01", Time: "18:35", EventType: "evening", Model: "GFS", Quality: &q2})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &q1})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-03-01", Time: "18:35", EventType: "evening", Model: "GFS", Quality: &q2})
 
 	t.Run("日期范围过滤最佳日期", func(t *testing.T) {
 		rankings, err := store.GetRankings("", "", "2024-02-01", "2024-04-01", 10)
@@ -550,9 +550,9 @@ func TestQueryRecordsWithMultipleFilters(t *testing.T) {
 	quality1 := 0.85
 	quality2 := 0.95
 	quality3 := 0.75
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality1})
-	store.UpsertRecord(SunsetRecord{City: "上海", Date: "2024-01-02", Time: "18:35", EventType: "morning", Model: "EC", Quality: &quality2})
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-03", Time: "18:40", EventType: "evening", Model: "GFS", Quality: &quality3})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality1})
+	_ = store.UpsertRecord(SunsetRecord{City: "上海", Date: "2024-01-02", Time: "18:35", EventType: "morning", Model: "EC", Quality: &quality2})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-03", Time: "18:40", EventType: "evening", Model: "GFS", Quality: &quality3})
 
 	t.Run("多条件过滤", func(t *testing.T) {
 		result, err := store.QueryRecords("北京", "evening", "2024-01-01", "2024-01-01")
@@ -581,8 +581,8 @@ func TestGetTodayTomorrowDataWithCity(t *testing.T) {
 
 	today := "2024-01-15"
 	quality := 0.85
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: today, Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
-	store.UpsertRecord(SunsetRecord{City: "上海", Date: today, Time: "18:35", EventType: "evening", Model: "EC", Quality: &quality})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: today, Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
+	_ = store.UpsertRecord(SunsetRecord{City: "上海", Date: today, Time: "18:35", EventType: "evening", Model: "EC", Quality: &quality})
 
 	t.Run("不指定城市", func(t *testing.T) {
 		result, err := store.GetTodayTomorrowData("")
@@ -722,10 +722,10 @@ func TestGetRankingsWithSeasonalData(t *testing.T) {
 
 	quality := 0.85
 	// 添加不同季节的数据
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-03-15", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-06-15", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-09-15", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-12-15", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-03-15", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-06-15", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-09-15", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-12-15", Time: "18:30", EventType: "evening", Model: "GFS", Quality: &quality})
 
 	rankings, err := store.GetRankings("", "", "", "", 10)
 	if err != nil {
@@ -748,7 +748,7 @@ func TestStoreWithNilQuality(t *testing.T) {
 	defer cleanup()
 
 	// 测试 quality 为 nil 的情况
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: nil})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", Quality: nil})
 
 	records, err := store.QueryRecords("北京", "", "", "")
 	if err != nil {
@@ -767,7 +767,7 @@ func TestStoreWithNilAOD(t *testing.T) {
 	defer cleanup()
 
 	// 测试 AOD 为 nil 的情况
-	store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", AOD: nil})
+	_ = store.UpsertRecord(SunsetRecord{City: "北京", Date: "2024-01-01", Time: "18:30", EventType: "evening", Model: "GFS", AOD: nil})
 
 	records, err := store.QueryRecords("北京", "", "", "")
 	if err != nil {

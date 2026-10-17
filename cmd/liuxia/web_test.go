@@ -224,7 +224,7 @@ func TestStartWebServerRoutes(t *testing.T) {
 
 	// 添加测试数据
 	quality := 0.85
-	store.UpsertRecord(SunsetRecord{
+	_ = store.UpsertRecord(SunsetRecord{
 		City:      "北京",
 		Date:      "2024-01-01",
 		Time:      "18:30",
@@ -374,7 +374,7 @@ func TestAllAPIEndpoints(t *testing.T) {
 
 	// 添加测试数据
 	quality := 0.85
-	store.UpsertRecord(SunsetRecord{
+	_ = store.UpsertRecord(SunsetRecord{
 		City:      "北京",
 		Date:      "2024-01-01",
 		Time:      "18:30",
@@ -385,12 +385,12 @@ func TestAllAPIEndpoints(t *testing.T) {
 
 	// 创建静态文件目录
 	staticDir := filepath.Join(dir, "static")
-	os.MkdirAll(staticDir, 0755)
+	_ = os.MkdirAll(staticDir, 0755)
 
 	// 创建 templates 目录
 	templatesDir := filepath.Join(dir, "templates")
-	os.MkdirAll(templatesDir, 0755)
-	os.WriteFile(filepath.Join(templatesDir, "index.html"), []byte("<html><body>Test</body></html>"), 0644)
+	_ = os.MkdirAll(templatesDir, 0755)
+	_ = os.WriteFile(filepath.Join(templatesDir, "index.html"), []byte("<html><body>Test</body></html>"), 0644)
 
 	mux := http.NewServeMux()
 
@@ -595,11 +595,11 @@ func TestAllAPIEndpoints(t *testing.T) {
 		if format == "csv" {
 			w.Header().Set("Content-Type", "text/csv; charset=utf-8")
 			w.Header().Set("Content-Disposition", "attachment; filename=liuxia_data.csv")
-			store.ExportCSV(w, city, eventType, start, end)
+			_ = store.ExportCSV(w, city, eventType, start, end)
 		} else {
 			w.Header().Set("Content-Type", "application/json")
 			w.Header().Set("Content-Disposition", "attachment; filename=liuxia_data.json")
-			store.ExportJSON(w, city, eventType, start, end)
+			_ = store.ExportJSON(w, city, eventType, start, end)
 		}
 	})
 
@@ -766,19 +766,19 @@ func TestStartWebServerIntegration(t *testing.T) {
 
 	// 保存当前工作目录
 	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
+	defer func() { _ = os.Chdir(originalDir) }()
 
 	// 切换到测试目录
-	os.Chdir(dir)
+	_ = os.Chdir(dir)
 
 	// 创建 templates 目录
 	templatesDir := filepath.Join(dir, "templates")
-	os.MkdirAll(templatesDir, 0755)
-	os.WriteFile(filepath.Join(templatesDir, "index.html"), []byte("<html><body>Test</body></html>"), 0644)
+	_ = os.MkdirAll(templatesDir, 0755)
+	_ = os.WriteFile(filepath.Join(templatesDir, "index.html"), []byte("<html><body>Test</body></html>"), 0644)
 
 	// 创建 static 目录
 	staticDir := filepath.Join(dir, "static")
-	os.MkdirAll(staticDir, 0755)
+	_ = os.MkdirAll(staticDir, 0755)
 
 	dbPath := filepath.Join(dir, "test.db")
 	store, err := InitStore(dbPath)
@@ -790,7 +790,7 @@ func TestStartWebServerIntegration(t *testing.T) {
 	logger := log.New(os.Stdout, "", 0)
 
 	// 启动服务器在后台
-	go StartWebServer("18081", store, logger)
+	go func() { _ = StartWebServer("18081", store, logger) }()
 
 	// 等待服务器启动
 	time.Sleep(100 * time.Millisecond)

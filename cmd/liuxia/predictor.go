@@ -330,7 +330,7 @@ func (wp *WeatherPredictor) buildMarkdownResponse(city string, urls map[string]s
 		}
 
 		if wp.store != nil && result.DateStr != "" {
-			wp.store.UpsertRecord(SunsetRecord{
+			if err := wp.store.UpsertRecord(SunsetRecord{
 				City:      city,
 				Date:      result.DateStr,
 				Time:      result.TimeStr,
@@ -338,7 +338,9 @@ func (wp *WeatherPredictor) buildMarkdownResponse(city string, urls map[string]s
 				Model:     model,
 				Quality:   result.QualityNum,
 				AOD:       result.AODNum,
-			})
+			}); err != nil {
+				wp.logger.Printf("[存储] 写入预测记录失败: %v", err)
+			}
 		}
 
 		if result.QualityNum == nil || *result.QualityNum < 0.2 {
