@@ -136,7 +136,7 @@ func TestAppriseNotifierSend(t *testing.T) {
 		}
 		// 测试不同的优先级（会因无法连接而失败，但测试代码路径）
 		for i := 1; i <= 5; i++ {
-			notifier.Send("title", "body", i, []string{}, false)
+			_ = notifier.Send("title", "body", i, []string{}, false)
 		}
 	})
 }

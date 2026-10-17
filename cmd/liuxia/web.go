@@ -328,11 +328,11 @@ async function syncPendingData() {
 		if format == "csv" {
 			w.Header().Set("Content-Type", "text/csv; charset=utf-8")
 			w.Header().Set("Content-Disposition", "attachment; filename=liuxia_data.csv")
-			store.ExportCSV(w, city, eventType, start, end)
+			_ = store.ExportCSV(w, city, eventType, start, end) // 响应流已开始，失败只能断连
 		} else {
 			w.Header().Set("Content-Type", "application/json")
 			w.Header().Set("Content-Disposition", "attachment; filename=liuxia_data.json")
-			store.ExportJSON(w, city, eventType, start, end)
+			_ = store.ExportJSON(w, city, eventType, start, end) // 响应流已开始，失败只能断连
 		}
 	})
 
