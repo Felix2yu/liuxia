@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"liuxia/internal/web"
 	"log"
 	"net/http"
 	"regexp"
@@ -60,15 +61,15 @@ func StartWebServer(port string, store *Store, logger *log.Logger) error {
 		serveIndex(w, r)
 	})
 
-	// 静态资源：由编译期内嵌的 assetsFS 提供，不再依赖运行时 static/ 目录
-	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
+	// 静态资源：由编译期内嵌的 web.AssetsFS 提供，不再依赖运行时 static/ 目录
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(web.StaticFS))))
 
 	// 根路径 favicon.ico：浏览器与爬虫的默认探测点，避免 404
 	mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		if !methodNotAllowed(w, r) {
 			return
 		}
-		data, err := assetsFS.ReadFile("static/favicon.ico")
+		data, err := web.AssetsFS.ReadFile("static/favicon.ico")
 		if err != nil {
 			http.NotFound(w, r)
 			return
@@ -112,8 +113,8 @@ func StartWebServer(port string, store *Store, logger *log.Logger) error {
 		if !methodNotAllowed(w, r) {
 			return
 		}
-		// 版本号基于内嵌 templates/index.html 的内容哈希（见 embed.go 的 swVersion），
-		// 内容一变版本即变，使静态缓存自动失效。不再依赖磁盘文件的修改时间。
+		// 版本号基于内嵌 templates/index.html 的内容哈希（见 internal/web/embed.go 的
+		// SWVersion），内容一变版本即变，使静态缓存自动失效。不再依赖磁盘文件的修改时间。
 		w.Header().Set("Content-Type", "application/javascript")
 		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 		fmt.Fprintf(w, `const CACHE_VERSION = '%s';
@@ -212,7 +213,7 @@ async function syncPendingData() {
   for (const req of keys) {
     try { await fetch(req); } catch (_) {}
   }
-}`, swVersion)
+}`, web.SWVersion)
 	})
 
 	mux.HandleFunc("/offline.html", func(w http.ResponseWriter, r *http.Request) {
@@ -609,8 +610,8 @@ async function syncPendingData() {
 }
 
 func serveIndex(w http.ResponseWriter, r *http.Request) {
-	// 页面由编译期内嵌的 assetsFS 提供
-	data, err := assetsFS.ReadFile("templates/index.html")
+	// 页面由编译期内嵌的 web.AssetsFS 提供
+	data, err := web.AssetsFS.ReadFile("templates/index.html")
 	if err != nil {
 		http.Error(w, "page not found", 500)
 		return
