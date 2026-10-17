@@ -1,3 +1,5 @@
-liuxia
+# 编译产物。必须加 / 锚定：裸写 liuxia 会命中 cmd/liuxia/ 整个入口包目录
+/liuxia
+/bin/
 *.exe
 __pycache__/

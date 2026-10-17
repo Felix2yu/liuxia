@@ -35,5 +35,8 @@ jobs:
     uses: Felix2yu/.github/.github/workflows/reusable-image.yml@v1
     with:
       go-dir: .
+      # 入口在 cmd/liuxia/：main-package 的默认值是 "."，入口迁走后不显式传
+      # 会在 Build binary 步骤失败（本地 go build 发现不了）
+      main-package: ./cmd/liuxia
       binary-name: liuxia
       image-name: ghcr.io/felix2yu/liuxia

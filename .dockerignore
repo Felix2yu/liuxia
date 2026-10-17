@@ -1,7 +1,23 @@
+# 装配式镜像：Dockerfile 只 COPY 预编译产物（bin/liuxia）与入口脚本
+# （scripts/docker-entrypoint.sh）。static/ 与 templates/ 已在编译期通过
+# go:embed 打进二进制，镜像不需要它们。
+# 下列排除项都不得命中 bin/ 与 scripts/ —— 否则 COPY 报的是「file not found」。
+
+# VCS / CI / 文档
 .img
 .git
 .github
-README.md
-*.md
 .gitignore
 .dockerignore
+README.md
+*.md
+
+# Go 源码：CI 已编译成 bin/liuxia，构建上下文不需要源码
+cmd
+internal
+
+# 本地数据与产物
+/liuxia
+data
+coverage.out
+docker-compose.yml
