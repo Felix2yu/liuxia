@@ -9,8 +9,7 @@ RUN apk add --no-cache tzdata ca-certificates gosu \
     && adduser -D -u 1000 -G appuser appuser
 
 COPY --chmod=755 bin/liuxia /app/liuxia
-COPY templates /app/templates
-COPY static /app/static
+# 注意：static/ 与 templates/ 已在编译期通过 go:embed 打入二进制，镜像无需再 COPY 它们
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 

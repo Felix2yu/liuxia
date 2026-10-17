@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -333,37 +334,7 @@ func TestStartWebServerRoutes(t *testing.T) {
 }
 
 func TestServeIndex(t *testing.T) {
-	// 创建临时目录和文件
-	dir, err := os.MkdirTemp("", "liuxia-test")
-	if err != nil {
-		t.Fatalf("创建临时目录失败: %v", err)
-	}
-	defer os.RemoveAll(dir)
-
-	// 创建 templates 目录和 index.html
-	templatesDir := filepath.Join(dir, "templates")
-	if err := os.MkdirAll(templatesDir, 0755); err != nil {
-		t.Fatalf("创建 templates 目录失败: %v", err)
-	}
-
-	htmlContent := `<!DOCTYPE html>
-<html>
-<head><title>流霞</title></head>
-<body><h1>测试页面</h1></body>
-</html>`
-
-	if err := os.WriteFile(filepath.Join(templatesDir, "index.html"), []byte(htmlContent), 0644); err != nil {
-		t.Fatalf("创建 index.html 失败: %v", err)
-	}
-
-	// 保存当前工作目录
-	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-
-	// 切换到测试目录
-	os.Chdir(dir)
-
-	// 测试 serveIndex
+	// serveIndex 现在直接返回编译期内嵌的 templates/index.html，不依赖运行时文件系统
 	req := httptest.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 
@@ -379,35 +350,11 @@ func TestServeIndex(t *testing.T) {
 	}
 
 	body := w.Body.String()
-	if body != htmlContent {
-		t.Errorf("响应内容不匹配")
+	if !strings.Contains(body, "<!DOCTYPE html>") {
+		t.Errorf("serveIndex() 未返回内嵌的 index.html")
 	}
-}
-
-func TestServeIndexNotFound(t *testing.T) {
-	// 创建临时目录（没有 templates/index.html）
-	dir, err := os.MkdirTemp("", "liuxia-test")
-	if err != nil {
-		t.Fatalf("创建临时目录失败: %v", err)
-	}
-	defer os.RemoveAll(dir)
-
-	// 保存当前工作目录
-	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-
-	// 切换到测试目录
-	os.Chdir(dir)
-
-	// 测试 serveIndex
-	req := httptest.NewRequest("GET", "/", nil)
-	w := httptest.NewRecorder()
-
-	serveIndex(w, req)
-
-	// 当找不到文件时，应该返回 500 错误
-	if w.Code != http.StatusInternalServerError {
-		t.Errorf("serveIndex() 状态码 = %d, want %d", w.Code, http.StatusInternalServerError)
+	if !strings.Contains(body, "流霞") {
+		t.Errorf("serveIndex() 内容缺少预期标记「流霞」")
 	}
 }
 

@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
-	"path/filepath"
 	"regexp"
 	"sync/atomic"
 	"time"
@@ -62,14 +60,21 @@ func StartWebServer(port string, store *Store, logger *log.Logger) error {
 		serveIndex(w, r)
 	})
 
-	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	// 静态资源：由编译期内嵌的 assetsFS 提供，不再依赖运行时 static/ 目录
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
 
 	// 根路径 favicon.ico：浏览器与爬虫的默认探测点，避免 404
 	mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		if !methodNotAllowed(w, r) {
 			return
 		}
-		http.ServeFile(w, r, "static/favicon.ico")
+		data, err := assetsFS.ReadFile("static/favicon.ico")
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Set("Content-Type", "image/x-icon")
+		w.Write(data)
 	})
 
 	mux.HandleFunc("/manifest.json", func(w http.ResponseWriter, r *http.Request) {
@@ -107,14 +112,8 @@ func StartWebServer(port string, store *Store, logger *log.Logger) error {
 		if !methodNotAllowed(w, r) {
 			return
 		}
-		// 用 HTML 文件的修改时间作为版本号，HTML 一改版本自动变
-		swVersion := "v1"
-		for _, p := range []string{"templates/index.html", "index.html"} {
-			if info, err := os.Stat(p); err == nil {
-				swVersion = fmt.Sprintf("v%d", info.ModTime().Unix())
-				break
-			}
-		}
+		// 版本号基于内嵌 templates/index.html 的内容哈希（见 embed.go 的 swVersion），
+		// 内容一变版本即变，使静态缓存自动失效。不再依赖磁盘文件的修改时间。
 		w.Header().Set("Content-Type", "application/javascript")
 		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 		fmt.Fprintf(w, `const CACHE_VERSION = '%s';
@@ -610,17 +609,11 @@ async function syncPendingData() {
 }
 
 func serveIndex(w http.ResponseWriter, r *http.Request) {
-	exe, _ := os.Executable()
-	dir := filepath.Dir(exe)
-	path := filepath.Join(dir, "templates", "index.html")
-
-	data, err := os.ReadFile(path)
+	// 页面由编译期内嵌的 assetsFS 提供
+	data, err := assetsFS.ReadFile("templates/index.html")
 	if err != nil {
-		data, err = os.ReadFile("templates/index.html")
-		if err != nil {
-			http.Error(w, "page not found", 500)
-			return
-		}
+		http.Error(w, "page not found", 500)
+		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
