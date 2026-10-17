@@ -46,6 +46,26 @@ func methodNotAllowed(w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 
+// serveFavicon 直出内嵌的 favicon.ico：浏览器与爬虫的默认探测点，避免 404。
+func serveFavicon(w http.ResponseWriter, r *http.Request) {
+	serveAsset(w, r, "static/favicon.ico", "image/x-icon")
+}
+
+// serveAsset 从内嵌资源中取单个文件直出。固定路径的静态文件（favicon 等）
+// 不走 /static/ 路由，用它可以复用同一套方法校验与 404 处理。
+func serveAsset(w http.ResponseWriter, r *http.Request, name, contentType string) {
+	if !methodNotAllowed(w, r) {
+		return
+	}
+	data, err := web.AssetsFS.ReadFile(name)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	w.Header().Set("Content-Type", contentType)
+	w.Write(data)
+}
+
 func StartWebServer(port string, store *Store, logger *log.Logger) error {
 	cache := store.Cache
 	mux := http.NewServeMux()
@@ -65,18 +85,7 @@ func StartWebServer(port string, store *Store, logger *log.Logger) error {
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(web.StaticFS))))
 
 	// 根路径 favicon.ico：浏览器与爬虫的默认探测点，避免 404
-	mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		if !methodNotAllowed(w, r) {
-			return
-		}
-		data, err := web.AssetsFS.ReadFile("static/favicon.ico")
-		if err != nil {
-			http.NotFound(w, r)
-			return
-		}
-		w.Header().Set("Content-Type", "image/x-icon")
-		w.Write(data)
-	})
+	mux.HandleFunc("/favicon.ico", serveFavicon)
 
 	mux.HandleFunc("/manifest.json", func(w http.ResponseWriter, r *http.Request) {
 		if !methodNotAllowed(w, r) {
