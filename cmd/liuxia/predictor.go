@@ -41,9 +41,9 @@ type WeatherData struct {
 }
 
 type tbResponse struct {
-	Quality     string `json:"tb_quality"`
-	AOD         string `json:"tb_aod"`
-	EventTime   string `json:"tb_event_time"`
+	Quality   string `json:"tb_quality"`
+	AOD       string `json:"tb_aod"`
+	EventTime string `json:"tb_event_time"`
 }
 
 func NewWeatherPredictor(config *Config, logger *log.Logger, store *Store) *WeatherPredictor {
