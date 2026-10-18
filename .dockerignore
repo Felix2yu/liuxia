@@ -1,7 +1,6 @@
-# 装配式镜像：Dockerfile 只 COPY 预编译产物（bin/liuxia）与入口脚本
-# （scripts/docker-entrypoint.sh）。static/ 与 templates/ 已在编译期通过
-# go:embed 打进二进制，镜像不需要它们。
-# 下列排除项都不得命中 bin/ 与 scripts/ —— 否则 COPY 报的是「file not found」。
+# 装配式镜像：Dockerfile 只 COPY 预编译产物（bin/liuxia）。static/ 与 templates/
+# 已在编译期通过 go:embed 打进二进制，镜像不需要它们；降权入口已下沉到公共基镜。
+# 下列排除项都不得命中 bin/ —— 否则 COPY 报的是「file not found」。
 
 # VCS / CI / 文档
 .img
