@@ -14,6 +14,17 @@ import (
 )
 
 func main() {
+	// 外部备份工具（docker-db-auto-backup）经 docker exec 调用 `liuxia backup`，
+	// 在进程内把一致性快照写到 stdout。必须放在最前面、早于 flag 解析与存储初始化：
+	// 导出进程不跑迁移、不起 cron 与 Web 服务，只做这一件事。
+	if len(os.Args) > 1 && os.Args[1] == "backup" {
+		// 标准 log 默认写 stderr，stdout 只留给快照字节；失败时非零退出。
+		if err := runBackup(os.Args[2:], os.Stdout); err != nil {
+			log.Fatalf("备份导出失败: %v", err)
+		}
+		return
+	}
+
 	logger := log.New(os.Stdout, "", log.LstdFlags)
 	logger.Printf("[启动] %s", time.Now().Format("2006-01-02 15:04:05"))
 
@@ -22,7 +33,7 @@ func main() {
 		logger.Fatalf("初始化失败: %v", err)
 	}
 
-	dbPath := getEnv("DB_PATH", "liuxia.db")
+	dbPath := getDBPath()
 	store, err := InitStore(dbPath)
 	if err != nil {
 		logger.Fatalf("数据库初始化失败: %v", err)

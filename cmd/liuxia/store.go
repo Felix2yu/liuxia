@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"time"
 
 	_ "modernc.org/sqlite"
@@ -83,6 +85,64 @@ func InitStore(dbPath string) (*Store, error) {
 	}
 
 	return &Store{db: db, Cache: NewCache(5 * time.Minute)}, nil
+}
+
+// OpenForExport 为「导出快照」打开数据库：只读已存在的数据文件，
+// 不建目录、不跑建表/加列/建索引这些迁移，也不写任何种子数据。
+//
+// 备份进程与运行实例指向同一个库，schema 的变更只属于正常启动路径；
+// 文件不存在时直接失败，绝不允许导出进程凭空造出一个空库当"备份"。
+func OpenForExport(dbPath string) (*Store, error) {
+	if _, err := os.Stat(dbPath); err != nil {
+		return nil, fmt.Errorf("数据文件不可用: %w", err)
+	}
+	// 刻意不设 journal_mode：连接一旦改写库头部，就可能扰动运行实例的一致性判断；
+	// 已存在的 WAL 数据照常读取，busy_timeout 保证撞上写锁时等待而非立即失败。
+	dsn := fmt.Sprintf("file:%s?_pragma=busy_timeout(5000)", dbPath)
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return nil, fmt.Errorf("open db: %w", err)
+	}
+	// 导出是一次顺序读，一条连接足够，也避免多余连接各自创建 -shm 句柄。
+	db.SetMaxOpenConns(1)
+	if err := db.Ping(); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("connect db: %w", err)
+	}
+	// 导出路径不查询也不写数据，用不到缓存，保持 Cache 为 nil。
+	return &Store{db: db}, nil
+}
+
+// WriteSQLiteSnapshot 把数据库以 SQLite 自身的一致性快照写到 w。
+//
+// 用 VACUUM INTO 而不是复制文件：热拷贝正在被写入的 .db/.db-wal/.db-shm 不是原子
+// 操作，容易拷出损坏副本或漏掉 WAL 里已提交的数据；VACUUM INTO 由 SQLite 在事务里
+// 生成一份自洽的快照，WAL 模式下也不阻塞写入。镜像里通常也没有 sqlite3 CLI 可用。
+//
+// 快照先落在临时目录再流式输出：VACUUM INTO 要求目标不存在，且这样无论调用方读到
+// 一半是否断开，都不会在数据目录里留下半成品。
+func (s *Store) WriteSQLiteSnapshot(w io.Writer) error {
+	dir, err := os.MkdirTemp("", "liuxia-snapshot-")
+	if err != nil {
+		return fmt.Errorf("创建临时目录失败: %w", err)
+	}
+	defer os.RemoveAll(dir)
+
+	target := filepath.Join(dir, "snapshot.db")
+	if _, err := s.db.Exec("VACUUM INTO ?", target); err != nil {
+		return fmt.Errorf("导出数据库快照失败: %w", err)
+	}
+
+	f, err := os.Open(target)
+	if err != nil {
+		return fmt.Errorf("读取快照失败: %w", err)
+	}
+	defer f.Close()
+
+	if _, err := io.Copy(w, f); err != nil {
+		return fmt.Errorf("写出快照失败: %w", err)
+	}
+	return nil
 }
 
 func (s *Store) UpsertRecord(r SunsetRecord) error {

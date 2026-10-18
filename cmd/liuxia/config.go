@@ -46,6 +46,12 @@ func getEnv(key, defaultValue string) string {
 	return defaultValue
 }
 
+// getDBPath 解析 SQLite 数据文件路径。正常启动与 `liuxia backup` 导出必须走同
+// 一份解析结果，否则备份进程可能读到与运行实例不同的文件。
+func getDBPath() string {
+	return getEnv("DB_PATH", "liuxia.db")
+}
+
 func getEnvBool(key string, defaultValue bool) bool {
 	if v, ok := os.LookupEnv(key); ok && v != "" {
 		if b, err := strconv.ParseBool(v); err == nil {
