@@ -44,7 +44,7 @@ services:
       - EVENING_TIME=08:00,11:30,16:00
       - EVENING_MODEL=GFS,EC
       - DB_PATH=/app/data/liuxia.db
-      - BACKUP_SQLITE_CMD=/app/liuxia backup
+      - BACKUP_SQLITE_CMD=liuxia backup
       - WEB_PORT=8080
       - DATA_RETENTION_DAYS=365
       - PUID=1000
@@ -58,7 +58,7 @@ services:
 旁文件不是原子操作，容易拷出损坏副本，所以由应用自己在事务里产出一致性快照：
 
 ```bash
-docker exec liuxia /app/liuxia backup > liuxia-$(date +%F).db
+docker exec liuxia liuxia backup > liuxia-$(date +%F).db
 ```
 
 `backup` 子命令把快照写到 stdout，日志走 stderr，因此重定向得到的就是可直接放回
@@ -87,7 +87,7 @@ docker exec liuxia /app/liuxia backup > liuxia-$(date +%F).db
 | `CITY` | 是 | — | 城市，支持逗号分隔多城市，如 `江苏省-苏州` 或 `江苏省-苏州,上海市-上海` |
 | `BASE_URL` | 否 | `https://sunsetbot.top/` | 服务基础 URL |
 | `DB_PATH` | 否 | `liuxia.db` | SQLite 数据库文件路径 |
-| `BACKUP_SQLITE_CMD` | 否 | — | 设为 `/app/liuxia backup`，供外部备份工具识别并定时导出快照（镜像把二进制装在 `/app`，不在 PATH 里，需写绝对路径） |
+| `BACKUP_SQLITE_CMD` | 否 | — | 设为 `liuxia backup`，供外部备份工具识别并定时导出快照 |
 | `WEB_PORT` | 否 | `8080` | Web 看板端口 |
 | `DATA_RETENTION_DAYS` | 否 | `365` | 数据保留天数，设为 `0` 禁用自动清理 |
 | `PUID` | 否 | `1000` | 容器运行用户 UID |

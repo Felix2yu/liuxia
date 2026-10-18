@@ -7,7 +7,10 @@ FROM ghcr.io/felix2yu/base:alpine-3.24
 
 WORKDIR /app
 
-COPY --chmod=755 bin/liuxia /app/liuxia
+# 二进制装进 /usr/local/bin（基镜契约），而不是 /app：装在 /app 时它不在 PATH 上，
+# `docker exec liuxia liuxia backup` 与「按镜像名推导导出命令」都解析不到。
+# WORKDIR 仍是 /app，所以相对路径的默认值与数据目录都不受影响。
+COPY --chmod=755 bin/liuxia /usr/local/bin/liuxia
 
 # 注意：static/ 与 templates/ 已在编译期通过 go:embed 打入二进制，镜像无需再 COPY 它们。
 # 数据目录沿用 /app（原入口脚本 chown 的目标）。
@@ -19,4 +22,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD wget -qO- http://127.0.0.1:8080/api/health >/dev/null || exit 1
 
-CMD ["/app/liuxia"]
+CMD ["liuxia"]
