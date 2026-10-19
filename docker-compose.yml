@@ -23,11 +23,12 @@ services:
       - EVENING_MODEL=GFS,EC
       - DB_PATH=/app/data/liuxia.db
       # 外部备份工具（docker-db-auto-backup）经 docker exec 触发本应用的导出：
-      #   docker exec liuxia liuxia backup > liuxia.db
+      #   docker exec liuxia /app/liuxia backup > liuxia.db
       # SQLite 没有可连的服务端，热拷贝 .db/-wal/-shm 会拷出损坏副本，故由应用用
       # VACUUM INTO 在进程内产出一致性快照。exec 身份由下方 PUID/PGID 自动推导，
       # 无需再声明 BACKUP_SQLITE_USER。
-      - BACKUP_SQLITE_CMD=liuxia backup
+      # 命令必须写绝对路径：本仓库的镜像把二进制放在 /app，而 /app 不在 PATH 上。
+      - BACKUP_SQLITE_CMD=/app/liuxia backup
       - WEB_PORT=8080
       - PUID=1000
       - PGID=1000
