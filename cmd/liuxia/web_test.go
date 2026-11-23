@@ -230,7 +230,7 @@ func TestStartWebServerRoutes(t *testing.T) {
 		Time:      "18:30",
 		EventType: "evening",
 		Model:     "GFS",
-		Quality:   &quality,
+		Score:     &quality,
 	})
 
 	t.Run("健康检查接口", func(t *testing.T) {
@@ -380,7 +380,7 @@ func TestAllAPIEndpoints(t *testing.T) {
 		Time:      "18:30",
 		EventType: "evening",
 		Model:     "GFS",
-		Quality:   &quality,
+		Score:     &quality,
 	})
 
 	// 创建静态文件目录

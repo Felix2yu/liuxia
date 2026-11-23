@@ -1,29 +1,14 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
-	"math/rand"
 	"net/http"
-	"net/url"
-	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
 )
-
-var eventMap = map[string]string{
-	"TODAY_MORNING":    "rise_1",
-	"TOMORROW_MORNING": "rise_2",
-	"TODAY_EVENING":    "set_1",
-	"TOMORROW_EVENING": "set_2",
-}
-
-var numRe = regexp.MustCompile(`\d+\.\d+`)
 
 type WeatherPredictor struct {
 	config   *Config
@@ -38,7 +23,6 @@ type WeatherPredictor struct {
 
 type WeatherData struct {
 	PushStr     string
-	QualityNum  *float64
 	AODNum      *float64
 	DateStr     string
 	TimeStr     string
@@ -47,12 +31,6 @@ type WeatherData struct {
 	Grade       string
 	Probability *float64
 	Clarity     string
-}
-
-type tbResponse struct {
-	Quality   string `json:"tb_quality"`
-	AOD       string `json:"tb_aod"`
-	EventTime string `json:"tb_event_time"`
 }
 
 func NewWeatherPredictor(config *Config, logger *log.Logger, store *Store) *WeatherPredictor {
@@ -70,102 +48,6 @@ func NewWeatherPredictor(config *Config, logger *log.Logger, store *Store) *Weat
 	}
 }
 
-func (wp *WeatherPredictor) buildURL(event, model, city string) string {
-	base := wp.config.Request.BaseURL
-	params := url.Values{}
-	params.Set("query_id", fmt.Sprintf("%d", rand.Intn(900000)+100000))
-	params.Set("event", event)
-	params.Set("model", model)
-	params.Set("query_city", city)
-	params.Set("intend", "select_city")
-	params.Set("event_date", "None")
-	params.Set("times", "None")
-	return fmt.Sprintf("%s?%s", strings.TrimRight(base, "/"), params.Encode())
-}
-
-func calculatePriority(qualityNum float64) int {
-	switch {
-	case qualityNum < 0.4:
-		return 1
-	case qualityNum < 0.6:
-		return 2
-	case qualityNum < 0.8:
-		return 3
-	case qualityNum < 1.0:
-		return 4
-	default:
-		return 5
-	}
-}
-
-func (wp *WeatherPredictor) parseWeatherData(content string) *WeatherData {
-	var jsonContent tbResponse
-	if err := json.Unmarshal([]byte(content), &jsonContent); err != nil {
-		wp.logger.Printf("JSON解析失败: %v, 内容: %.100s...", err, content)
-		return nil
-	}
-
-	qualityStr := jsonContent.Quality
-	qualityMatch := numRe.FindString(qualityStr)
-	var qualityNum *float64
-	if qualityMatch == "" {
-		wp.logger.Printf("质量数据无法解析数值: %s，记录为空值", qualityStr)
-	} else {
-		if v, err := strconv.ParseFloat(qualityMatch, 64); err == nil {
-			qualityNum = &v
-		}
-	}
-
-	aodStr := jsonContent.AOD
-	if aodStr == "" {
-		aodStr = "N/A"
-	}
-	aodMatch := numRe.FindString(aodStr)
-	var aodNum *float64
-	if aodMatch != "" {
-		if v, err := strconv.ParseFloat(aodMatch, 64); err == nil {
-			aodNum = &v
-		}
-	}
-
-	eventTime := jsonContent.EventTime
-	var dateStr, timeStr string
-	if len(eventTime) >= 10 {
-		dateStr = eventTime[:10]
-	}
-	if len(eventTime) >= 11 && eventTime[10] == ' ' {
-		timeStr = eventTime[11:]
-	}
-
-	if !isReasonableDate(dateStr) {
-		wp.logger.Printf("[过滤] 日期 %q 不合理，跳过存储", dateStr)
-		return nil
-	}
-
-	var pushStr strings.Builder
-	if qualityNum == nil {
-		pushStr.WriteString(fmt.Sprintf("鲜艳度：%s（数据异常）\n", qualityStr))
-	} else if *qualityNum >= 0.4 {
-		pushStr.WriteString(fmt.Sprintf("鲜艳度：**%s**\n", qualityStr))
-	} else {
-		pushStr.WriteString(fmt.Sprintf("鲜艳度：%s\n", qualityStr))
-	}
-
-	if aodNum != nil && *aodNum <= 0.4 {
-		pushStr.WriteString(fmt.Sprintf("气溶胶：**%s**\n", aodStr))
-	} else {
-		pushStr.WriteString(fmt.Sprintf("气溶胶：%s\n", aodStr))
-	}
-
-	return &WeatherData{
-		PushStr:    pushStr.String(),
-		QualityNum: qualityNum,
-		AODNum:     aodNum,
-		DateStr:    dateStr,
-		TimeStr:    timeStr,
-	}
-}
-
 func (wp *WeatherPredictor) errorResult(msg string) *WeatherData {
 	if wp.config.Schedule.PushError {
 		return &WeatherData{
@@ -173,35 +55,6 @@ func (wp *WeatherPredictor) errorResult(msg string) *WeatherData {
 		}
 	}
 	return nil
-}
-
-func (wp *WeatherPredictor) fetchSingleData(fetchURL string) *WeatherData {
-	req, err := http.NewRequest("GET", fetchURL, nil)
-	if err != nil {
-		wp.logger.Printf("构建请求失败: %s", fetchURL)
-		return wp.errorResult(fmt.Sprintf("请求错误: %.100s", err.Error()))
-	}
-
-	resp, err := wp.client.Do(req)
-	if err != nil {
-		wp.logger.Printf("请求失败: %s, 错误: %v", fetchURL, err)
-		return wp.errorResult(fmt.Sprintf("请求错误: %.100s", err.Error()))
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 400 {
-		wp.logger.Printf("请求返回错误状态: %s -> %d", fetchURL, resp.StatusCode)
-		return wp.errorResult(fmt.Sprintf("请求错误: HTTP %d", resp.StatusCode))
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		wp.logger.Printf("读取响应失败: %v", err)
-		return wp.errorResult(fmt.Sprintf("请求错误: %.100s", err.Error()))
-	}
-
-	wp.logger.Printf("请求成功: %s", fetchURL)
-	return wp.parseWeatherData(string(body))
 }
 
 func (wp *WeatherPredictor) FetchData(isMorning bool) {
@@ -237,72 +90,14 @@ func (wp *WeatherPredictor) FetchData(isMorning bool) {
 }
 
 func (wp *WeatherPredictor) fetchDataForCity(city string, models []string, isMorning bool, now time.Time, section string) {
-	if wp.config.Request.Source == "open-meteo" {
-		wp.fetchGlowForCity(city, models, isMorning, now, section)
-		return
-	}
-
-	urls := map[string]string{}
-	eventPrefix := "MORNING"
-	if !isMorning {
-		eventPrefix = "EVENING"
-	}
-
-	for _, model := range models {
-		urlTomorrow := wp.buildURL(eventMap["TOMORROW_"+eventPrefix], model, city)
-		urls[urlTomorrow] = model
-
-		if isMorning {
-			if now.Hour() < 12 {
-				urlToday := wp.buildURL(eventMap["TODAY_"+eventPrefix], model, city)
-				urls[urlToday] = model
-			}
-		} else {
-			if now.Hour() < 19 {
-				urlToday := wp.buildURL(eventMap["TODAY_"+eventPrefix], model, city)
-				urls[urlToday] = model
-			}
-		}
-	}
-
-	urlList := make([]string, 0, len(urls))
-	for u := range urls {
-		urlList = append(urlList, u)
-	}
-	wp.logger.Printf("[URL构建] 城市 %s 构建了 %d 个请求URL: %v", city, len(urls), urlList)
-
-	displayCity := city
-	if idx := strings.LastIndex(city, "-"); idx >= 0 {
-		displayCity = city[idx+1:]
-	}
-
-	eventTitle := fmt.Sprintf("%s朝霞预报", displayCity)
-	eventTag := "sunrise"
-	if !isMorning {
-		eventTitle = fmt.Sprintf("%s晚霞预报", displayCity)
-		eventTag = "city_sunset"
-	}
-
-	markdownLines, maxPriority, hasData := wp.buildMarkdownResponse(city, urls, section)
-
-	if hasData {
-		pushContent := strings.Join(markdownLines, "\n")
-		if maxPriority == nil {
-			p := 3
-			maxPriority = &p
-		}
-		wp.sendNotification(eventTitle, pushContent, *maxPriority, []string{eventTag})
-	} else {
-		wp.logger.Printf("[推送] 城市 %s 没有符合条件的数据", city)
-	}
+	wp.fetchGlowForCity(city, models, isMorning, now, section)
 }
 
 type dateEntry struct {
-	model      string
-	pushStr    string
-	qualityNum *float64
-	aodNum     *float64
-	timeStr    string
+	model   string
+	pushStr string
+	aodNum  *float64
+	timeStr string
 }
 
 func (wp *WeatherPredictor) sendNotification(title, content string, priority int, tags []string) {
@@ -325,64 +120,6 @@ func (wp *WeatherPredictor) sendNotification(title, content string, priority int
 	if err := wp.notifier.Send(title, body, priority, tags, markdown); err != nil {
 		wp.logger.Printf("[推送失败] %v", err)
 	}
-}
-
-func (wp *WeatherPredictor) buildMarkdownResponse(city string, urls map[string]string, eventType string) ([]string, *int, bool) {
-	dataByDate := map[string][]dateEntry{}
-	var maxPriority *int
-
-	urlList := make([]string, 0, len(urls))
-	for u := range urls {
-		urlList = append(urlList, u)
-	}
-	sort.Strings(urlList)
-
-	for _, u := range urlList {
-		model := urls[u]
-		result := wp.fetchSingleData(u)
-		if result == nil {
-			continue
-		}
-
-		if wp.store != nil && result.DateStr != "" {
-			if err := wp.store.UpsertRecord(SunsetRecord{
-				City:      city,
-				Date:      result.DateStr,
-				Time:      result.TimeStr,
-				EventType: eventType,
-				Model:     model,
-				Quality:   result.QualityNum,
-				AOD:       result.AODNum,
-			}); err != nil {
-				wp.logger.Printf("[存储] 写入预测记录失败: %v", err)
-			}
-		}
-
-		if result.QualityNum == nil || *result.QualityNum < 0.2 {
-			if result.QualityNum == nil {
-				wp.logger.Printf("[过滤] 质量数据为空，跳过通知")
-			} else {
-				wp.logger.Printf("[过滤] 质量 %.2f 低于 0.2，跳过通知", *result.QualityNum)
-			}
-			continue
-		}
-
-		priority := calculatePriority(*result.QualityNum)
-		if maxPriority == nil || priority > *maxPriority {
-			maxPriority = &priority
-		}
-
-		dataByDate[result.DateStr] = append(dataByDate[result.DateStr], dateEntry{
-			model:      model,
-			pushStr:    result.PushStr,
-			qualityNum: result.QualityNum,
-			aodNum:     result.AODNum,
-			timeStr:    result.TimeStr,
-		})
-	}
-
-	hasData := len(dataByDate) > 0
-	return renderMarkdownLines(dataByDate), maxPriority, hasData
 }
 
 func renderMarkdownLines(dataByDate map[string][]dateEntry) []string {

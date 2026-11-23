@@ -28,13 +28,13 @@ func TestRunBackupSnapshot(t *testing.T) {
 	quality := 0.85
 	if err := store.UpsertRecord(SunsetRecord{
 		City: "江苏省-苏州", Date: "2026-01-01", Time: "17:30",
-		EventType: "evening", Model: "GFS", Quality: &quality,
+		EventType: "evening", Model: "GFS", Score: &quality,
 	}); err != nil {
 		t.Fatalf("UpsertRecord(旧数据) 失败: %v", err)
 	}
 	if err := store.UpsertRecord(SunsetRecord{
 		City: "江苏省-苏州", Date: "2026-07-15", Time: "19:02",
-		EventType: "evening", Model: "EC", Quality: &quality,
+		EventType: "evening", Model: "EC", Score: &quality,
 	}); err != nil {
 		t.Fatalf("UpsertRecord(最新数据) 失败: %v", err)
 	}

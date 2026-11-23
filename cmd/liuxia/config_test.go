@@ -221,9 +221,6 @@ func TestLoadConfig(t *testing.T) {
 		if cfg.Schedule.City != "北京" {
 			t.Errorf("Schedule.City = %q, want %q", cfg.Schedule.City, "北京")
 		}
-		if cfg.Request.BaseURL != "https://sunsetbot.top/" {
-			t.Errorf("Request.BaseURL = %q, want %q", cfg.Request.BaseURL, "https://sunsetbot.top/")
-		}
 	})
 
 	t.Run("多城市配置", func(t *testing.T) {

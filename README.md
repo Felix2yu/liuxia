@@ -2,9 +2,9 @@
 
 > 流霞，天边流动的彩霞。古人以"流霞"喻仙酒、喻美景，今以此名，捕捉朝暮之间那一抹转瞬即逝的绚烂。
 
-流霞是一款朝霞晚霞预报与监控工具。默认使用 Open-Meteo 预报与空气质量数据，在本地用规则模型计算 0–100 的「霞分」，同时保留历史鲜艳度字段，通过 [apprise-go](https://github.com/unraid/apprise-go) 推送提醒，并提供 Web 数据看板用于历史数据的可视化分析。
+流霞是一款朝霞晚霞预报与监控工具。使用 Open-Meteo 预报与空气质量数据，在本地用规则模型计算 0–100 的「霞分」，通过 [apprise-go](https://github.com/unraid/apprise-go) 推送提醒，并提供 Web 数据看板用于历史数据的可视化分析。
 
-评分模型是 [霞 · 全球火烧云预报](https://github.com/baiiiii521/sunset-glow-forecast) `algo.js` 的 Go 纯函数移植（MIT），包含光路几何、光谱云底亮度、六级分档与多模式集合；阈值尚未经大规模样本标定，结果应作为观赏参考而非官方预报。旧的 sunsetbot.top 接口仍可通过 `DATA_SOURCE=sunsetbot` 使用。Docker 镜像支持 `linux/amd64` 和 `linux/arm64` 架构。
+评分模型是 [霞 · 全球火烧云预报](https://github.com/baiiiii521/sunset-glow-forecast) `algo.js` 的 Go 纯函数移植（MIT），包含光路几何、光谱云底亮度、六级分档与多模式集合；阈值尚未经大规模样本标定，结果应作为观赏参考而非官方预报。Docker 镜像支持 `linux/amd64` 和 `linux/arm64` 架构。
 
 ## 功能特性
 
@@ -31,7 +31,6 @@ services:
       - ./data:/app/data
     environment:
       - CITY=江苏省-苏州,上海市-上海
-      - DATA_SOURCE=open-meteo
       - PUSH_ENABLE=true
       - PUSH_MARKDOWN=true
       - PUSH_URL=ntfy://ntfy.sh/Weather,tgram://bot-token/chatid
@@ -85,8 +84,6 @@ docker exec liuxia /app/liuxia backup > liuxia-$(date +%F).db
 | 变量 | 必填 | 默认值 | 说明 |
 |------|------|--------|------|
 | `CITY` | 是 | — | 城市，支持逗号分隔多城市，如 `江苏省-苏州` 或 `江苏省-苏州,上海市-上海` |
-| `DATA_SOURCE` | 否 | `open-meteo` | 数据源：`open-meteo`（本地评分）或 `sunsetbot`（旧接口） |
-| `BASE_URL` | 否 | `https://sunsetbot.top/` | 仅 `DATA_SOURCE=sunsetbot` 时使用 |
 | `FORECAST_URL` | 否 | `https://api.open-meteo.com/v1/forecast` | Open-Meteo 预报接口，可指向自建或镜像服务 |
 | `FORECAST_MODELS` | 否 | — | 强制指定预报模式，仅在指向集合接口等需要 `models` 参数的镜像时设置，如 `ecmwf_ifs025` |
 | `AQ_URL` | 否 | `https://air-quality-api.open-meteo.com/v1/air-quality` | Open-Meteo 空气质量接口 |
@@ -153,7 +150,7 @@ PUSH_URL=ntfy://ntfy.sh/Weather,tgram://bot-token/chatid
 
 ### 通知等级
 
-`DATA_SOURCE=open-meteo`（默认）按霞分推送，等级直接取模型的六级分档：
+按霞分推送，等级直接取模型的六级分档：
 
 - 霞分 < 35（无烧 / 微烧）：只落库，不通知
 - 35–49 小烧 → 等级 3
@@ -161,18 +158,9 @@ PUSH_URL=ntfy://ntfy.sh/Weather,tgram://bot-token/chatid
 - 65–79 中到大烧 → 等级 5
 - ≥ 80 大烧 → 等级 5
 
-`DATA_SOURCE=sunsetbot` 仍按旧鲜艳度分级：
+数据库写入 `score`/`level`/`grade`/`probability`/`clarity` 与 `aod`；启动迁移会删除旧版 `quality` 列，不再保留 sunsetbot 鲜艳度口径。
 
-- 过滤阈值：< 0.2 的数据会被过滤掉，不通知
-- 0.2 - 0.4 → 等级 1
-- 0.4 - 0.6 → 等级 2
-- 0.6 - 0.8 → 等级 3
-- 0.8 - 1.0 → 等级 4
-- 1.0 及以上 → 等级 5
-
-新数据写入 `score`/`level`/`grade`/`probability`/`clarity` 列，历史 `quality`/`aod` 原样保留，两种口径不混算。
-
-设置 `PUSH_MARKDOWN=true` 时，消息中质量、气溶胶数值较优秀时会加粗标记；设置为 `false` 则发送纯文本。
+设置 `PUSH_MARKDOWN=true` 时，推送正文中的霞分以粗体标记；设置为 `false` 则发送纯文本。
 
 ![通知示例](.img/snapshot.jpg)
 

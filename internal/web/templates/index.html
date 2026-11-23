@@ -708,15 +708,15 @@
     white-space: nowrap;
   }
 
-  .tt-gauge-quality-low .tt-gauge-fill {
+  .tt-gauge-score-low .tt-gauge-fill {
     background: linear-gradient(90deg, #94a3b8, #64748b);
   }
 
-  .tt-gauge-quality-mid .tt-gauge-fill {
+  .tt-gauge-score-mid .tt-gauge-fill {
     background: linear-gradient(90deg, #fbbf24, #f59e0b);
   }
 
-  .tt-gauge-quality-high .tt-gauge-fill {
+  .tt-gauge-score-high .tt-gauge-fill {
     background: linear-gradient(90deg, #ff7b3d, #e85d1c);
   }
 
@@ -1098,9 +1098,8 @@
   .data-table colgroup .col-event { width: 8%; }
   .data-table colgroup .col-time { width: 12%; }
   .data-table colgroup .col-model { width: 8%; }
-  .data-table colgroup .col-score { width: 10%; }
-  .data-table colgroup .col-quality { width: 26%; }
-  .data-table colgroup .col-aod { width: 25%; }
+  .data-table colgroup .col-score { width: 18%; }
+  .data-table colgroup .col-aod { width: 41%; }
 
   .data-table thead th {
     background: var(--bg-secondary);
@@ -1657,9 +1656,8 @@
     .data-table colgroup .col-event { width: 9%; }
     .data-table colgroup .col-time { width: 10%; }
     .data-table colgroup .col-model { width: 9%; }
-    .data-table colgroup .col-score { width: 12%; }
-    .data-table colgroup .col-quality { width: 27%; }
-    .data-table colgroup .col-aod { width: 27%; }
+    .data-table colgroup .col-score { width: 20%; }
+    .data-table colgroup .col-aod { width: 40%; }
 
     .data-table thead th {
       padding: 12px 10px;
@@ -2099,7 +2097,7 @@
         <div class="actions">
           <div class="seg" id="trendMetricSeg" onclick="event.stopPropagation()">
             <button type="button" data-metric="both" class="active" onclick="setTrendMetric('both')">双指标</button>
-            <button type="button" data-metric="quality" onclick="setTrendMetric('quality')">鲜艳度</button>
+            <button type="button" data-metric="score" onclick="setTrendMetric('score')">霞分</button>
             <button type="button" data-metric="clarity" onclick="setTrendMetric('clarity')">通透度</button>
           </div>
           <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadFacetGroup('trendFacets', '趋势分面矩阵')">
@@ -2112,7 +2110,7 @@
       </div>
       <div class="chart-body">
         <div class="facet-grid" id="trendFacetGrid"></div>
-        <p class="chart-note" id="trendFacetsNote">每张子图只呈现<b>一种「现象 × 模型」组合</b>，四条趋势线互不重叠。左轴为<b>鲜艳度</b>，右轴为<b>通透度</b>（1 − 气溶胶，以灰色虚线表示）；同一天多次预报取当日最新一次。</p>
+        <p class="chart-note" id="trendFacetsNote">每张子图只呈现<b>一种「现象 × 模型」组合</b>，四条趋势线互不重叠。左轴为<b>霞分</b>，右轴为<b>通透度</b>（1 − 气溶胶，以灰色虚线表示）；同一天多次预报取当日最新一次。</p>
       </div>
     </div>
 
@@ -2126,7 +2124,7 @@
             <button type="button" data-view="diff" onclick="setModelView('diff')">偏差分布</button>
           </div>
           <div class="seg" id="modelMetricSeg" onclick="event.stopPropagation()">
-            <button type="button" data-metric="quality" class="active" onclick="setModelMetric('quality')">鲜艳度</button>
+            <button type="button" data-metric="score" class="active" onclick="setModelMetric('score')">霞分</button>
             <button type="button" data-metric="clarity" onclick="setModelMetric('clarity')">通透度</button>
           </div>
           <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadFacetGroup('modelFacets', '模型对比')">
@@ -2158,7 +2156,7 @@
       </div>
       <div class="chart-body">
         <div class="facet-grid" id="monthlyFacetGrid"></div>
-        <p class="chart-note">柱状为当月<b>平均鲜艳度</b>（左轴），折线为当月<b>平均通透度</b>（右轴）。每个组合单独成图，避免四条曲线互相遮挡。</p>
+        <p class="chart-note">柱状为当月<b>平均霞分</b>（左轴），折线为当月<b>平均通透度</b>（右轴）。每个组合单独成图，避免四条曲线互相遮挡。</p>
       </div>
     </div>
 
@@ -2177,7 +2175,7 @@
       </div>
       <div class="chart-body">
         <div class="facet-grid" id="seasonFacetGrid"></div>
-        <p class="chart-note">每面子图为<b>一个组合</b>的四季平均鲜艳度；子图右上角同时给出该组合的平均通透度与样本数。</p>
+        <p class="chart-note">每面子图为<b>一个组合</b>的四季平均霞分；子图右上角同时给出该组合的平均通透度与样本数。</p>
       </div>
     </div>
 
@@ -2229,12 +2227,12 @@
       <div class="chart-body"><canvas id="bestDatesChart"></canvas></div>
     </div>
 
-    <!-- 8. 鲜艳度 × 通透度散点 -->
+    <!-- 8. 霞分 × 通透度散点 -->
     <div class="chart-box fade-in-up delay-6" data-chart="scatter" id="scatterBox">
       <div class="chart-header" onclick="toggleChart('scatter')">
-        <h2>鲜艳度 × 通透度</h2>
+        <h2>霞分 × 通透度</h2>
         <div class="actions">
-          <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadChart('scatterChart', '鲜艳度与通透度散点')">
+          <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadChart('scatterChart', '霞分与通透度散点')">
             <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           </button>
           <button class="chart-icon-btn" id="toggle-scatter" title="收起">
@@ -2248,12 +2246,12 @@
       </div>
     </div>
 
-    <!-- 9. 鲜艳度分布与达标率 -->
+    <!-- 9. 霞分分布与达标率 -->
     <div class="chart-box fade-in-up delay-6" data-chart="dist" id="distBox">
       <div class="chart-header" onclick="toggleChart('dist')">
-        <h2>鲜艳度分布与达标率</h2>
+        <h2>霞分分布与达标率</h2>
         <div class="actions">
-          <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadChart('distChart', '鲜艳度分布')">
+          <button class="chart-icon-btn" title="下载图片" onclick="event.stopPropagation();downloadChart('distChart', '霞分分布')">
             <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           </button>
           <button class="chart-icon-btn" id="toggle-dist" title="收起">
@@ -2270,7 +2268,7 @@
     <!-- 10. 日历热力图 -->
     <div class="chart-box span-2 fade-in-up delay-6" data-chart="calendar">
       <div class="chart-header" onclick="toggleChart('calendar')">
-        <h2>日历热力图 · 每日最佳鲜艳度</h2>
+        <h2>日历热力图 · 每日最佳霞分</h2>
         <div class="actions">
           <button class="chart-icon-btn" id="toggle-calendar" title="收起">
             <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
@@ -2392,9 +2390,9 @@
 let lastRecords = [];
 let lastBestDates = [];
 let lastComparison = [];
-let trendMetric = 'both';      // both | quality | clarity
+let trendMetric = 'both';      // both | score | clarity
 let modelView = 'line';        // line | diff
-let modelMetric = 'quality';   // quality | clarity
+let modelMetric = 'score';     // score | clarity
 let allRecords = [];
 let currentPage = 1;
 let sortCol = null;
@@ -2478,9 +2476,7 @@ function renderTodayTomorrow(records, today, tomorrow) {
       const time = Object.values(models)[0]?.time || '';
 
       const allR = Object.values(models).filter(r => r);
-      const qValues = allR.map(r => r.quality).filter(v => v != null);
       const aValues = allR.map(r => r.aod).filter(v => v != null);
-      const bestQ = qValues.length > 0 ? Math.max(...qValues) : null;
       const bestA = aValues.length > 0 ? Math.min(...aValues) : null;
       const clarity = bestA != null ? Math.max(0, 1 - bestA / 1.0) : null;
       const sValues = allR.map(r => r.score).filter(v => v != null);
@@ -2489,10 +2485,10 @@ function renderTodayTomorrow(records, today, tomorrow) {
       const scoreGrade = bestR?.grade || '';
       const scoreProb = bestR?.probability != null ? Math.round(bestR.probability * 100) : null;
 
-      const qPct = bestQ != null ? Math.min(bestQ / 2.5 * 100, 100) : 0;
-      let qGaugeClass = 'tt-gauge-quality-low';
-      if (bestQ != null && bestQ >= 0.8) qGaugeClass = 'tt-gauge-quality-high';
-      else if (bestQ != null && bestQ >= 0.2) qGaugeClass = 'tt-gauge-quality-mid';
+      const scorePct = bestS != null ? Math.min(bestS, 100) : 0;
+      let scoreGaugeClass = 'tt-gauge-score-low';
+      if (bestS != null && bestS >= 65) scoreGaugeClass = 'tt-gauge-score-high';
+      else if (bestS != null && bestS >= 35) scoreGaugeClass = 'tt-gauge-score-mid';
 
       const cPct = clarity != null ? Math.min(clarity * 100, 100) : 0;
       let cGaugeClass = 'tt-gauge-clarity-low';
@@ -2505,15 +2501,12 @@ function renderTodayTomorrow(records, today, tomorrow) {
         if (lv >= 4) { verdict = isMorning ? '值得早起！' : '值得等待！'; verdictClass = 'good'; }
         else if (lv >= 2) { verdict = isMorning ? '可以早起看看' : '可以等等看'; verdictClass = 'mid'; }
         else { verdict = '不太值得'; verdictClass = 'bad'; }
-      } else if (bestQ != null && bestQ >= 1.0) { verdict = isMorning ? '值得早起！' : '值得等待！'; verdictClass = 'good'; }
-      else if (bestQ != null && bestQ >= 0.6) { verdict = isMorning ? '可以早起看看' : '可以等等看'; verdictClass = 'mid'; }
-      else if (bestQ != null && bestQ >= 0.3) { verdict = '一般般'; verdictClass = 'mid'; }
-      else { verdict = '不太值得'; verdictClass = 'bad'; }
+      } else { verdict = '暂无数据'; verdictClass = 'bad'; }
 
       const modelTexts = ['GFS', 'EC'].map(m => {
         const r = models[m];
         if (!r) return null;
-        const v = r.score != null ? Math.round(r.score) : (r.quality != null ? r.quality.toFixed(2) : '-');
+        const v = r.score != null ? Math.round(r.score) : '-';
         return `${m} ${v}`;
       }).filter(Boolean).join(' / ');
 
@@ -2524,15 +2517,14 @@ function renderTodayTomorrow(records, today, tomorrow) {
           <span class="tt-event-time">${escapeHtml(fmtTime(time))}</span>
           <span class="tt-verdict ${verdictClass}">${verdict}</span>
         </div>
-        ${bestS != null ? `<div class="tt-score-line"><b>${Math.round(bestS)}</b><span>霞分</span><span>${escapeHtml(scoreGrade)}</span>${scoreProb != null ? `<span>概率 ${scoreProb}%</span>` : ''}</div>` : ''}
         <div class="tt-gauge-row">
-          <div class="tt-gauge ${qGaugeClass}">
-            <div class="tt-gauge-fill" style="width:${bestQ != null ? Math.max(qPct, 4) : 0}%"></div>
+          <div class="tt-gauge ${scoreGaugeClass}">
+            <div class="tt-gauge-fill" style="width:${bestS != null ? Math.max(scorePct, 4) : 0}%"></div>
           </div>
-          <span class="tt-gauge-val">${bestQ != null ? bestQ.toFixed(2) : '—'}</span>
+          <span class="tt-gauge-val">${bestS != null ? Math.round(bestS) : '—'}</span>
         </div>
         <div style="font-size:11px;color:var(--text-tertiary);margin:4px 0 8px;display:flex;justify-content:space-between;font-family:var(--font-mono);letter-spacing:0.3px">
-          <span>鲜艳度 · ${qualityLabel(bestQ)}</span>
+          <span>霞分 · ${escapeHtml(scoreGrade || '暂无数据')}${scoreProb != null ? ` · ${scoreProb}%` : ''}</span>
           <span style="opacity:.7">${modelTexts || '暂无数据'}</span>
         </div>
         <div class="tt-gauge-row">
@@ -2743,12 +2735,12 @@ function renderCards() {
         if (!r) {
           html += `<span class="card-metric">-</span>`;
         } else {
-          const qLevel = qualityLabel(r.quality);
           const aodLevel = aodLabel(r.aod);
           if (r.score != null) {
             html += `<span class="card-metric">霞分 ${Math.round(r.score)} · ${escapeHtml(r.grade || '')}</span>`;
+          } else {
+            html += `<span class="card-metric">霞分 -</span>`;
           }
-          html += `<span class="card-metric">鲜艳度 ${qLevel}</span>`;
           html += `<span class="card-metric">气溶胶 ${aodLevel}</span>`;
         }
         html += `</div>`;
@@ -2785,7 +2777,6 @@ function renderTable() {
       let va, vb;
       if (sortCol === 'date') { va = a.date + a.time; vb = b.date + b.time; }
       else if (sortCol === 'score') { va = a.score ?? -1; vb = b.score ?? -1; }
-      else if (sortCol === 'quality') { va = a.quality ?? -1; vb = b.quality ?? -1; }
       else if (sortCol === 'aod') { va = a.aod ?? -1; vb = b.aod ?? -1; }
       else return 0;
       if (va < vb) return sortDir === 'asc' ? -1 : 1;
@@ -2809,17 +2800,6 @@ function renderTable() {
     if (!groups[r.date][r.event_type]) groups[r.date][r.event_type] = {};
     groups[r.date][r.event_type][r.model] = r;
   });
-
-  function qBarHTML(val) {
-    if (val == null) return '<span style="color:var(--text-tertiary)">-</span>';
-    const pct = Math.min(val / 2.5 * 100, 100);
-    const cls = val < 0.2 ? 'bar-q-low' : val < 0.8 ? 'bar-q-mid' : 'bar-q-high';
-    const label = qualityLabel(val);
-    return `<div class="bar-wrap">
-      <div class="bar-track"><div class="bar-fill ${cls}" style="width:${pct}%"></div></div>
-      <span class="bar-val">${val.toFixed(2)}</span>
-    </div><span class="level-badge level-${cls.replace('bar-', '')}">${label}</span>`;
-  }
 
   function aodBarHTML(val) {
     if (val == null) return '<span style="color:var(--text-tertiary)">-</span>';
@@ -2872,10 +2852,9 @@ function renderTable() {
           tableRows += '<td><span style="color:var(--text-tertiary)">-</span></td>';
         }
         if (r) {
-          tableRows += `<td class="bar-cell" aria-label="鲜艳度: ${qualityLabel(r.quality)} (${r.quality != null ? r.quality.toFixed(4) : '无数据'})">${qBarHTML(r.quality)}</td>`;
           tableRows += `<td aria-label="气溶胶: ${aodLabel(r.aod)} (${r.aod != null ? r.aod.toFixed(4) : '无数据'})">${aodBarHTML(r.aod)}</td>`;
         } else {
-          tableRows += '<td><span style="color:var(--text-tertiary)">-</span></td><td><span style="color:var(--text-tertiary)">-</span></td>';
+          tableRows += '<td><span style="color:var(--text-tertiary)">-</span></td>';
         }
         tableRows += '</tr>';
       });
@@ -2885,7 +2864,6 @@ function renderTable() {
 
   const thDateClass = sortCol === 'date' ? (sortDir === 'asc' ? 'sort-asc' : 'sort-desc') : '';
   const thScoreClass = sortCol === 'score' ? (sortDir === 'asc' ? 'sort-asc' : 'sort-desc') : '';
-  const thQClass = sortCol === 'quality' ? (sortDir === 'asc' ? 'sort-asc' : 'sort-desc') : '';
   const thAodClass = sortCol === 'aod' ? (sortDir === 'asc' ? 'sort-asc' : 'sort-desc') : '';
 
   wrap.innerHTML = `
@@ -2896,7 +2874,6 @@ function renderTable() {
         <col class="col-time">
         <col class="col-model">
         <col class="col-score">
-        <col class="col-quality">
         <col class="col-aod">
       </colgroup>
       <thead>
@@ -2906,7 +2883,6 @@ function renderTable() {
           <th scope="col" role="columnheader">时间</th>
           <th scope="col" role="columnheader">模型</th>
           <th scope="col" class="sortable ${thScoreClass}" data-sort="score" tabindex="0" role="columnheader" aria-sort="${sortCol === 'score' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}">霞分</th>
-          <th scope="col" class="sortable ${thQClass}" data-sort="quality" tabindex="0" role="columnheader" aria-sort="${sortCol === 'quality' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}">鲜艳度</th>
           <th scope="col" class="sortable ${thAodClass}" data-sort="aod" tabindex="0" role="columnheader" aria-sort="${sortCol === 'aod' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}">气溶胶</th>
         </tr>
       </thead>
@@ -3297,7 +3273,7 @@ function renderTrendFacets(records) {
   const cityCount = new Set(records.map(r => r.city).filter(Boolean)).size;
   const note = document.getElementById('trendFacetsNote');
   if (note) {
-    const base = '每张子图只呈现<b>一种「现象 × 模型」组合</b>，四条趋势线互不重叠。左轴为<b>鲜艳度</b>，'
+    const base = '每张子图只呈现<b>一种「现象 × 模型」组合</b>，四条趋势线互不重叠。左轴为<b>霞分</b>，'
       + '右轴为<b>通透度</b>（1 − 气溶胶，灰色线）。'
       + '<b>实线</b>连接相邻都有数据的两天，<b>虚线</b>表示该段跨越了缺失日（中间那天没有预报），不代表插值。'
       + '同一天多次预报取当日最新一次。';
@@ -3308,15 +3284,15 @@ function renderTrendFacets(records) {
 
   const specs = combos.map(c => {
     const map = latestByDate(c.items);
-    const q = labels.map(d => pick(map, d, 'quality'));
+    const s = labels.map(d => pick(map, d, 'score'));
     const k = labels.map(d => pick(map, d, 'aod', toClarity));
     return {
       canvasId: 'trend-' + c.event + '-' + c.model,
       title: c.label,
       color: c.color,
-      stat: '鲜艳度 ' + fmt(avg(q)) + ' · 通透度 ' + fmt(avg(k)) + ' · n=' + c.items.length,
-      hasData: q.some(v => v != null) || k.some(v => v != null),
-      quality: q,
+      stat: '霞分 ' + fmt(avg(s)) + ' · 通透度 ' + fmt(avg(k)) + ' · n=' + c.items.length,
+      hasData: s.some(v => v != null) || k.some(v => v != null),
+      score: s,
       clarity: k,
     };
   });
@@ -3326,10 +3302,10 @@ function renderTrendFacets(records) {
     const datasets = [];
 
     if (trendMetric !== 'clarity') {
-      const raw = spec.quality;
-      const hasQ = raw.map(v => v != null);
+      const raw = spec.score;
+      const hasS = raw.map(v => v != null);
       datasets.push({
-        label: '鲜艳度',
+        label: '霞分',
         data: raw,
         yAxisID: 'y',
         borderColor: spec.color,
@@ -3338,7 +3314,7 @@ function renderTrendFacets(records) {
         tension: 0.32,
         borderWidth: 2,
         spanGaps: true,
-        segment: gapSegments(hasQ, spec.color),
+        segment: gapSegments(hasS, spec.color),
         pointRadius: pr,
         pointHoverRadius: 5,
         pointBackgroundColor: spec.color,
@@ -3346,7 +3322,7 @@ function renderTrendFacets(records) {
       });
     }
 
-    if (trendMetric !== 'quality') {
+    if (trendMetric !== 'score') {
       const solo = trendMetric === 'clarity';
       const raw = spec.clarity;
       const hasK = raw.map(v => v != null);
@@ -3373,7 +3349,7 @@ function renderTrendFacets(records) {
     if (trendMetric === 'clarity') {
       scales.y = yScale(ink, '通透度', { min: 0, max: 1 });
     } else {
-      scales.y = yScale(ink, '鲜艳度');
+      scales.y = yScale(ink, '霞分');
       if (trendMetric === 'both') scales.y1 = clarityScale(ink, '通透度');
     }
 
@@ -3411,7 +3387,7 @@ function renderModelFacets(records) {
   const note = document.getElementById('modelFacetsNote');
   if (!grid) return;
 
-  const metricName = modelMetric === 'quality' ? '鲜艳度' : '通透度';
+  const metricName = modelMetric === 'score' ? '霞分' : '通透度';
   if (note) {
     note.innerHTML = modelView === 'diff'
       ? '柱形为同一天 <b>GFS − EC</b> 的差值：<b>正值</b>（GFS 色）表示 GFS 预报更高，<b>负值</b>（EC 色）表示 EC 更高，柱越高代表两模型分歧越大。'
@@ -3423,8 +3399,8 @@ function renderModelFacets(records) {
 
   const events = PHENOMENA.filter(et => records.some(r => r.event_type === et));
   const labels = sortedDates(records);
-  const field = modelMetric === 'quality' ? 'quality' : 'aod';
-  const transform = modelMetric === 'quality' ? null : toClarity;
+  const field = modelMetric === 'score' ? 'score' : 'aod';
+  const transform = modelMetric === 'score' ? null : toClarity;
   const pr = pointRadius(labels.length);
 
   const specs = events.map(et => {
@@ -3479,7 +3455,7 @@ function renderModelFacets(records) {
       };
     } else {
       datasets = [];
-      const isQuality = modelMetric === 'quality';
+      const isScore = modelMetric === 'score';
       MODELS.forEach(m => {
         const raw = m === 'GFS' ? spec.gfs : spec.ec;
         if (!raw.some(v => v != null)) return;
@@ -3503,7 +3479,7 @@ function renderModelFacets(records) {
       });
       scales = {
         x: xScale(ink),
-        y: isQuality ? yScale(ink, '鲜艳度') : yScale(ink, '通透度', { min: 0, max: 1 }),
+        y: isScore ? yScale(ink, '霞分') : yScale(ink, '通透度', { min: 0, max: 1 }),
       };
     }
 
@@ -3539,16 +3515,16 @@ function renderMonthlyFacets(records) {
     const q = [], k = [];
     months.forEach(mo => {
       const items = c.items.filter(r => String(r.date || '').slice(0, 7) === mo);
-      q.push(avg(items.map(r => r.quality)));
+      q.push(avg(items.map(r => r.score)));
       k.push(avg(items.map(r => r.aod == null ? null : toClarity(r.aod))));
     });
     return {
       canvasId: 'monthly-' + c.event + '-' + c.model,
       title: c.label,
       color: c.color,
-      stat: '月均鲜艳度 ' + fmt(avg(q)) + ' · 月均通透度 ' + fmt(avg(k)),
+      stat: '月均霞分 ' + fmt(avg(q)) + ' · 月均通透度 ' + fmt(avg(k)),
       hasData: q.some(v => v != null) || k.some(v => v != null),
-      quality: q,
+      score: q,
       clarity: k,
     };
   });
@@ -3562,8 +3538,8 @@ function renderMonthlyFacets(records) {
         datasets: [
           {
             type: 'bar',
-            label: '平均鲜艳度',
-            data: spec.quality,
+            label: '平均霞分',
+            data: spec.score,
             yAxisID: 'y',
             backgroundColor: withAlpha(spec.color, 0.85),
             hoverBackgroundColor: spec.color,
@@ -3598,7 +3574,7 @@ function renderMonthlyFacets(records) {
         plugins: { legend: facetLegend(ink, true, false), tooltip: tooltipCfg(ink) },
         scales: {
           x: xScale(ink),
-          y: yScale(ink, '鲜艳度'),
+          y: yScale(ink, '霞分'),
           y1: clarityScale(ink, '通透度'),
         },
       },
@@ -3623,7 +3599,7 @@ function renderSeasonFacets(records) {
     const q = [], k = [];
     seasons.forEach(s => {
       const items = c.items.filter(r => seasonOf(r.date) === s);
-      q.push(avg(items.map(r => r.quality)));
+      q.push(avg(items.map(r => r.score)));
       k.push(avg(items.map(r => r.aod == null ? null : toClarity(r.aod))));
     });
     return {
@@ -3632,7 +3608,7 @@ function renderSeasonFacets(records) {
       color: c.color,
       stat: '通透度均 ' + fmt(avg(k)) + ' · n=' + c.items.length,
       hasData: q.some(v => v != null),
-      quality: q,
+      score: q,
       clarity: k,
     };
   });
@@ -3644,8 +3620,8 @@ function renderSeasonFacets(records) {
       data: {
         labels: seasons,
         datasets: [{
-          label: '平均鲜艳度',
-          data: spec.quality,
+          label: '平均霞分',
+          data: spec.score,
           backgroundColor: spec.color,
           borderRadius: 6,
           borderSkipped: false,
@@ -3660,14 +3636,14 @@ function renderSeasonFacets(records) {
           legend: { display: false },
           tooltip: tooltipCfg(ink, {
             callbacks: {
-              label: ctx => ' 平均鲜艳度：' + (ctx.parsed.y == null ? '—' : ctx.parsed.y.toFixed(3)),
+              label: ctx => ' 平均霞分：' + (ctx.parsed.y == null ? '—' : ctx.parsed.y.toFixed(3)),
               afterBody: ctx => ' 平均通透度：' + fmt(spec.clarity[ctx[0].dataIndex]),
             },
           }),
         },
         scales: {
           x: { ticks: { color: ink.text, font: { size: 11 } }, grid: { display: false }, border: { color: ink.grid } },
-          y: yScale(ink, '鲜艳度'),
+          y: yScale(ink, '霞分'),
         },
       },
     }));
@@ -3686,7 +3662,7 @@ function renderSummary(records) {
   if (!combos.length) return;
 
   const clarity = clarityInk(ink);
-  const q = combos.map(c => avg(c.items.map(r => r.quality)));
+  const q = combos.map(c => avg(c.items.map(r => r.score)));
   const k = combos.map(c => avg(c.items.map(r => r.aod == null ? null : toClarity(r.aod))));
 
   trackChart('summary', new Chart(canvas, {
@@ -3695,7 +3671,7 @@ function renderSummary(records) {
       labels: combos.map(c => c.label),
       datasets: [
         {
-          label: '平均鲜艳度',
+          label: '平均霞分',
           data: q,
           backgroundColor: combos.map(c => c.color),
           borderRadius: 8,
@@ -3748,7 +3724,7 @@ function renderCityComparison(comparison) {
   const canvas = document.getElementById('cityCompareChart');
   if (!canvas) return;
 
-  const rows = [...lastComparison].sort((a, b) => (b.avg_quality || 0) - (a.avg_quality || 0));
+  const rows = [...lastComparison].sort((a, b) => (b.avg_score || 0) - (a.avg_score || 0));
   const clarity = clarityInk(ink);
 
   trackChart('city', new Chart(canvas, {
@@ -3757,8 +3733,8 @@ function renderCityComparison(comparison) {
       labels: rows.map(c => c.city),
       datasets: [
         {
-          label: '平均鲜艳度',
-          data: rows.map(c => r4(c.avg_quality)),
+          label: '平均霞分',
+          data: rows.map(c => r4(c.avg_score)),
           backgroundColor: rows.map((_, i) => CITY_COLORS[i % CITY_COLORS.length]),
           borderRadius: 8,
           borderSkipped: false,
@@ -3802,7 +3778,7 @@ function renderBestDates(dates) {
 
   const isMobile = window.innerWidth <= 768;
   const clarity = clarityInk(ink);
-  const rows = [...lastBestDates].sort((a, b) => (b.quality || 0) - (a.quality || 0));
+  const rows = [...lastBestDates].sort((a, b) => (b.score || 0) - (a.score || 0));
   const labels = rows.map(d => {
     const shortDate = String(d.date || '').slice(5);
     const typeName = typeMap[d.event_type] || d.event_type;
@@ -3816,8 +3792,8 @@ function renderBestDates(dates) {
       labels: labels,
       datasets: [
         {
-          label: '鲜艳度',
-          data: rows.map(d => r4(d.quality)),
+          label: '霞分',
+          data: rows.map(d => r4(d.score)),
           backgroundColor: colors,
           borderRadius: 6,
           borderSkipped: false,
@@ -3851,7 +3827,7 @@ function renderBestDates(dates) {
   }));
 }
 
-/* ==================== 8. 鲜艳度 × 通透度散点 ==================== */
+/* ==================== 8. 霞分 × 通透度散点 ==================== */
 function pearson(xs, ys) {
   const n = Math.min(xs.length, ys.length);
   if (n < 3) return null;
@@ -3880,8 +3856,8 @@ function renderScatter(records) {
   const corrs = [];
   combos.forEach(c => {
     const pts = c.items
-      .filter(r => r.quality != null && r.aod != null)
-      .map(r => ({ x: r4(toClarity(r.aod)), y: r4(r.quality), d: r.date, t: fmtTime(r.time) }));
+      .filter(r => r.score != null && r.aod != null)
+      .map(r => ({ x: r4(toClarity(r.aod)), y: r4(r.score), d: r.date, t: fmtTime(r.time) }));
     if (!pts.length) return;
     corrs.push({ label: c.label, r: pearson(pts.map(p => p.x), pts.map(p => p.y)), n: pts.length });
     datasets.push({
@@ -3898,10 +3874,10 @@ function renderScatter(records) {
   const all = datasets.reduce((acc, d) => acc.concat(d.data), []);
   const rAll = pearson(all.map(p => p.x), all.map(p => p.y));
   if (note) {
-    note.innerHTML = '每个点 = <b>一条预报记录</b>，横轴为<b>通透度</b>（1 − 气溶胶），纵轴为<b>鲜艳度</b>。'
+    note.innerHTML = '每个点 = <b>一条预报记录</b>，横轴为<b>通透度</b>（1 − 气溶胶），纵轴为<b>霞分</b>。'
       + '整体相关系数 <b>r = ' + fmt(rAll, 2) + '</b>（n=' + all.length + '）；'
       + (corrs.length ? '分组：' + corrs.map(x => x.label + ' ' + fmt(x.r, 2)).join('、') : '')
-      + '。r 越接近 +1，说明通透越好鲜艳度越高。';
+      + '。r 越接近 +1，说明通透越好霞分越高。';
   }
 
   trackChart('scatter', new Chart(canvas, {
@@ -3917,7 +3893,7 @@ function renderScatter(records) {
           intersect: true,
           callbacks: {
             title: ctx => (ctx[0] && ctx[0].raw) ? ctx[0].raw.d + ' ' + ctx[0].raw.t : '',
-            label: ctx => ' ' + ctx.dataset.label + '：鲜艳度 ' + Number(ctx.raw.y).toFixed(3) + ' · 通透度 ' + Number(ctx.raw.x).toFixed(3),
+            label: ctx => ' ' + ctx.dataset.label + '：霞分 ' + Number(ctx.raw.y).toFixed(3) + ' · 通透度 ' + Number(ctx.raw.x).toFixed(3),
           },
         }),
       },
@@ -3930,7 +3906,7 @@ function renderScatter(records) {
         },
         y: {
           beginAtZero: true,
-          title: { display: true, text: '鲜艳度', color: ink.text, font: { size: 10 }, padding: { bottom: 4 } },
+          title: { display: true, text: '霞分', color: ink.text, font: { size: 10 }, padding: { bottom: 4 } },
           ticks: { color: ink.text, font: { size: 10 } },
           grid: { color: ink.grid },
         },
@@ -3939,16 +3915,14 @@ function renderScatter(records) {
   }));
 }
 
-/* ==================== 9. 鲜艳度分布与达标率 ==================== */
-const Q_BINS = [
-  { label: '0', test: v => v <= 0 },
-  { label: '0–0.05', test: v => v > 0 && v < 0.05 },
-  { label: '0.05–0.1', test: v => v >= 0.05 && v < 0.1 },
-  { label: '0.1–0.2', test: v => v >= 0.1 && v < 0.2 },
-  { label: '0.2–0.4', test: v => v >= 0.2 && v < 0.4 },
-  { label: '0.4–0.6', test: v => v >= 0.4 && v < 0.6 },
-  { label: '0.6–1.0', test: v => v >= 0.6 && v < 1.0 },
-  { label: '≥1.0', test: v => v >= 1.0 },
+/* ==================== 9. 霞分分布与达标率 ==================== */
+const SCORE_BINS = [
+  { label: '无烧 0–19', test: v => v < 20 },
+  { label: '微烧 20–34', test: v => v >= 20 && v < 35 },
+  { label: '小烧 35–49', test: v => v >= 35 && v < 50 },
+  { label: '小到中 50–64', test: v => v >= 50 && v < 65 },
+  { label: '中到大 65–79', test: v => v >= 65 && v < 80 },
+  { label: '大烧 ≥80', test: v => v >= 80 },
 ];
 
 function renderDistribution(records) {
@@ -3964,10 +3938,10 @@ function renderDistribution(records) {
 
   const datasets = combos.map(c => {
     const map = latestByDate(c.items);
-    const vals = labels.map(d => pick(map, d, 'quality')).filter(v => v != null);
+    const vals = labels.map(d => pick(map, d, 'score')).filter(v => v != null);
     return {
       label: c.label,
-      data: Q_BINS.map(b => vals.filter(b.test).length),
+      data: SCORE_BINS.map(b => vals.filter(b.test).length),
       backgroundColor: c.color,
       borderRadius: 3,
       borderSkipped: false,
@@ -3976,25 +3950,25 @@ function renderDistribution(records) {
     };
   });
 
-  /* 达标率按「天」统计：当日所有组合中的最高鲜艳度达到阈值即算达标 */
+  /* 达标率按「天」统计：当日所有组合中的最高霞分达到阈值即算达标 */
   const dayBest = labels.map(d => {
-    const vals = records.filter(r => r.date === d && r.quality != null).map(r => r.quality);
+    const vals = records.filter(r => r.date === d && r.score != null).map(r => r.score);
     return vals.length ? Math.max.apply(null, vals) : null;
   }).filter(v => v != null);
-  const THRESHOLDS = [0.3, 0.6, 1.0];
+  const THRESHOLDS = [35, 50, 65, 80];
   const rateText = THRESHOLDS.map(t => {
     const hit = dayBest.filter(v => v >= t).length;
-    return '≥' + t.toFixed(1) + '：<b>' + hit + '/' + dayBest.length + ' 天（' + (dayBest.length ? (hit / dayBest.length * 100).toFixed(0) : '0') + '%）</b>';
+    return '≥' + t + '：<b>' + hit + '/' + dayBest.length + ' 天（' + (dayBest.length ? (hit / dayBest.length * 100).toFixed(0) : '0') + '%）</b>';
   }).join('　');
 
   if (note) {
-    note.innerHTML = '堆叠柱为<b>各组合的鲜艳度分布</b>（同一天多次预报取最新一次）。'
-      + '达标率（按当日最佳值计）：' + rateText + '。鲜艳度整体偏低时，可先看「≥0.3」这一档判断实际可看频率。';
+    note.innerHTML = '堆叠柱为<b>各组合的霞分分布</b>（同一天多次预报取最新一次）。'
+      + '达标率（按当日最佳值计）：' + rateText + '。';
   }
 
   trackChart('dist', new Chart(canvas, {
     type: 'bar',
-    data: { labels: Q_BINS.map(b => b.label), datasets: datasets },
+    data: { labels: SCORE_BINS.map(b => b.label), datasets: datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
@@ -4011,18 +3985,17 @@ function renderDistribution(records) {
 }
 
 /* ==================== 10. 日历热力图 ==================== */
-const CAL_LEVELS = [
-  { max: 0, alpha: 0.10, name: '无' },
-  { max: 0.05, alpha: 0.22, name: '微微烧' },
-  { max: 0.2, alpha: 0.38, name: '小烧' },
-  { max: 0.4, alpha: 0.55, name: '小烧到中等' },
-  { max: 0.6, alpha: 0.72, name: '中等烧' },
-  { max: 1.0, alpha: 0.88, name: '大烧' },
-  { max: Infinity, alpha: 1, name: '优质大烧' },
+const SCORE_LEVELS = [
+  { max: 19, alpha: 0.10, name: '无烧' },
+  { max: 34, alpha: 0.22, name: '微烧' },
+  { max: 49, alpha: 0.38, name: '小烧' },
+  { max: 64, alpha: 0.55, name: '小到中烧' },
+  { max: 79, alpha: 0.72, name: '中到大烧' },
+  { max: Infinity, alpha: 0.88, name: '大烧' },
 ];
 
-function calColor(q) {
-  const lv = CAL_LEVELS.find(l => q <= l.max) || CAL_LEVELS[CAL_LEVELS.length - 1];
+function calColor(s) {
+  const lv = SCORE_LEVELS.find(l => s <= l.max) || SCORE_LEVELS[SCORE_LEVELS.length - 1];
   return 'rgba(255, 132, 54, ' + lv.alpha + ')';
 }
 
@@ -4046,13 +4019,13 @@ function renderCalendar(records) {
     return;
   }
 
-  /* 当日最佳：所有组合中鲜艳度最高的一条 */
+  /* 当日最佳：所有组合中霞分最高的一条 */
   const best = new Map();
   records.forEach(r => {
-    if (r.quality == null || !r.date) return;
+    if (r.score == null || !r.date) return;
     const prev = best.get(r.date);
-    if (!prev || r.quality > prev.q) {
-      best.set(r.date, { q: r4(r.quality), label: comboLabel(r.event_type, r.model), t: fmtTime(r.time) });
+    if (!prev || r.score > prev.s) {
+      best.set(r.date, { s: r4(r.score), label: comboLabel(r.event_type, r.model), t: fmtTime(r.time) });
     }
   });
 
@@ -4089,24 +4062,24 @@ function renderCalendar(records) {
       if (!b) {
         html += '<div class="cal-cell" title="' + key + ' 无预报数据"></div>';
       } else {
-        html += '<div class="cal-cell has-data" style="background:' + calColor(b.q) + '" title="'
-          + key + ' · ' + b.t + ' · ' + b.label + ' · 鲜艳度 ' + b.q.toFixed(3) + '"></div>';
+        html += '<div class="cal-cell has-data" style="background:' + calColor(b.s) + '" title="'
+          + key + ' · ' + b.t + ' · ' + b.label + ' · 霞分 ' + Math.round(b.s) + '"></div>';
       }
     });
   });
   html += '</div></div>';
 
   html += '<div class="cal-legend"><span>弱</span>'
-    + CAL_LEVELS.map(l => '<i style="background:rgba(255, 132, 54, ' + l.alpha + ')"></i>').join('')
-    + '<span>强</span><span style="margin-left:10px">（' + CAL_LEVELS.map(l => l.name).join(' / ') + '，取当日各组合最高鲜艳度）</span></div>';
+    + SCORE_LEVELS.map(l => '<i style="background:rgba(255, 132, 54, ' + l.alpha + ')"></i>').join('')
+    + '<span>强</span><span style="margin-left:10px">（' + SCORE_LEVELS.map(l => l.name).join(' / ') + '，取当日各组合最高霞分）</span></div>';
 
   box.innerHTML = html;
 
   if (note) {
-    const vals = [...best.values()].map(v => v.q).sort((a, b) => b - a);
-    const top = dates.slice().sort((a, b) => best.get(b).q - best.get(a).q).slice(0, 3);
+    const vals = [...best.values()].map(v => v.s).sort((a, b) => b - a);
+    const top = dates.slice().sort((a, b) => best.get(b).s - best.get(a).s).slice(0, 3);
     note.innerHTML = '共 <b>' + dates.length + '</b> 天有预报，最佳日：'
-      + top.map(d => d + '（' + best.get(d).q.toFixed(2) + ' ' + best.get(d).label + '）').join('、')
+      + top.map(d => d + '（' + Math.round(best.get(d).s) + ' ' + best.get(d).label + '）').join('、')
       + '。横向成片的深色块表示<b>连续的好天气过程</b>，零散深色块多为偶发。';
   }
 }
@@ -4277,7 +4250,7 @@ function renderWeekday(records) {
       type: 'bar',
       label: c.label,
       data: WD_LABELS.map((_, i) => {
-        const vals = labels.filter(d => weekdayIndex(d) === i).map(d => pick(map, d, 'quality')).filter(v => v != null);
+        const vals = labels.filter(d => weekdayIndex(d) === i).map(d => pick(map, d, 'score')).filter(v => v != null);
         return vals.length ? r4(avg(vals)) : null;
       }),
       backgroundColor: c.color,
@@ -4288,20 +4261,20 @@ function renderWeekday(records) {
     };
   });
 
-  /* 达标率：当日最佳鲜艳度 ≥ 0.3 的比例 */
+  /* 达标率：当日最佳霞分 ≥ 65 的比例 */
   const hitRate = WD_LABELS.map((_, i) => {
     const days = labels.filter(d => weekdayIndex(d) === i);
     if (!days.length) return null;
     const hit = days.filter(d => {
-      const vals = records.filter(r => r.date === d && r.quality != null).map(r => r.quality);
-      return vals.length && Math.max.apply(null, vals) >= 0.3;
+      const vals = records.filter(r => r.date === d && r.score != null).map(r => r.score);
+      return vals.length && Math.max.apply(null, vals) >= 65;
     }).length;
     return r4(hit / days.length * 100);
   });
 
   datasets.push({
     type: 'line',
-    label: '当日达标率（≥0.3）',
+    label: '当日达标率（≥65）',
     data: hitRate,
     yAxisID: 'y1',
     borderColor: ink.isDark ? '#cbd5e1' : '#64748b',
@@ -4316,7 +4289,7 @@ function renderWeekday(records) {
 
   if (note) {
     const valid = hitRate.map((v, i) => ({ v: v, i: i })).filter(x => x.v != null).sort((a, b) => b.v - a.v);
-    note.innerHTML = '柱状为各组合<b>按星期几的平均鲜艳度</b>，灰色虚线为当日<b>最佳鲜艳度 ≥ 0.3 的比例</b>（右轴 %）。'
+    note.innerHTML = '柱状为各组合<b>按星期几的平均霞分</b>，灰色虚线为当日<b>最佳霞分 ≥ 65 的比例</b>（右轴 %）。'
       + (valid.length ? '达标率最高：<b>' + WD_LABELS[valid[0].i] + ' ' + valid[0].v.toFixed(0) + '%</b>；最低：' + WD_LABELS[valid[valid.length - 1].i] + ' ' + valid[valid.length - 1].v.toFixed(0) + '%。' : '')
       + '若工作日明显高于周末，通常反映人为排放带来的气溶胶周循环。';
   }
@@ -4339,7 +4312,7 @@ function renderWeekday(records) {
       },
       scales: {
         x: { ticks: { color: ink.text, font: { size: 10 } }, grid: { display: false }, border: { color: ink.grid } },
-        y: yScale(ink, '平均鲜艳度'),
+        y: yScale(ink, '平均霞分'),
         y1: { position: 'right', min: 0, max: 100, title: { display: true, text: '达标率 %', color: ink.text, font: { size: 10 } }, ticks: { color: ink.text, font: { size: 10 } }, grid: { drawOnChartArea: false } },
       },
     },
@@ -4360,20 +4333,6 @@ function renderCharts(records) {
   renderEventTime(lastRecords);
   renderCoverage(lastRecords);
   renderWeekday(lastRecords);
-}
-
-function qualityLabel(v) {
-  if (v == null) return '-';
-  if (v < 0.05) return '微微烧';
-  if (v < 0.2) return '小烧';
-  if (v < 0.4) return '小烧到中等烧';
-  if (v < 0.6) return '中等烧';
-  if (v < 0.8) return '中等到大烧';
-  if (v < 1.0) return '不完美大烧';
-  if (v < 1.5) return '典型大烧';
-  if (v < 2.0) return '优质大烧';
-  if (v < 2.5) return '世纪大烧';
-  return '超级大烧';
 }
 
 function aodLabel(v) {

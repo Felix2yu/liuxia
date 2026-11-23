@@ -120,7 +120,6 @@ func omTestPredictor(t *testing.T, server *httptest.Server, withStore bool) (*We
 	}
 	cfg := &Config{
 		Request: RequestConfig{
-			Source:       "open-meteo",
 			ForecastURL:  server.URL + "/forecast",
 			AQURL:        server.URL + "/air-quality",
 			GeocodingURL: server.URL + "/geocoding",
@@ -188,9 +187,6 @@ func TestBuildGlowResponseStoresScore(t *testing.T) {
 	if r.Grade != "大烧" || r.Clarity == "" || r.Probability == nil {
 		t.Errorf("落库字段异常: %+v", r)
 	}
-	if r.Quality != nil {
-		t.Errorf("新数据不应写 quality，得到 %v", *r.Quality)
-	}
 
 	stats, err := store.GetStatistics("北京", "", "", "")
 	if err != nil {
@@ -203,8 +199,8 @@ func TestBuildGlowResponseStoresScore(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(rankings.BestScores) != 1 || rankings.BestScores[0].Grade != "大烧" {
-		t.Errorf("新评分排行异常: %+v", rankings.BestScores)
+	if len(rankings.BestDates) != 1 || rankings.BestDates[0].Grade != "大烧" {
+		t.Errorf("新评分排行异常: %+v", rankings.BestDates)
 	}
 }
 
@@ -217,7 +213,6 @@ func TestLiveOpenMeteoSmoke(t *testing.T) {
 	}
 	cfg := &Config{
 		Request: RequestConfig{
-			Source:         "open-meteo",
 			ForecastURL:    os.Getenv("FORECAST_URL"),
 			ForecastModels: os.Getenv("FORECAST_MODELS"),
 		},

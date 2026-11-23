@@ -8,7 +8,6 @@ services:
       - ./data:/app/data
     environment:
       - CITY=江苏省-苏州
-      - DATA_SOURCE=open-meteo
       - PUSH_ENABLE=true
       - PUSH_MARKDOWN=true
       # 使用 apprise URL（推荐，支持多渠道）
