@@ -8,7 +8,12 @@ import (
 )
 
 type RequestConfig struct {
-	BaseURL string
+	BaseURL        string
+	Source         string
+	ForecastURL    string
+	ForecastModels string
+	AQURL          string
+	GeocodingURL   string
 }
 
 type PushConfig struct {
@@ -102,7 +107,12 @@ func LoadConfig() (*Config, error) {
 
 	cfg := &Config{
 		Request: RequestConfig{
-			BaseURL: getEnv("BASE_URL", "https://sunsetbot.top/"),
+			BaseURL:        getEnv("BASE_URL", "https://sunsetbot.top/"),
+			Source:         getEnv("DATA_SOURCE", "open-meteo"),
+			ForecastURL:    getEnv("FORECAST_URL", "https://api.open-meteo.com/v1/forecast"),
+			ForecastModels: getEnv("FORECAST_MODELS", ""),
+			AQURL:          getEnv("AQ_URL", "https://air-quality-api.open-meteo.com/v1/air-quality"),
+			GeocodingURL:   getEnv("GEOCODING_URL", "https://geocoding-api.open-meteo.com/v1/search"),
 		},
 		Push: PushConfig{
 			Enable:   getEnvBool("PUSH_ENABLE", true),

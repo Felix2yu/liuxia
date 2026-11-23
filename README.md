@@ -2,9 +2,9 @@
 
 > 流霞，天边流动的彩霞。古人以"流霞"喻仙酒、喻美景，今以此名，捕捉朝暮之间那一抹转瞬即逝的绚烂。
 
-流霞是一款朝霞晚霞预报与监控工具。它基于 GFS/EC 气象模型数据，每日定时获取朝霞/晚霞的鲜艳度与气溶胶预报，通过 [apprise-go](https://github.com/unraid/apprise-go) 推送提醒，并提供 Web 数据看板用于历史数据的可视化分析。
+流霞是一款朝霞晚霞预报与监控工具。默认使用 Open-Meteo 预报与空气质量数据，在本地用规则模型计算 0–100 的「霞分」，同时保留历史鲜艳度字段，通过 [apprise-go](https://github.com/unraid/apprise-go) 推送提醒，并提供 Web 数据看板用于历史数据的可视化分析。
 
-由 sunsetbot.top 提供接口。Docker 镜像支持 `linux/amd64` 和 `linux/arm64` 架构。
+评分模型是 [霞 · 全球火烧云预报](https://github.com/baiiiii521/sunset-glow-forecast) `algo.js` 的 Go 纯函数移植（MIT），包含光路几何、光谱云底亮度、六级分档与多模式集合；阈值尚未经大规模样本标定，结果应作为观赏参考而非官方预报。旧的 sunsetbot.top 接口仍可通过 `DATA_SOURCE=sunsetbot` 使用。Docker 镜像支持 `linux/amd64` 和 `linux/arm64` 架构。
 
 ## 功能特性
 
@@ -31,7 +31,7 @@ services:
       - ./data:/app/data
     environment:
       - CITY=江苏省-苏州,上海市-上海
-      - BASE_URL=https://sunsetbot.top/
+      - DATA_SOURCE=open-meteo
       - PUSH_ENABLE=true
       - PUSH_MARKDOWN=true
       - PUSH_URL=ntfy://ntfy.sh/Weather,tgram://bot-token/chatid
@@ -85,7 +85,12 @@ docker exec liuxia /app/liuxia backup > liuxia-$(date +%F).db
 | 变量 | 必填 | 默认值 | 说明 |
 |------|------|--------|------|
 | `CITY` | 是 | — | 城市，支持逗号分隔多城市，如 `江苏省-苏州` 或 `江苏省-苏州,上海市-上海` |
-| `BASE_URL` | 否 | `https://sunsetbot.top/` | 服务基础 URL |
+| `DATA_SOURCE` | 否 | `open-meteo` | 数据源：`open-meteo`（本地评分）或 `sunsetbot`（旧接口） |
+| `BASE_URL` | 否 | `https://sunsetbot.top/` | 仅 `DATA_SOURCE=sunsetbot` 时使用 |
+| `FORECAST_URL` | 否 | `https://api.open-meteo.com/v1/forecast` | Open-Meteo 预报接口，可指向自建或镜像服务 |
+| `FORECAST_MODELS` | 否 | — | 强制指定预报模式，仅在指向集合接口等需要 `models` 参数的镜像时设置，如 `ecmwf_ifs025` |
+| `AQ_URL` | 否 | `https://air-quality-api.open-meteo.com/v1/air-quality` | Open-Meteo 空气质量接口 |
+| `GEOCODING_URL` | 否 | `https://geocoding-api.open-meteo.com/v1/search` | Open-Meteo 地理编码接口 |
 | `DB_PATH` | 否 | `liuxia.db` | SQLite 数据库文件路径 |
 | `BACKUP_SQLITE_CMD` | 否 | — | 设为 `/app/liuxia backup`（绝对路径：镜像把二进制放在 /app，不在 PATH 上），供外部备份工具识别并定时导出快照 |
 | `WEB_PORT` | 否 | `8080` | Web 看板端口 |
@@ -93,6 +98,17 @@ docker exec liuxia /app/liuxia backup > liuxia-$(date +%F).db
 | `PUID` | 否 | `1000` | 容器运行用户 UID |
 | `PGID` | 否 | `1000` | 容器运行用户 GID |
 | `TZ` | 否 | `Asia/Shanghai` | 时区 |
+
+若 `api.open-meteo.com` 在部署网络中不可达，可改用集合接口（需显式指定模式）：
+
+```yaml
+FORECAST_URL=https://ensemble-api.open-meteo.com/v1/ensemble
+FORECAST_MODELS=ecmwf_ifs025
+EVENING_MODEL=EC
+MORNING_MODEL=EC
+```
+
+集合接口的 GFS 模式不提供低/中/高分层云量，此时关键云量视为缺失，霞分会被封顶。
 
 ### 任务配置
 
@@ -137,7 +153,15 @@ PUSH_URL=ntfy://ntfy.sh/Weather,tgram://bot-token/chatid
 
 ### 通知等级
 
-通知等级对应关系：
+`DATA_SOURCE=open-meteo`（默认）按霞分推送，等级直接取模型的六级分档：
+
+- 霞分 < 35（无烧 / 微烧）：只落库，不通知
+- 35–49 小烧 → 等级 3
+- 50–64 小到中烧 → 等级 4
+- 65–79 中到大烧 → 等级 5
+- ≥ 80 大烧 → 等级 5
+
+`DATA_SOURCE=sunsetbot` 仍按旧鲜艳度分级：
 
 - 过滤阈值：< 0.2 的数据会被过滤掉，不通知
 - 0.2 - 0.4 → 等级 1
@@ -145,6 +169,8 @@ PUSH_URL=ntfy://ntfy.sh/Weather,tgram://bot-token/chatid
 - 0.6 - 0.8 → 等级 3
 - 0.8 - 1.0 → 等级 4
 - 1.0 及以上 → 等级 5
+
+新数据写入 `score`/`level`/`grade`/`probability`/`clarity` 列，历史 `quality`/`aod` 原样保留，两种口径不混算。
 
 设置 `PUSH_MARKDOWN=true` 时，消息中质量、气溶胶数值较优秀时会加粗标记；设置为 `false` 则发送纯文本。
 
@@ -202,6 +228,31 @@ PUSH_URL=ntfy://ntfy.sh/Weather,tgram://bot-token/chatid
 | 头 | 说明 |
 |------|------|
 | `X-Cache` | 缓存命中状态：`HIT` 或 `MISS` |
+
+## 离线评分评估
+
+`cmd/glow-eval` 用 sunsetbot 公开的上海再分析标注（2022-06-24～2023-12-30，逐日日出/日落六档标签）离线检验 `internal/glow` 的评分，不改动线上取数与推送链路。
+
+```bash
+go run ./cmd/glow-eval                       # 输出到终端
+go run ./cmd/glow-eval -out report.md        # 写入报告
+go run ./cmd/glow-eval -refresh              # 忽略缓存重新抓取
+go run ./cmd/glow-eval -limit 4              # 小样本冒烟
+```
+
+标注与历史气象缓存默认位于 `.cache/glow-eval/`，已由 `.gitignore` 忽略。历史输入来自 Open-Meteo Historical Forecast 与 Air Quality；该接口不提供历史降水概率，AOD 自 2022-08 中旬起才有值。上游点按周代表日方位角取 50–400 km，报告会明确列出这些口径限制。
+
+### 标定实验
+
+`calibrate` 子命令复用同一份缓存，输出候选参数与交叉验证指标，不修改 `internal/glow`、线上取数、存储与推送：
+
+```bash
+go run ./cmd/glow-eval calibrate                       # 输出到终端
+go run ./cmd/glow-eval calibrate -out calibrate.md    # 写入报告
+go run ./cmd/glow-eval calibrate -folds 5 -lambda 10  # 交叉验证折数与 L2 系数
+```
+
+报告包含三部分：六档阈值的动态规划最优解与按月交叉验证、概率 sigmoid 的逻辑回归重拟合、各分项排序能力与 L2 重加权 AUC。阈值优化以「同分段必须同档」为约束，分项缺失值按 50（中性）填充；标签为 sunsetbot 同口径自评，结果只代表与该标签的一致性，不代表独立真值验证。
 
 ## 许可证
 

@@ -12,6 +12,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -30,14 +31,22 @@ type WeatherPredictor struct {
 	logger   *log.Logger
 	store    *Store
 	notifier Notifier
+
+	geoMu    sync.Mutex
+	geoCache map[string]glowCoord
 }
 
 type WeatherData struct {
-	PushStr    string
-	QualityNum *float64
-	AODNum     *float64
-	DateStr    string
-	TimeStr    string
+	PushStr     string
+	QualityNum  *float64
+	AODNum      *float64
+	DateStr     string
+	TimeStr     string
+	Score       *float64
+	Level       int
+	Grade       string
+	Probability *float64
+	Clarity     string
 }
 
 type tbResponse struct {
@@ -57,6 +66,7 @@ func NewWeatherPredictor(config *Config, logger *log.Logger, store *Store) *Weat
 		logger:   logger,
 		store:    store,
 		notifier: NewNotifier(&config.Push, logger),
+		geoCache: make(map[string]glowCoord),
 	}
 }
 
@@ -227,6 +237,11 @@ func (wp *WeatherPredictor) FetchData(isMorning bool) {
 }
 
 func (wp *WeatherPredictor) fetchDataForCity(city string, models []string, isMorning bool, now time.Time, section string) {
+	if wp.config.Request.Source == "open-meteo" {
+		wp.fetchGlowForCity(city, models, isMorning, now, section)
+		return
+	}
+
 	urls := map[string]string{}
 	eventPrefix := "MORNING"
 	if !isMorning {
@@ -366,9 +381,12 @@ func (wp *WeatherPredictor) buildMarkdownResponse(city string, urls map[string]s
 		})
 	}
 
-	var markdownLines []string
 	hasData := len(dataByDate) > 0
+	return renderMarkdownLines(dataByDate), maxPriority, hasData
+}
 
+func renderMarkdownLines(dataByDate map[string][]dateEntry) []string {
+	var markdownLines []string
 	dateKeys := make([]string, 0, len(dataByDate))
 	for k := range dataByDate {
 		dateKeys = append(dateKeys, k)
@@ -399,8 +417,92 @@ func (wp *WeatherPredictor) buildMarkdownResponse(city string, urls map[string]s
 			markdownLines = append(markdownLines, "")
 		}
 	}
+	return markdownLines
+}
 
-	return markdownLines, maxPriority, hasData
+// fetchGlowForCity 是 Open-Meteo + glow 评分路径的城市级入口。
+func (wp *WeatherPredictor) fetchGlowForCity(city string, models []string, isMorning bool, now time.Time, section string) {
+	dates := []string{now.AddDate(0, 0, 1).Format("2006-01-02")}
+	if (isMorning && now.Hour() < 12) || (!isMorning && now.Hour() < 19) {
+		dates = append([]string{now.Format("2006-01-02")}, dates...)
+	}
+	markdownLines, maxPriority, hasData := wp.buildGlowResponse(city, models, isMorning, now, section, dates)
+
+	displayCity := city
+	if idx := strings.LastIndex(city, "-"); idx >= 0 {
+		displayCity = city[idx+1:]
+	}
+	eventTitle := fmt.Sprintf("%s朝霞预报", displayCity)
+	eventTag := "sunrise"
+	if !isMorning {
+		eventTitle = fmt.Sprintf("%s晚霞预报", displayCity)
+		eventTag = "city_sunset"
+	}
+	if hasData {
+		pushContent := strings.Join(markdownLines, "\n")
+		if maxPriority == nil {
+			p := 3
+			maxPriority = &p
+		}
+		wp.sendNotification(eventTitle, pushContent, *maxPriority, []string{eventTag})
+	} else {
+		wp.logger.Printf("[推送] 城市 %s 没有符合条件的数据", city)
+	}
+}
+
+func (wp *WeatherPredictor) buildGlowResponse(city string, models []string, isMorning bool, now time.Time, eventType string, dates []string) ([]string, *int, bool) {
+	dataByDate := map[string][]dateEntry{}
+	var maxPriority *int
+
+	for _, model := range models {
+		for _, date := range dates {
+			result := wp.fetchGlowData(city, model, date, isMorning, now)
+			if result == nil || result.Score == nil {
+				continue
+			}
+			if wp.store != nil && result.DateStr != "" {
+				if err := wp.store.UpsertRecord(SunsetRecord{
+					City:        city,
+					Date:        result.DateStr,
+					Time:        result.TimeStr,
+					EventType:   eventType,
+					Model:       model,
+					AOD:         result.AODNum,
+					Score:       result.Score,
+					Level:       &result.Level,
+					Grade:       result.Grade,
+					Probability: result.Probability,
+					Clarity:     result.Clarity,
+				}); err != nil {
+					wp.logger.Printf("[存储] 写入霞分记录失败: %v", err)
+				}
+			}
+			// 微烧以下只落库，不推送。
+			if *result.Score < 35 {
+				wp.logger.Printf("[过滤] 霞分 %.2f 低于 35，跳过通知", *result.Score)
+				continue
+			}
+			priority := result.Level + 1
+			if priority < 1 {
+				priority = 1
+			}
+			if priority > 5 {
+				priority = 5
+			}
+			if maxPriority == nil || priority > *maxPriority {
+				maxPriority = &priority
+			}
+			dataByDate[result.DateStr] = append(dataByDate[result.DateStr], dateEntry{
+				model:   model,
+				pushStr: result.PushStr,
+				aodNum:  result.AODNum,
+				timeStr: result.TimeStr,
+			})
+		}
+	}
+
+	hasData := len(dataByDate) > 0
+	return renderMarkdownLines(dataByDate), maxPriority, hasData
 }
 
 var minValidDate = time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)

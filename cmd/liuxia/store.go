@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	_ "modernc.org/sqlite"
@@ -19,16 +20,21 @@ type Store struct {
 }
 
 type SunsetRecord struct {
-	ID        int64    `json:"id"`
-	City      string   `json:"city"`
-	Date      string   `json:"date"`
-	Time      string   `json:"time"`
-	EventType string   `json:"event_type"`
-	Model     string   `json:"model"`
-	Quality   *float64 `json:"quality"`
-	AOD       *float64 `json:"aod"`
-	CreatedAt string   `json:"created_at"`
-	UpdatedAt string   `json:"updated_at"`
+	ID          int64    `json:"id"`
+	City        string   `json:"city"`
+	Date        string   `json:"date"`
+	Time        string   `json:"time"`
+	EventType   string   `json:"event_type"`
+	Model       string   `json:"model"`
+	Quality     *float64 `json:"quality"`
+	AOD         *float64 `json:"aod"`
+	Score       *float64 `json:"score,omitempty"`
+	Level       *int     `json:"level,omitempty"`
+	Grade       string   `json:"grade,omitempty"`
+	Probability *float64 `json:"probability,omitempty"`
+	Clarity     string   `json:"clarity,omitempty"`
+	CreatedAt   string   `json:"created_at"`
+	UpdatedAt   string   `json:"updated_at"`
 }
 
 func InitStore(dbPath string) (*Store, error) {
@@ -51,6 +57,11 @@ func InitStore(dbPath string) (*Store, error) {
 		model TEXT NOT NULL,
 		quality REAL,
 		aod REAL,
+		score REAL,
+		level INTEGER,
+		grade TEXT,
+		probability REAL,
+		clarity TEXT,
 		created_at TEXT NOT NULL,
 		updated_at TEXT NOT NULL,
 		UNIQUE(city, date, event_type, model)
@@ -71,12 +82,32 @@ func InitStore(dbPath string) (*Store, error) {
 		}
 	}
 
+	// 新评分与历史 quality 并存：只补缺失列，不改写任何历史数据。
+	for _, col := range []struct{ name, def string }{
+		{"score", "REAL"},
+		{"level", "INTEGER"},
+		{"grade", "TEXT"},
+		{"probability", "REAL"},
+		{"clarity", "TEXT"},
+	} {
+		var exists int
+		if err := db.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('sunset_data') WHERE name=?`, col.name).Scan(&exists); err != nil {
+			return nil, fmt.Errorf("check %s column: %w", col.name, err)
+		}
+		if exists == 0 {
+			if _, err := db.Exec(fmt.Sprintf(`ALTER TABLE sunset_data ADD COLUMN %s %s`, col.name, col.def)); err != nil {
+				return nil, fmt.Errorf("add %s column: %w", col.name, err)
+			}
+		}
+	}
+
 	indexes := []string{
 		`CREATE INDEX IF NOT EXISTS idx_city ON sunset_data(city)`,
 		`CREATE INDEX IF NOT EXISTS idx_date ON sunset_data(date)`,
 		`CREATE INDEX IF NOT EXISTS idx_event_type ON sunset_data(event_type)`,
 		`CREATE INDEX IF NOT EXISTS idx_city_date ON sunset_data(city, date)`,
 		`CREATE INDEX IF NOT EXISTS idx_date_event ON sunset_data(date, event_type)`,
+		`CREATE INDEX IF NOT EXISTS idx_score ON sunset_data(score)`,
 	}
 	for _, idx := range indexes {
 		if _, err := db.Exec(idx); err != nil {
@@ -148,14 +179,21 @@ func (s *Store) WriteSQLiteSnapshot(w io.Writer) error {
 func (s *Store) UpsertRecord(r SunsetRecord) error {
 	now := time.Now().Format("2006-01-02 15:04:05")
 	_, err := s.db.Exec(`
-		INSERT INTO sunset_data (city, date, time, event_type, model, quality, aod, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO sunset_data (city, date, time, event_type, model, quality, aod,
+			score, level, grade, probability, clarity, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(city, date, event_type, model) DO UPDATE SET
 			time = excluded.time,
 			quality = excluded.quality,
 			aod = excluded.aod,
+			score = excluded.score,
+			level = excluded.level,
+			grade = excluded.grade,
+			probability = excluded.probability,
+			clarity = excluded.clarity,
 			updated_at = excluded.updated_at`,
-		r.City, r.Date, r.Time, r.EventType, r.Model, r.Quality, r.AOD, now, now)
+		r.City, r.Date, r.Time, r.EventType, r.Model, r.Quality, r.AOD,
+		r.Score, r.Level, r.Grade, r.Probability, r.Clarity, now, now)
 	if err == nil {
 		s.Cache.Clear()
 	}
@@ -163,7 +201,8 @@ func (s *Store) UpsertRecord(r SunsetRecord) error {
 }
 
 func (s *Store) QueryRecords(city, eventType, startDate, endDate string) ([]SunsetRecord, error) {
-	query := `SELECT id, city, date, time, event_type, model, quality, aod, created_at, updated_at
+	query := `SELECT id, city, date, time, event_type, model, quality, aod,
+		score, level, grade, probability, clarity, created_at, updated_at
 		FROM sunset_data WHERE date >= '2020-01-01'`
 	args := []interface{}{}
 
@@ -195,7 +234,8 @@ func (s *Store) QueryRecords(city, eventType, startDate, endDate string) ([]Suns
 	for rows.Next() {
 		var r SunsetRecord
 		if err := rows.Scan(&r.ID, &r.City, &r.Date, &r.Time, &r.EventType, &r.Model,
-			&r.Quality, &r.AOD, &r.CreatedAt, &r.UpdatedAt); err != nil {
+			&r.Quality, &r.AOD, &r.Score, &r.Level, &r.Grade, &r.Probability, &r.Clarity,
+			&r.CreatedAt, &r.UpdatedAt); err != nil {
 			return nil, err
 		}
 		records = append(records, r)
@@ -210,7 +250,8 @@ func (s *Store) ExportCSV(w io.Writer, city, eventType, startDate, endDate strin
 	}
 
 	writer := csv.NewWriter(w)
-	if err := writer.Write([]string{"city", "date", "time", "event_type", "model", "quality", "aod", "created_at", "updated_at"}); err != nil {
+	if err := writer.Write([]string{"city", "date", "time", "event_type", "model", "quality", "aod",
+		"score", "level", "grade", "probability", "clarity", "created_at", "updated_at"}); err != nil {
 		return err
 	}
 	for _, r := range records {
@@ -222,7 +263,20 @@ func (s *Store) ExportCSV(w io.Writer, city, eventType, startDate, endDate strin
 		if r.AOD != nil {
 			aStr = fmt.Sprintf("%.4f", *r.AOD)
 		}
-		if err := writer.Write([]string{r.City, r.Date, r.Time, r.EventType, r.Model, qStr, aStr, r.CreatedAt, r.UpdatedAt}); err != nil {
+		scoreStr := ""
+		if r.Score != nil {
+			scoreStr = fmt.Sprintf("%.2f", *r.Score)
+		}
+		levelStr := ""
+		if r.Level != nil {
+			levelStr = strconv.Itoa(*r.Level)
+		}
+		probStr := ""
+		if r.Probability != nil {
+			probStr = fmt.Sprintf("%.4f", *r.Probability)
+		}
+		if err := writer.Write([]string{r.City, r.Date, r.Time, r.EventType, r.Model, qStr, aStr,
+			scoreStr, levelStr, r.Grade, probStr, r.Clarity, r.CreatedAt, r.UpdatedAt}); err != nil {
 			return err
 		}
 	}
@@ -257,6 +311,7 @@ type ModelStats struct {
 	MinAOD     *float64 `json:"min_aod"`
 	MaxAOD     *float64 `json:"max_aod"`
 	AvgAOD     *float64 `json:"avg_aod"`
+	AvgScore   *float64 `json:"avg_score,omitempty"`
 }
 
 type MonthlyStats struct {
@@ -264,6 +319,7 @@ type MonthlyStats struct {
 	Count      int      `json:"count"`
 	AvgQuality *float64 `json:"avg_quality"`
 	AvgAOD     *float64 `json:"avg_aod"`
+	AvgScore   *float64 `json:"avg_score,omitempty"`
 }
 
 type Statistics struct {
@@ -301,7 +357,7 @@ func (s *Store) GetStatistics(city, eventType, startDate, endDate string) (*Stat
 
 	modelQuery := `SELECT model, event_type, COUNT(*),
 		MIN(quality), MAX(quality), AVG(quality),
-		MIN(aod), MAX(aod), AVG(aod)
+		MIN(aod), MAX(aod), AVG(aod), AVG(score)
 		FROM sunset_data WHERE date >= '2020-01-01'`
 
 	modelArgs := []interface{}{}
@@ -334,13 +390,13 @@ func (s *Store) GetStatistics(city, eventType, startDate, endDate string) (*Stat
 		var m ModelStats
 		if err := rows.Scan(&m.Model, &m.EventType, &m.Count,
 			&m.MinQuality, &m.MaxQuality, &m.AvgQuality,
-			&m.MinAOD, &m.MaxAOD, &m.AvgAOD); err != nil {
+			&m.MinAOD, &m.MaxAOD, &m.AvgAOD, &m.AvgScore); err != nil {
 			return nil, err
 		}
 		stats.Models = append(stats.Models, m)
 	}
 
-	monthlyQuery := `SELECT substr(date, 1, 7) as month, COUNT(*), AVG(quality), AVG(aod)
+	monthlyQuery := `SELECT substr(date, 1, 7) as month, COUNT(*), AVG(quality), AVG(aod), AVG(score)
 		FROM sunset_data WHERE date >= '2020-01-01'`
 
 	monthlyArgs := []interface{}{}
@@ -371,7 +427,7 @@ func (s *Store) GetStatistics(city, eventType, startDate, endDate string) (*Stat
 
 	for mRows.Next() {
 		var m MonthlyStats
-		if err := mRows.Scan(&m.Month, &m.Count, &m.AvgQuality, &m.AvgAOD); err != nil {
+		if err := mRows.Scan(&m.Month, &m.Count, &m.AvgQuality, &m.AvgAOD, &m.AvgScore); err != nil {
 			return nil, err
 		}
 		stats.Monthly = append(stats.Monthly, m)
@@ -440,11 +496,12 @@ type CityComparison struct {
 	City       string   `json:"city"`
 	AvgQuality *float64 `json:"avg_quality"`
 	AvgAOD     *float64 `json:"avg_aod"`
+	AvgScore   *float64 `json:"avg_score,omitempty"`
 	Count      int      `json:"count"`
 }
 
 func (s *Store) GetCityComparison(eventType, startDate, endDate string) ([]CityComparison, error) {
-	query := `SELECT city, AVG(quality), AVG(aod), COUNT(*)
+	query := `SELECT city, AVG(quality), AVG(aod), AVG(score), COUNT(*)
 		FROM sunset_data WHERE city != '' AND date >= '2020-01-01'`
 
 	args := []interface{}{}
@@ -462,7 +519,7 @@ func (s *Store) GetCityComparison(eventType, startDate, endDate string) ([]CityC
 		args = append(args, endDate)
 	}
 
-	query += ` GROUP BY city ORDER BY AVG(quality) DESC`
+	query += ` GROUP BY city ORDER BY COALESCE(AVG(score), AVG(quality)*40) DESC`
 
 	rows, err := s.db.Query(query, args...)
 	if err != nil {
@@ -473,7 +530,7 @@ func (s *Store) GetCityComparison(eventType, startDate, endDate string) ([]CityC
 	var results []CityComparison
 	for rows.Next() {
 		var c CityComparison
-		if err := rows.Scan(&c.City, &c.AvgQuality, &c.AvgAOD, &c.Count); err != nil {
+		if err := rows.Scan(&c.City, &c.AvgQuality, &c.AvgAOD, &c.AvgScore, &c.Count); err != nil {
 			return nil, err
 		}
 		results = append(results, c)
@@ -492,6 +549,9 @@ type DateRanking struct {
 	Model     string   `json:"model"`
 	Quality   *float64 `json:"quality"`
 	AOD       *float64 `json:"aod"`
+	Score     *float64 `json:"score,omitempty"`
+	Level     *int     `json:"level,omitempty"`
+	Grade     string   `json:"grade,omitempty"`
 }
 
 type MonthRanking struct {
@@ -509,16 +569,18 @@ type SeasonRanking struct {
 }
 
 type Rankings struct {
-	BestDates []DateRanking   `json:"best_dates"`
-	Monthly   []MonthRanking  `json:"monthly"`
-	Seasonal  []SeasonRanking `json:"seasonal"`
+	BestDates  []DateRanking   `json:"best_dates"`
+	BestScores []DateRanking   `json:"best_scores,omitempty"`
+	Monthly    []MonthRanking  `json:"monthly"`
+	Seasonal   []SeasonRanking `json:"seasonal"`
 }
 
 func (s *Store) GetTodayTomorrowData(city string) ([]SunsetRecord, error) {
 	today := time.Now().Format("2006-01-02")
 	tomorrow := time.Now().AddDate(0, 0, 1).Format("2006-01-02")
 
-	query := `SELECT id, city, date, time, event_type, model, quality, aod, created_at, updated_at
+	query := `SELECT id, city, date, time, event_type, model, quality, aod,
+		score, level, grade, probability, clarity, created_at, updated_at
 		FROM sunset_data WHERE date IN (?, ?)`
 	args := []interface{}{today, tomorrow}
 
@@ -539,7 +601,8 @@ func (s *Store) GetTodayTomorrowData(city string) ([]SunsetRecord, error) {
 	for rows.Next() {
 		var r SunsetRecord
 		if err := rows.Scan(&r.ID, &r.City, &r.Date, &r.Time, &r.EventType, &r.Model,
-			&r.Quality, &r.AOD, &r.CreatedAt, &r.UpdatedAt); err != nil {
+			&r.Quality, &r.AOD, &r.Score, &r.Level, &r.Grade, &r.Probability, &r.Clarity,
+			&r.CreatedAt, &r.UpdatedAt); err != nil {
 			return nil, err
 		}
 		records = append(records, r)
@@ -585,6 +648,44 @@ func (s *Store) GetRankings(city, eventType, startDate, endDate string, limit in
 		rankings.BestDates = append(rankings.BestDates, d)
 	}
 	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	scoreQuery := `SELECT city, date, time, event_type, model, quality, aod, score, level, grade
+		FROM sunset_data WHERE score IS NOT NULL AND date >= '2020-01-01'`
+	scoreArgs := []interface{}{}
+	if city != "" {
+		scoreQuery += ` AND city = ?`
+		scoreArgs = append(scoreArgs, city)
+	}
+	if eventType != "" {
+		scoreQuery += ` AND event_type = ?`
+		scoreArgs = append(scoreArgs, eventType)
+	}
+	if startDate != "" {
+		scoreQuery += ` AND date >= ?`
+		scoreArgs = append(scoreArgs, startDate)
+	}
+	if endDate != "" {
+		scoreQuery += ` AND date <= ?`
+		scoreArgs = append(scoreArgs, endDate)
+	}
+	scoreQuery += ` ORDER BY score DESC LIMIT ?`
+	scoreArgs = append(scoreArgs, limit)
+	scoreRows, err := s.db.Query(scoreQuery, scoreArgs...)
+	if err != nil {
+		return nil, err
+	}
+	defer scoreRows.Close()
+	for scoreRows.Next() {
+		var d DateRanking
+		if err := scoreRows.Scan(&d.City, &d.Date, &d.Time, &d.EventType, &d.Model,
+			&d.Quality, &d.AOD, &d.Score, &d.Level, &d.Grade); err != nil {
+			return nil, err
+		}
+		rankings.BestScores = append(rankings.BestScores, d)
+	}
+	if err := scoreRows.Err(); err != nil {
 		return nil, err
 	}
 
@@ -671,6 +772,9 @@ func (s *Store) GetRankings(city, eventType, startDate, endDate string, limit in
 
 	if rankings.BestDates == nil {
 		rankings.BestDates = []DateRanking{}
+	}
+	if rankings.BestScores == nil {
+		rankings.BestScores = []DateRanking{}
 	}
 	if rankings.Monthly == nil {
 		rankings.Monthly = []MonthRanking{}
